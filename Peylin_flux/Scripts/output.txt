@@ -1,0 +1,13 @@
+netCDF file path: ./../data/fco2_Rayner-C13-2018_June2018-ext3_1992-2012_monthlymean_XYT.nc
+Time: 1992-01-16
+
+
+Earth Land Total Sink: -2.430040749181076 GtC
+South Land Total Sink: 0.030853742069682947 GtC
+Tropical Land Total Sink: -2.173373032679136 GtC
+North Land Total Sink: -0.2875214585716222 GtC
+
+Earth Ocean Total Sink: 1.0779260712112513 GtC
+South Ocean Total Sink: 0.9434319050277722 GtC
+Tropical Ocean Total Sink: -0.1490289475418239 GtC
+North Ocean Total Sink: 0.283523113725303 GtC
