@@ -1,6 +1,7 @@
 import numpy as np
 import xarray as xr
 import sys
+import pandas as pd
 
 # Common values.
 from numpy import pi
@@ -48,14 +49,22 @@ def earth_area_grid(lats,lons):
 
 # Code to get aggregate fluxes.
 
-# Open Rayner's netCDF file.
+
+
+# Open a netCDF file.
+
+CAMS = './../data/fco2_CAMS-V17-1-2018_June2018-ext3_1979-2017_monthlymean_XYT.nc'
 Rayner = './../data/fco2_Rayner-C13-2018_June2018-ext3_1992-2012_monthlymean_XYT.nc'
-CAMS_17 = './../data/fco2_CAMS-V17-1-2018_June2018-ext3_1979-2017_monthlymean_XYT.nc'
+CTRACKER = './../data/fco2_CTRACKER-EU-v2018_June2018-ext3_2000-2017_monthlymean_XYT.nc'
+JAMSTEC = './../data/fco2_JAMSTEC-V1-2-2018_June2018-ext3_1996-2017_monthlymean_XYT.nc'
+JENA_S76 = './../data/fco2_JENA-s76-4-2-2018_June2018-ext3_1976-2017_monthlymean_XYT.nc'
+JENA_S85 = './../data/fco2_JENA-s85-4-2-2018_June2018-ext3_1985-2017_monthlymean_XYT.nc'
 
 data = Rayner
 df = xr.open_dataset(data)
 
-# Obtain object names for variables
+
+# Obtain object names for variables.
 if 'latitude' and 'longitude' and 'time' in df.variables:
     lat = df.latitude
     lon = df.longitude
@@ -67,53 +76,88 @@ south_grid_area = earth_area_grid(lat[lat<-23], lon)
 trop_grid_area = earth_area_grid(lat[(lat>-23) & (lat<23)], lon)
 north_grid_area = earth_area_grid(lat[lat>23], lon)
 
-# Obtain grid values of fluxes.
-time_point = str(time.values[0])[:10]
 
-earth_land_flux = df.Terrestrial_flux.sel(time=time_point).values[0]
-south_land_flux = earth_land_flux[lat<-23]
-trop_land_flux = earth_land_flux[(lat>-23) & (lat<23)]
-north_land_flux = earth_land_flux[lat>23]
+def single_time(time_index, write_output=False):
+    
+    "Obtain spaitally aggregated fluxes at a specified time point."
+    
+    # Obtain a grid of land and ocean fluxes at a time point.
+    time_point = df.time[time_index]
+    earth_land_flux = df.Terrestrial_flux.sel(time=time_point).values
+    earth_ocean_flux = df.ocean.sel(time=time_point).values
 
-earth_ocean_flux = df.ocean.sel(time=str(time.values[0])[:10]).values[0]
-south_ocean_flux = earth_ocean_flux[lat<-23]
-trop_ocean_flux = earth_ocean_flux[(lat>-23) & (lat<23)]
-north_ocean_flux = earth_ocean_flux[lat>23]
+    # Obtain a grid of total sink
+    earth_land_sink = earth_grid_area*earth_land_flux
+    south_land_sink = south_grid_area*earth_land_flux[lat<-23]
+    trop_land_sink = trop_grid_area*earth_land_flux[(lat>-23) & (lat<23)]
+    north_land_sink = north_grid_area*earth_land_flux[lat>23]
 
-# Obtain grid values of total sink.
-earth_land_sink = earth_grid_area*earth_land_flux
-south_land_sink = south_grid_area*south_land_flux
-trop_land_sink = trop_grid_area*trop_land_flux
-north_land_sink = north_grid_area*north_land_flux
+    earth_ocean_sink = earth_grid_area*earth_ocean_flux
+    south_ocean_sink = south_grid_area*earth_ocean_flux[lat<-23]
+    trop_ocean_sink = trop_grid_area*earth_ocean_flux[(lat>-23) & (lat<23)]
+    north_ocean_sink = north_grid_area*earth_ocean_flux[lat>23]
+    
+    # Obtain total values of sinks in globe and regions.
+    total_values = {
+        'earth_land_total': np.sum(earth_land_sink)*1e-15,
+        'south_land_total': np.sum(south_land_sink)*1e-15,
+        'trop_land_total': np.sum(trop_land_sink)*1e-15,
+        'north_land_total': np.sum(north_land_sink)*1e-15,
+        'earth_ocean_total': np.sum(earth_ocean_sink)*1e-15,
+        'south_ocean_total': np.sum(south_ocean_sink)*1e-15,
+        'trop_ocean_total': np.sum(trop_ocean_sink)*1e-15,
+        'north_ocean_total': np.sum(north_ocean_sink)*1e-15
+    }
+    
+    # Return an output file of total sink if requested.
+    
+    if write_output:
+        output = open("output.txt", "w")
+        output.write(
+            "netCDF file path: " + data +"\n\n\n"
+            "Time: " + time_point + "\n\n"
+            "Earth Land Total Sink: " + str(total_values['earth_land_total']) +" GtC\n"
+            "South Land Total Sink: " + str(total_values['south_land_total']) +" GtC\n"
+            "Tropical Land Total Sink: " + str(total_values['trop_land_total']) +" GtC\n"
+            "North Land Total Sink: " + str(total_values['north_land_total']) +" GtC\n\n"
+            "Earth Ocean Total Sink: " + str(total_values['earth_ocean_total']) +" GtC\n"
+            "South Ocean Total Sink: " + str(total_values['south_ocean_total']) +" GtC\n"
+            "Tropical Ocean Total Sink: " + str(total_values['trop_ocean_total']) +" GtC\n"
+            "North Ocean Total Sink: " + str(total_values['north_ocean_total']) +" GtC\n"
+        )
+        output.close()
+    
+    return total_values
 
-earth_ocean_sink = earth_grid_area*earth_ocean_flux
-south_ocean_sink = south_grid_area*south_ocean_flux
-trop_ocean_sink = trop_grid_area*trop_ocean_flux
-north_ocean_sink = north_grid_area*north_ocean_flux
 
-# Obtain total values of sinks in globe and regions.
-earth_land_total = np.sum(earth_land_sink)*1e-15
-south_land_total = np.sum(south_land_sink)*1e-15
-trop_land_total = np.sum(trop_land_sink)*1e-15
-north_land_total = np.sum(north_land_sink)*1e-15
 
-earth_ocean_total = np.sum(earth_ocean_sink)*1e-15
-south_ocean_total = np.sum(south_ocean_sink)*1e-15
-trop_ocean_total = np.sum(trop_ocean_sink)*1e-15
-north_ocean_total = np.sum(north_ocean_sink)*1e-15
-
-# Output of results.
-output = open("output.txt", "w")
-output.write(
-    "netCDF file path: " + data +"\n"
-    "Time: " + time_point + "\n\n\n"
-    "Earth Land Total Sink: " + str(earth_land_total) +" GtC\n"
-    "South Land Total Sink: " + str(south_land_total) +" GtC\n"
-    "Tropical Land Total Sink: " + str(trop_land_total) +" GtC\n"
-    "North Land Total Sink: " + str(north_land_total) +" GtC\n\n"
-    "Earth Ocean Total Sink: " + str(earth_ocean_total) +" GtC\n"
-    "South Ocean Total Sink: " + str(south_ocean_total) +" GtC\n"
-    "Tropical Ocean Total Sink: " + str(trop_ocean_total) +" GtC\n"
-    "North Ocean Total Sink: " + str(north_ocean_total) +" GtC\n"
-)
-output.close()
+def multiple_time():
+    
+    "Return a dataframe of total sinks for a range of time points."
+    
+    total_values = pd.DataFrame(columns=
+                                ['time',
+                                 'earth_land_total',
+                                 'south_land_total',
+                                 'trop_land_total',
+                                 'north_land_total',
+                                 'earth_ocean_total',
+                                 'south_ocean_total',
+                                 'trop_ocean_total',
+                                 'north_ocean_total']
+                               )
+    
+    el = []
+    sl = []
+    tl = []
+    nl = []
+    eo = []
+    so = []
+    to = []
+    no = []
+    
+    for i in range(df.time.size):
+        single = single_time(i)
+        el.append(single['earth_land_total'])
+    
+    return total_values
