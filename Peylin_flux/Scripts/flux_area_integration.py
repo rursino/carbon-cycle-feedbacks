@@ -98,16 +98,29 @@ def single_time(time_index, write_output=False):
     north_ocean_sink = north_grid_area*earth_ocean_flux[lat>23]
     
     # Obtain total values of sinks in globe and regions.
-    total_values = {
-        'earth_land_total': np.sum(earth_land_sink)*1e-15,
-        'south_land_total': np.sum(south_land_sink)*1e-15,
-        'trop_land_total': np.sum(trop_land_sink)*1e-15,
-        'north_land_total': np.sum(north_land_sink)*1e-15,
-        'earth_ocean_total': np.sum(earth_ocean_sink)*1e-15,
-        'south_ocean_total': np.sum(south_ocean_sink)*1e-15,
-        'trop_ocean_total': np.sum(trop_ocean_sink)*1e-15,
-        'north_ocean_total': np.sum(north_ocean_sink)*1e-15
-    }
+    
+    total_values = pd.DataFrame(columns=
+                                ['time',
+                                 'earth_land_total',
+                                 'south_land_total',
+                                 'trop_land_total',
+                                 'north_land_total',
+                                 'earth_ocean_total',
+                                 'south_ocean_total',
+                                 'trop_ocean_total',
+                                 'north_ocean_total']
+                               )
+    
+    total_values.loc[0,:] = np.array([time_index*1e15,
+                                      np.sum(earth_land_sink),
+                                      np.sum(south_land_sink),
+                                      np.sum(trop_land_sink),
+                                      np.sum(north_land_sink),
+                                      np.sum(earth_ocean_sink),
+                                      np.sum(south_ocean_sink),
+                                      np.sum(trop_ocean_sink),
+                                      np.sum(north_ocean_sink)])*1e-15
+    
     
     # Return an output file of total sink if requested.
     
@@ -115,15 +128,15 @@ def single_time(time_index, write_output=False):
         output = open("output.txt", "w")
         output.write(
             "netCDF file path: " + data +"\n\n\n"
-            "Time: " + time_point + "\n\n"
-            "Earth Land Total Sink: " + str(total_values['earth_land_total']) +" GtC\n"
-            "South Land Total Sink: " + str(total_values['south_land_total']) +" GtC\n"
-            "Tropical Land Total Sink: " + str(total_values['trop_land_total']) +" GtC\n"
-            "North Land Total Sink: " + str(total_values['north_land_total']) +" GtC\n\n"
-            "Earth Ocean Total Sink: " + str(total_values['earth_ocean_total']) +" GtC\n"
-            "South Ocean Total Sink: " + str(total_values['south_ocean_total']) +" GtC\n"
-            "Tropical Ocean Total Sink: " + str(total_values['trop_ocean_total']) +" GtC\n"
-            "North Ocean Total Sink: " + str(total_values['north_ocean_total']) +" GtC\n"
+            "Time: " + str(time_point.values)[:10] + "\n\n"
+            "Earth Land Total Sink: " + str(total_values.loc[0,'earth_land_total']) +" GtC\n"
+            "South Land Total Sink: " + str(total_values.loc[0,'south_land_total']) +" GtC\n"
+            "Tropical Land Total Sink: " + str(total_values.loc[0,'trop_land_total']) +" GtC\n"
+            "North Land Total Sink: " + str(total_values.loc[0,'north_land_total']) +" GtC\n\n"
+            "Earth Ocean Total Sink: " + str(total_values.loc[0,'earth_ocean_total']) +" GtC\n"
+            "South Ocean Total Sink: " + str(total_values.loc[0,'south_ocean_total']) +" GtC\n"
+            "Tropical Ocean Total Sink: " + str(total_values.loc[0,'trop_ocean_total']) +" GtC\n"
+            "North Ocean Total Sink: " + str(total_values.loc[0,'north_ocean_total']) +" GtC\n"
         )
         output.close()
     
@@ -147,17 +160,8 @@ def multiple_time():
                                  'north_ocean_total']
                                )
     
-    el = []
-    sl = []
-    tl = []
-    nl = []
-    eo = []
-    so = []
-    to = []
-    no = []
-    
     for i in range(df.time.size):
         single = single_time(i)
-        el.append(single['earth_land_total'])
+        total_values.loc[i,:] = np.array(single.loc[0])
     
-    return total_values
+    return total_values.reset_index(drop=True)
