@@ -3,7 +3,7 @@ import xarray as xr
 import sys
 import pandas as pd
 
-# Common values.
+
 from numpy import pi
 r_earth = 6.371e6 # Radius of Earth
 dtor = pi/180. # conversion from degrees to radians.
@@ -48,48 +48,15 @@ def earth_area_grid(lats,lons):
     return result
 
 
-# Open a netCDF file.
-
-CAMS = './../data/fco2_CAMS-V17-1-2018_June2018-ext3_1979-2017_monthlymean_XYT.nc'
-Rayner = './../data/fco2_Rayner-C13-2018_June2018-ext3_1992-2012_monthlymean_XYT.nc'
-CTRACKER = './../data/fco2_CTRACKER-EU-v2018_June2018-ext3_2000-2017_monthlymean_XYT.nc'
-JAMSTEC = './../data/fco2_JAMSTEC-V1-2-2018_June2018-ext3_1996-2017_monthlymean_XYT.nc'
-JENA_S76 = './../data/fco2_JENA-s76-4-2-2018_June2018-ext3_1976-2017_monthlymean_XYT.nc'
-JENA_S85 = './../data/fco2_JENA-s85-4-2-2018_June2018-ext3_1985-2017_monthlymean_XYT.nc'
-
-df = xr.open_dataset(Rayner)
-
-# Obtain object names for variables.
-if 'latitude' and 'longitude' and 'time' in df.variables:
-    lat = df.latitude
-    lon = df.longitude
-    time = df.time
-    
-# Obtain grid areas of globe and regions.
-earth_grid_area = earth_area_grid(lat,lon)
-south_grid_area = earth_area_grid(lat[lat<-23], lon)
-trop_grid_area = earth_area_grid(lat[(lat>-23) & (lat<23)], lon)
-north_grid_area = earth_area_grid(lat[lat>23], lon)
-
-
-def spatial_integration(data, variables, time=None):
+def spatial_integration(df, variables, time=None):
     
     "Return a dataframe of total sinks for specific regions and the globe and at a specific time point or a range of time points. The regions are split into land and ocean and are latitudinally split as follows: 90 degN to 23 degN, 23 degN to 23 degS and 23 degS to 90 degS. Globally integrated fluxes are also included for each of land and ocean."
-    
-    # Read dataset.
-    df = xr.open_dataset(data)
     
     # Initialise a dataframe of the regional flux values.
     total_values = pd.DataFrame(columns=
                                 ['time',
-                                 'earth_land_total',
-                                 'south_land_total',
-                                 'trop_land_total',
-                                 'north_land_total',
-                                 'earth_ocean_total',
-                                 'south_ocean_total',
-                                 'trop_ocean_total',
-                                 'north_ocean_total']
+                                 'earth_land_total', 'south_land_total', 'trop_land_total', 'north_land_total',
+                                 'earth_ocean_total','south_ocean_total', 'trop_ocean_total','north_ocean_total']
                                )
     
     # Check that time range (min_time to max_time) is within the time range of the dataset.
@@ -111,6 +78,9 @@ def spatial_integration(data, variables, time=None):
     
     
     # Aggregate fluxes spatially at each time point and insert into dataframe.
+    lat = df.latitude
+    lon = df.longitude
+    
     for time_index in range(min_time, max_time):
         
         # Obtain a grid of land and ocean fluxes at a time point.
@@ -118,27 +88,20 @@ def spatial_integration(data, variables, time=None):
         earth_land_flux = df[variables[0]].sel(time=time_point).values
         earth_ocean_flux = df[variables[1]].sel(time=time_point).values
 
-        # Obtain a grid of total sink
-        earth_land_sink = earth_grid_area*earth_land_flux
-        south_land_sink = south_grid_area*earth_land_flux[lat<-23]
-        trop_land_sink = trop_grid_area*earth_land_flux[(lat>-23) & (lat<23)]
-        north_land_sink = north_grid_area*earth_land_flux[lat>23]
-
-        earth_ocean_sink = earth_grid_area*earth_ocean_flux
-        south_ocean_sink = south_grid_area*earth_ocean_flux[lat<-23]
-        trop_ocean_sink = trop_grid_area*earth_ocean_flux[(lat>-23) & (lat<23)]
-        north_ocean_sink = north_grid_area*earth_ocean_flux[lat>23]
+        # Obtain a grid of total sink.
+        earth_land_sink = earth_area_grid(lat,lon)*earth_land_flux
+        earth_ocean_sink = earth_area_grid(lat,lon)*earth_ocean_flux
 
         # Obtain total values of sinks in globe and regions.
         total_values.loc[time_index,:] = np.array([df.time.values[time_index],
-                                          np.sum(earth_land_sink*1e-15),
-                                          np.sum(south_land_sink*1e-15),
-                                          np.sum(trop_land_sink*1e-15),
-                                          np.sum(north_land_sink*1e-15),
-                                          np.sum(earth_ocean_sink*1e-15),
-                                          np.sum(south_ocean_sink*1e-15),
-                                          np.sum(trop_ocean_sink*1e-15),
-                                          np.sum(north_ocean_sink*1e-15)])
+                                          np.sum(1e-15*earth_land_sink),
+                                          np.sum(1e-15*earth_land_sink[lat<-23]),
+                                          np.sum(1e-15*earth_land_sink[(lat>-23) & (lat<23)]),
+                                          np.sum(1e-15*earth_land_sink[lat>23]),
+                                          np.sum(1e-15*earth_ocean_sink),
+                                          np.sum(1e-15*earth_ocean_sink[lat<-23]),
+                                          np.sum(1e-15*earth_ocean_sink[(lat>-23) & (lat<23)]),
+                                          np.sum(1e-15*earth_ocean_sink[lat>23])])
         
     
     return total_values.reset_index(drop=True)
@@ -151,17 +114,11 @@ def year_integration(df):
     min_year = df.time[0].year
     max_year = df.time[df.time.size-1].year
 
-    df_year = pd.DataFrame(columns=
-                                    ['Year',
-                                     'earth_land_total',
-                                     'south_land_total',
-                                     'trop_land_total',
-                                     'north_land_total',
-                                     'earth_ocean_total',
-                                     'south_ocean_total',
-                                     'trop_ocean_total',
-                                     'north_ocean_total']
-                                   )
+    df_year = pd.DataFrame(columns= 
+                           ['Year',
+                            'earth_land_total', 'south_land_total', 'trop_land_total', 'north_land_total',
+                            'earth_ocean_total','south_ocean_total', 'trop_ocean_total','north_ocean_total']
+                          )
 
     for (j,year) in enumerate(range(min_year, max_year+1)):
         index = []
@@ -181,17 +138,11 @@ def decade_integration(df):
     min_decade = int(df.time[0].year/10)*10
     max_decade = int(df.time[df.time.size-1].year/10)*10
         
-    df_decade = pd.DataFrame(columns=
-                                    ['Decade',
-                                     'earth_land_total',
-                                     'south_land_total',
-                                     'trop_land_total',
-                                     'north_land_total',
-                                     'earth_ocean_total',
-                                     'south_ocean_total',
-                                     'trop_ocean_total',
-                                     'north_ocean_total']
-                                   )
+    df_decade = pd.DataFrame(columns= 
+                           ['Decade',
+                            'earth_land_total', 'south_land_total', 'trop_land_total', 'north_land_total',
+                            'earth_ocean_total','south_ocean_total', 'trop_ocean_total','north_ocean_total']
+                          )
 
     for (j,decade) in enumerate(range(min_decade, max_decade+10,10)):
         index = []
