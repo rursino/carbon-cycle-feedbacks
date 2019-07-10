@@ -47,9 +47,6 @@ def earth_area_grid(lats,lons):
     
     return result
 
-# Code to get aggregate fluxes.
-
-
 
 # Open a netCDF file.
 
@@ -147,6 +144,72 @@ def spatial_integration(data, variables, time=None):
     return total_values.reset_index(drop=True)
 
 
+def year_integration(df):
+    
+    "Returns a dataframe with the yearly integrated regional fluxes. df must be a dataframe with previously spatially integrated fluxes and at a monthly scale."
+    
+    min_year = df.time[0].year
+    max_year = df.time[df.time.size-1].year
+
+    df_year = pd.DataFrame(columns=
+                                    ['Year',
+                                     'earth_land_total',
+                                     'south_land_total',
+                                     'trop_land_total',
+                                     'north_land_total',
+                                     'earth_ocean_total',
+                                     'south_ocean_total',
+                                     'trop_ocean_total',
+                                     'north_ocean_total']
+                                   )
+
+    for (j,year) in enumerate(range(min_year, max_year+1)):
+        index = []
+        for (i,time) in enumerate(df['time']):
+            if time.year == year:
+                index.append(i)
+        df_year.loc[j,:] = df.iloc[index,1:].sum()
+
+    df_year['Year'] = range(min_year, max_year+1)
+    return df_year
+
+
+def decade_integration(df):
+    
+    "Returns a dataframe with the decadal integrated regional fluxes. df must be a dataframe with previously spatially integrated fluxes and at a monthly scale."
+    
+    min_decade = int(df.time[0].year/10)*10
+    max_decade = int(df.time[df.time.size-1].year/10)*10
+        
+    df_decade = pd.DataFrame(columns=
+                                    ['Decade',
+                                     'earth_land_total',
+                                     'south_land_total',
+                                     'trop_land_total',
+                                     'north_land_total',
+                                     'earth_ocean_total',
+                                     'south_ocean_total',
+                                     'trop_ocean_total',
+                                     'north_ocean_total']
+                                   )
+
+    for (j,decade) in enumerate(range(min_decade, max_decade+10,10)):
+        index = []
+        for (i,time) in enumerate(df['time']):
+            if time.year in range(decade, decade+10):
+                index.append(i)
+        df_decade.loc[j,:] = df.iloc[index,1:].sum()
+
+    df_decade['Decade'] = range(min_decade, max_decade+10,10)
+    return df_decade
+
+
+def whole_time_integration(df):
+    
+    "Returns a dataframe with regional fluxes integrated through the entire time period of df. df must be a dataframe with previously spatially integrated fluxes and at a monthly scale."
+    
+    return df.iloc[:,1:].sum()
+
 
 def row_output(df, time_index, data_path=None):
     
@@ -157,7 +220,7 @@ def row_output(df, time_index, data_path=None):
     else:
         data_line = ""
     
-    output = open("output.txt", "w")
+    output = open("single_time_output.txt", "w")
     output.write(
         
         data_line +"\n\n"
