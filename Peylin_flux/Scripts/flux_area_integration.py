@@ -80,6 +80,7 @@ def spatial_integration(df, variables, time=None):
     # Aggregate fluxes spatially at each time point and insert into dataframe.
     lat = df.latitude
     lon = df.longitude
+    earth_grid_area = earth_area_grid(lat,lon)
     
     for time_index in range(min_time, max_time):
         
@@ -89,8 +90,8 @@ def spatial_integration(df, variables, time=None):
         earth_ocean_flux = df[variables[1]].sel(time=time_point).values
 
         # Obtain a grid of total sink.
-        earth_land_sink = earth_area_grid(lat,lon)*earth_land_flux
-        earth_ocean_sink = earth_area_grid(lat,lon)*earth_ocean_flux
+        earth_land_sink = earth_grid_area*earth_land_flux
+        earth_ocean_sink = earth_grid_area*earth_ocean_flux
 
         # Obtain total values of sinks in globe and regions.
         total_values.loc[time_index,:] = np.array([df.time.values[time_index],
