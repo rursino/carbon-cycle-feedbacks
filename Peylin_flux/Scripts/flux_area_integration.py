@@ -82,12 +82,19 @@ def spatial_integration(df, variables, time=None):
     lon = df.longitude
     earth_grid_area = earth_area_grid(lat,lon)
     
+    # Create list of month numbers for conversion of yearly averaged monthly fluxes to month units.
+    days = [31,28,31,30,31,30,31,31,30,31,30,31]
+    month_no = np.array(list(arg_time_range))%12
+    
     for time_index in range(min_time, max_time):
+        
+        # Gather number of days in month number of the time point.
+        days_in_month = days[month_no[time_index-min_time]]
         
         # Obtain a grid of land and ocean fluxes at a time point.
         time_point = df.time[time_index]
-        earth_land_flux = df[variables[0]].sel(time=time_point).values
-        earth_ocean_flux = df[variables[1]].sel(time=time_point).values
+        earth_land_flux = df[variables[0]].sel(time=time_point).values*(days_in_month/365)
+        earth_ocean_flux = df[variables[1]].sel(time=time_point).values*(days_in_month/365)
 
         # Obtain a grid of total sink.
         earth_land_sink = earth_grid_area*earth_land_flux
