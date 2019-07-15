@@ -48,7 +48,7 @@ def earth_area_grid(lats,lons):
     return result
 
 
-def spatial_integration(df, variables, time=None):
+def spatial_integration(df, variables, start_time=None, end_time=None):
     
     "Return a dataframe of total sinks for specific regions and the globe and at a specific time point or a range of time points. The regions are split into land and ocean and are latitudinally split as follows: 90 degN to 23 degN, 23 degN to 23 degS and 23 degS to 90 degS. Globally integrated fluxes are also included for each of land and ocean."
     
@@ -59,23 +59,20 @@ def spatial_integration(df, variables, time=None):
                                  'earth_ocean_total','south_ocean_total', 'trop_ocean_total','north_ocean_total']
                                )
     
-    # Check that time range (min_time to max_time) is within the time range of the dataset.
-    if time == None:
-        min_time = range(df.time.size)[0]
-        max_time = range(df.time.size)[-1] + 1
+    # Create a list range of time indices.
+    if start_time == None:
+        start_time = df.time.values[0].strftime('%Y-%m')
+    if end_time == None:
+        end_time = df.time.values[-1].strftime('%Y-%m')
     
-    if type(time) == list or type(time) == tuple:
-        min_time = time[0]
-        max_time = time[1] + 1
-    elif type(time) == int or type(time) == float:
-        min_time = int(time)
-        max_time = int(time) + 1
+    if start_time == end_time:
+        arg_time_range = start_time
+    else:
+        arg_time_range = pd.date_range(start=start_time, end=end_time, freq='M').strftime('%Y-%m')
     
-    arg_time_range = range(min_time, max_time)
-    df_time_range = range(df.time.size)
-    if not (arg_time_range[0] in df_time_range and arg_time_range[-1] in df_time_range):
-        raise ValueError('Time points are out of bounds of dataframe.')
+    # Check that time range is in bounds of the time range of df.
     
+
     
     # Aggregate fluxes spatially at each time point and insert into dataframe.
     lat = df.latitude
@@ -84,15 +81,16 @@ def spatial_integration(df, variables, time=None):
     
     # Create list of month numbers for conversion of yearly averaged monthly fluxes to month units.
     days = [31,28,31,30,31,30,31,31,30,31,30,31]
-    month_no = np.array(list(arg_time_range))%12
+    month_no = np.zeros(arg_time_range.size)
+    for index,date in enumerate(arg_time_range):
+        month_no[index]= date[-2:]
     
-    for time_index in range(min_time, max_time):
+    for time_point in arg_time_range:
         
         # Gather number of days in month number of the time point.
         days_in_month = days[month_no[time_index-min_time]]
         
         # Obtain a grid of land and ocean fluxes at a time point.
-        time_point = df.time[time_index]
         earth_land_flux = df[variables[0]].sel(time=time_point).values*(days_in_month/365)
         earth_ocean_flux = df[variables[1]].sel(time=time_point).values*(days_in_month/365)
 
