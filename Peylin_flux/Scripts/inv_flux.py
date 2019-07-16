@@ -53,53 +53,54 @@ def spatial_integration(df, variables, start_time=None, end_time=None):
     "Return a dataframe of total sinks for specific regions and the globe and at a specific time point or a range of time points. The regions are split into land and ocean and are latitudinally split as follows: 90 degN to 23 degN, 23 degN to 23 degS and 23 degS to 90 degS. Globally integrated fluxes are also included for each of land and ocean."
     
     # Initialise a dataframe of the regional flux values.
-    total_values = pd.DataFrame(columns=
-                                ['time',
-                                 'earth_land_total', 'south_land_total', 'trop_land_total', 'north_land_total',
-                                 'earth_ocean_total','south_ocean_total', 'trop_ocean_total','north_ocean_total']
-                               )
+    columns = ['time',
+               'earth_land_total', 'south_land_total', 'trop_land_total', 'north_land_total',
+               'earth_ocean_total','south_ocean_total', 'trop_ocean_total','north_ocean_total']
+    total_values = pd.DataFrame(columns=columns)
+    
     
     # Create a list range of time indices.
     if start_time == None:
         start_time = df.time.values[0].strftime('%Y-%m')
+    
     if end_time == None:
-        end_time = df.time.values[-1].strftime('%Y-%m')
+        end_time = df.time.values[-1]
+        try:
+            next_month = end_time.replace(month=end_time.month+1)
+        except ValueError:
+            next_month = end_time.replace(year=end_time.year+1, month=1)
+        
+        end_time = next_month.strftime('%Y-%m')
+            
+    arg_time_range = pd.date_range(start=start_time, end=end_time, freq='M').strftime('%Y-%m')
     
-    if start_time == end_time:
-        arg_time_range = start_time
-    else:
-        arg_time_range = pd.date_range(start=start_time, end=end_time, freq='M').strftime('%Y-%m')
-    
-    # Check that time range is in bounds of the time range of df.
-    
-
     
     # Aggregate fluxes spatially at each time point and insert into dataframe.
     lat = df.latitude
     lon = df.longitude
     earth_grid_area = earth_area_grid(lat,lon)
     
-    # Create list of month numbers for conversion of yearly averaged monthly fluxes to month units.
-    days = [31,28,31,30,31,30,31,31,30,31,30,31]
-    month_no = np.zeros(arg_time_range.size)
-    for index,date in enumerate(arg_time_range):
-        month_no[index]= date[-2:]
     
-    for time_point in arg_time_range:
+    # Create list of month numbers for conversion of yearly averaged monthly fluxes to month units.
+    days = {'01': 31, '02': 28, '03': 31, '04': 30,
+            '05': 31, '06': 30, '07': 31, '08': 31,
+            '09': 30, '10': 31, '11': 30, '12': 31}
+    
+    for index,time_point in enumerate(arg_time_range):
         
         # Gather number of days in month number of the time point.
-        days_in_month = days[month_no[time_index-min_time]]
+        days_in_month = days[time_point[-2:]]
         
         # Obtain a grid of land and ocean fluxes at a time point.
-        earth_land_flux = df[variables[0]].sel(time=time_point).values*(days_in_month/365)
-        earth_ocean_flux = df[variables[1]].sel(time=time_point).values*(days_in_month/365)
+        earth_land_flux = df[variables[0]].sel(time=time_point).values[0]*(days_in_month/365)
+        earth_ocean_flux = df[variables[1]].sel(time=time_point).values[0]*(days_in_month/365)
 
         # Obtain a grid of total sink.
         earth_land_sink = earth_grid_area*earth_land_flux
         earth_ocean_sink = earth_grid_area*earth_ocean_flux
 
         # Obtain total values of sinks in globe and regions.
-        total_values.loc[time_index,:] = np.array([df.time.values[time_index],
+        total_values.loc[index,:] = np.array([time_point,
                                           np.sum(1e-15*earth_land_sink),
                                           np.sum(1e-15*earth_land_sink[lat<-23]),
                                           np.sum(1e-15*earth_land_sink[(lat>-23) & (lat<23)]),
