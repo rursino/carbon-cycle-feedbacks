@@ -54,7 +54,7 @@ def earth_area_grid(lats,lons):
 class TheDataFrame:
     """ This class takes an instance of the netCDF datasets from the Peylin_flux/data folder.
     It provides features to analyse the carbon flux data from the netCDF files,
-	including the integration of fluxes on spatial and temporal scales.
+    including the integration of fluxes on spatial and temporal scales.
     
     Parameters
     ----------
@@ -190,7 +190,7 @@ class TheDataFrame:
 
 
     def whole_time_integration(self):       
-	""" Returns a pd.DataFrame with regional fluxes integrated through the entire time period. """
+    """ Returns a pd.DataFrame with regional fluxes integrated through the entire time period. """
         
         df = self.spatial_integration()
         
