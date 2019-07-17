@@ -64,6 +64,7 @@ class TheDataFrame:
     def __init__(self, data):
         """ Initialise an instance of an TheDataFrame. """
         self.data = xr.open_dataset(data)
+        self.data_path = data
         self.variables = list(self.data.var().variables)
 
 
@@ -199,32 +200,38 @@ class TheDataFrame:
         df_whole_time.loc[0,:] = df.iloc[:,1:].sum()
         
         return df_whole_time
-
-
-
-
-#class TheOutput
-def row_output(df, time_index, data_path=None):
     
-    "Write a text file of total sinks at a specific time point."
-    
-    if data_path:
-        data_line = "netCDF file path: " + data_path +"\n"
-    else:
-        data_line = ""
-    
-    output = open("single_time_output.txt", "w")
-    output.write(
+    def single_time_output(self, time):
+        """ Writes a text file of total sinks at a specific time point.
+        Instance must be a output pandas dataframe from the spatial_integration function.
+
+        Parameters
+        ----------
+        time: Must be a single date string in the format %Y-%M.
         
-        data_line +"\n\n"
-        "Time: " + str(df.loc[time_index,'time']) + "\n\n"
-        "Earth Land Total Sink: " + str(df.loc[time_index,'earth_land_total']) +" GtC\n"
-        "South Land Total Sink: " + str(df.loc[time_index,'south_land_total']) +" GtC\n"
-        "Tropical Land Total Sink: " + str(df.loc[time_index,'trop_land_total']) +" GtC\n"
-        "North Land Total Sink: " + str(df.loc[time_index,'north_land_total']) +" GtC\n\n"
-        "Earth Ocean Total Sink: " + str(df.loc[time_index,'earth_ocean_total']) +" GtC\n"
-        "South Ocean Total Sink: " + str(df.loc[time_index,'south_ocean_total']) +" GtC\n"
-        "Tropical Ocean Total Sink: " + str(df.loc[time_index,'trop_ocean_total']) +" GtC\n"
-        "North Ocean Total Sink: " + str(df.loc[time_index,'north_ocean_total']) +" GtC\n"
-    )
-    output.close()
+        """
+        
+        df = self.spatial_integration()
+        
+        time_year = int(time[:4])
+        time_month = int(time[-2:])
+        time_indices = np.array([(datetime.year, datetime.month) for i,datetime in enumerate(df.time.values)])
+        year_index = np.where(time_year == time_indices[:,0])
+        month_index = np.where(time_month == time_indices[year_index,1][0])[0][0]
+        time_index = year_index[0][month_index]
+
+        output = open("single_time_output.txt", "w")
+        output.write(
+
+            "Data path: " + self.data_path + "\n\n"
+            "Time: " + str(df.loc[time_index,'time']) + "\n\n"
+            "Earth Land Total Sink: " + str(df.loc[time_index,'earth_land_total']) +" GtC\n"
+            "South Land Total Sink: " + str(df.loc[time_index,'south_land_total']) +" GtC\n"
+            "Tropical Land Total Sink: " + str(df.loc[time_index,'trop_land_total']) +" GtC\n"
+            "North Land Total Sink: " + str(df.loc[time_index,'north_land_total']) +" GtC\n\n"
+            "Earth Ocean Total Sink: " + str(df.loc[time_index,'earth_ocean_total']) +" GtC\n"
+            "South Ocean Total Sink: " + str(df.loc[time_index,'south_ocean_total']) +" GtC\n"
+            "Tropical Ocean Total Sink: " + str(df.loc[time_index,'trop_ocean_total']) +" GtC\n"
+            "North Ocean Total Sink: " + str(df.loc[time_index,'north_ocean_total']) +" GtC\n"
+        )
+        output.close()
