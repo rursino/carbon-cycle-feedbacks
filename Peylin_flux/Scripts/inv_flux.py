@@ -53,7 +53,8 @@ def earth_area_grid(lats,lons):
 
 class TheDataFrame:
     """ This class takes an instance of the netCDF datasets from the Peylin_flux/data folder.
-    It is designed to obtain output from a set of analyses from the data in the netCDF files.
+    It provides features to analyse the carbon flux data from the netCDF files,
+	including the integration of fluxes on spatial and temporal scales.
     
     Parameters
     ----------
@@ -138,7 +139,7 @@ class TheDataFrame:
 
 
     def year_integration(self):
-        """ Returns a dataframe with the yearly integrated regional fluxes. """
+        """ Returns a pd.DataFrame with yearly integrated regional fluxes. """
         
         df = self.spatial_integration()
 
@@ -164,7 +165,7 @@ class TheDataFrame:
 
 
     def decade_integration(self):
-        """ Returns a dataframe with the decadal integrated regional fluxes. """
+        """ Returns a pd.DataFrame with decadal integrated regional fluxes. """
         
         df = self.spatial_integration()
 
@@ -188,8 +189,8 @@ class TheDataFrame:
         return df_decade
 
 
-    def whole_time_integration(self):
-        """ Returns a dataframe with regional fluxes integrated through the entire time period of dataset. """
+    def whole_time_integration(self):       
+	""" Returns a pd.DataFrame with regional fluxes integrated through the entire time period. """
         
         df = self.spatial_integration()
         
@@ -202,8 +203,7 @@ class TheDataFrame:
         return df_whole_time
     
     def single_time_output(self, time):
-        """ Writes a text file of total sinks at a specific time point.
-        Instance must be a output pandas dataframe from the spatial_integration function.
+        """ Writes a text file of spatially integrated regional fluxes at a specific time point.
 
         Parameters
         ----------
