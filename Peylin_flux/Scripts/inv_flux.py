@@ -189,8 +189,8 @@ class TheDataFrame:
         return df_decade
 
 
-    def whole_time_integration(self):       
-    """ Returns a pd.DataFrame with regional fluxes integrated through the entire time period. """
+    def whole_time_integration(self):
+        """ Returns a pd.DataFrame with regional fluxes integrated through the entire time period. """
         
         df = self.spatial_integration()
         
