@@ -1,8 +1,11 @@
+#!/usr/bin/python
+
 import numpy as np
 import xarray as xr
 import sys
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 
 
 
@@ -253,16 +256,22 @@ if __name__ == "__main__":
     output_df.to_csv(output_file, index=False) # Save dataframe as a csv file.
     
     if len(sys.argv) > 3:
-        plt.plot(output_df.Year, output_df.earth_land_total)
+        ax = plt.figure().gca()
+        ax.plot(output_df.Year, output_df.earth_land_total)
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.title("Annual Global Land Flux")
         plt.xlabel("Year")
-        plt.ylabel("C flux to the atmosphere (GtC)")
+        plt.ylabel("C flux to the atmosphere (GtC/yr)")
+        plt.ylim([-5,11])
         plt.savefig(sys.argv[3])
     if len(sys.argv) > 4:
         plt.clf()
-        plt.plot(output_df.Year, output_df.earth_ocean_total)
+        ax = plt.figure().gca()
+        ax.plot(output_df.Year, output_df.earth_ocean_total)
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.title("Annual Global Ocean Flux")
         plt.xlabel("Year")
-        plt.ylabel("C flux to the atmosphere (GtC)")
+        plt.ylabel("C flux to the atmosphere (GtC/yr)")
+        plt.ylim([-5,2])
         plt.savefig(sys.argv[4])
 
