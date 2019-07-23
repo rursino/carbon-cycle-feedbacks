@@ -7,8 +7,8 @@ JAMSTEC="./../raw_data/fco2_JAMSTEC-V1-2-2018_June2018-ext3_1996-2017_monthlymea
 JENA_s76="./../raw_data/fco2_JENA-s76-4-2-2018_June2018-ext3_1976-2017_monthlymean_XYT.nc"
 JENA_s85="./../raw_data/fco2_JENA-s85-4-2-2018_June2018-ext3_1985-2017_monthlymean_XYT.nc"
 
-python fossil_fix_data.py $CAMS ./../data_fixed/CAMS_land ./../data_fixed/CAMS_ocean
-python fossil_fix_data.py $CTRACKER ./../data_fixed/CTRACKER_land ./../data_fixed/CTRACKER_ocean
-python fossil_fix_data.py $JAMSTEC ./../data_fixed/JAMSTEC_land ./../data_fixed/JAMSTEC_ocean
-python fossil_fix_data.py $JENA_s76 ./../data_fixed/JENA_s76_land ./../data_fixed/JENA_s76_ocean
-python fossil_fix_data.py $JENA_s85 ./../data_fixed/JENA_s85_land ./../data_fixed/JENA_s85_ocean
+python fossil_fix_data.py $CAMS ./../data_fixed/CAMS.pickle
+python fossil_fix_data.py $CTRACKER ./../data_fixed/CTRACKER.pickle
+python fossil_fix_data.py $JAMSTEC ./../data_fixed/JAMSTEC.pickle
+python fossil_fix_data.py $JENA_s76 ./../data_fixed/JENA_s76.pickle
+python fossil_fix_data.py $JENA_s85 ./../data_fixed/JENA_s85.pickle
