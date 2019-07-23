@@ -9,8 +9,7 @@ import sys
 
 if __name__ == "__main__":
     input_file = sys.argv[1]
-    land_output = sys.argv[2]
-    ocean_output = sys.argv[3]
+    output = sys.argv[2]
     
     df = xr.open_dataset(input_file)
     var = list(df.var())
@@ -18,11 +17,12 @@ if __name__ == "__main__":
     fossil = df[var[0]]
     land = df[var[1]]
     ocean = df[var[2]]
-
+    
     land_fix = land-fossil
     ocean_fix = ocean-fossil
+
+    dataset_fix = xr.Dataset({'Terrestrial_flux': land_fix, 'Ocean_flux': ocean_fix})
     
-    pickle.dump(land_fix, open(land_output, "wb"))
-    pickle.dump(ocean_fix, open(ocean_output, "wb"))
+    pickle.dump(dataset_fix, open(output, "wb"))
     
-    print("{} and {} successfully created and serialised.".format(land_output, ocean_output))
+    print("{} dataset successfully created and serialised.".format(output))
