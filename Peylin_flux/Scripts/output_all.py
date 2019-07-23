@@ -31,14 +31,14 @@ if __name__ == "__main__":
     
     
     # Output files after directory successfully created.
-    pickle.dump(df_spatial, open("{}/spatial.csv".format(output_folder), "wb"))
-    print ("Successfully created %s/spatial.csv " % output_folder)
+    pickle.dump(df_spatial, open("{}/spatial.pickle".format(output_folder), "wb"))
+    print ("Successfully created %s/spatial.pickle " % output_folder)
     
-    pickle.dump(df_year, open("{}/year.csv".format(output_folder), "wb"))
-    print ("Successfully created %s/year.csv " % output_folder)
+    pickle.dump(df_year, open("{}/year.pickle".format(output_folder), "wb"))
+    print ("Successfully created %s/year.pickle " % output_folder)
     
-    pickle.dump(df_decade, open("{}/decade.csv".format(output_folder), "wb"))
-    print ("Successfully created %s/decade.csv " % output_folder)
+    pickle.dump(df_decade, open("{}/decade.pickle".format(output_folder), "wb"))
+    print ("Successfully created %s/decade.pickle " % output_folder)
     
-    pickle.dump(df_whole, open("{}/whole_time.csv".format(output_folder), "wb"))
-    print ("Successfully created %s/whole_time.csv " % output_folder)
+    pickle.dump(df_whole, open("{}/whole_time.pickle".format(output_folder), "wb"))
+    print ("Successfully created %s/whole_time.pickle " % output_folder)

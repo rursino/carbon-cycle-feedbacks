@@ -70,7 +70,6 @@ class TheDataFrame:
             _data = xr.open_dataset(data)
         
         self.data = _data
-        self.variables = list(self.data.var().variables)
 
 
     def spatial_integration(self, start_time=None, end_time=None):
@@ -122,8 +121,13 @@ class TheDataFrame:
             
             days_in_month = days[time_point[-2:]]
 
-            earth_land_flux = df[self.variables[0]].sel(time=time_point).values[0]*(days_in_month/365)
-            earth_ocean_flux = df[self.variables[1]].sel(time=time_point).values[0]*(days_in_month/365)
+            earth_land_flux = df['Terrestrial_flux'].sel(time=time_point).values[0]*(days_in_month/365)
+            
+            # Rayner dataset has ocean variable as 'ocean' instead of 'Ocean_flux'.
+            try:
+                earth_ocean_flux = df['Ocean_flux'].sel(time=time_point).values[0]*(days_in_month/365)
+            except KeyError:
+                earth_ocean_flux = df['ocean'].sel(time=time_point).values[0]*(days_in_month/365)
 
             earth_land_sink = earth_grid_area*earth_land_flux
             earth_ocean_sink = earth_grid_area*earth_ocean_flux
