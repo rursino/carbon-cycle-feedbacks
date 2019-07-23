@@ -58,19 +58,23 @@ class TheDataFrame:
     
     Parameters
     ----------
-    data: an instance of any of the datasets, read in as the file path to the dataset.
+    data: an instance of an xarray.Dataset, xarray.DataArray or .nc file.
     
     """
 
     def __init__(self, data):
         """ Initialise an instance of an TheDataFrame. """
-        self.data = xr.open_dataset(data)
-        self.data_path = data
+        if isinstance(data, xr.Dataset) or isinstance(data, xr.DataArray):
+            _data = data
+        else:
+            _data = xr.open_dataset(data)
+        
+        self.data = _data
         self.variables = list(self.data.var().variables)
 
 
     def spatial_integration(self, start_time=None, end_time=None):
-        """Return a dataframe of total global and regional sinks at a specific time point or a range of time points.
+        """Returns a pd.DataFrame of total global and regional sinks at a specific time point or a range of time points.
         The regions are split into land and ocean and are latitudinally split as follows:
         90 degN to 23 degN, 23 degN to 23 degS and 23 degS to 90 degS.
         Globally integrated fluxes are also included for each of land and ocean.
@@ -202,11 +206,12 @@ class TheDataFrame:
         
         return df_whole_time
     
-    def single_time_output(self, time):
+    def single_time_output(self, fname, time):
         """ Writes a text file of spatially integrated regional fluxes at a specific time point.
 
         Parameters
         ----------
+        fname: Name of the file to be written.
         time: Must be a single date string in the format %Y-%M.
         
         """
@@ -220,10 +225,9 @@ class TheDataFrame:
         month_index = np.where(time_month == time_indices[year_index,1][0])[0][0]
         time_index = year_index[0][month_index]
 
-        output = open("single_time_output.txt", "w")
+        output = open(fname, "w")
         output.write(
-
-            "Data path: " + self.data_path + "\n\n"
+            
             "Time: " + str(df.loc[time_index,'time']) + "\n\n"
             "Earth Land Total Sink: " + str(df.loc[time_index,'earth_land_total']) +" GtC\n"
             "South Land Total Sink: " + str(df.loc[time_index,'south_land_total']) +" GtC\n"
