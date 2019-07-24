@@ -5,6 +5,7 @@ Run this script is run from the shell. """
 
 import sys
 import inv_flux
+import pickle
 
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
@@ -13,6 +14,9 @@ from matplotlib.ticker import MaxNLocator
 if __name__ == "__main__":
     input_file = sys.argv[1]
     output_file = sys.argv[2]
+    
+    if input_file.endswith(".pickle"):
+        input_file = pickle.load(open(input_file, 'rb'))
     
     df = inv_flux.TheDataFrame(data=input_file)
     
@@ -28,7 +32,7 @@ if __name__ == "__main__":
         plt.title("Annual Global Land Flux")
         plt.xlabel("Year")
         plt.ylabel("C flux to the atmosphere (GtC/yr)")
-        plt.ylim([-5,11])
+        plt.ylim([-15,0])
         plt.savefig(sys.argv[3])
     if len(sys.argv) > 4:
         plt.clf()
@@ -38,6 +42,8 @@ if __name__ == "__main__":
         plt.title("Annual Global Ocean Flux")
         plt.xlabel("Year")
         plt.ylabel("C flux to the atmosphere (GtC/yr)")
-        plt.ylim([-5,2])
+        plt.ylim([-15,0])
         plt.savefig(sys.argv[4])
+    
+    print("Files created successfully.")
 
