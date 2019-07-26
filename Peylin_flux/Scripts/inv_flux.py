@@ -2,6 +2,7 @@ import numpy as np
 import xarray as xr
 import sys
 import pandas as pd
+import pickle
 
 
 
@@ -66,6 +67,12 @@ class TheDataFrame:
         """ Initialise an instance of an TheDataFrame. """
         if isinstance(data, xr.Dataset) or isinstance(data, xr.DataArray):
             _data = data
+        elif type(data) == str and data.endswith('.pickle'):
+            read_file = open(data, 'rb')
+            _data = pickle.load(read_file)
+            if not (isinstance(_data, xr.Dataset) or isinstance(_data, xr.DataArray)):
+                raise TypeError("Pickle object must be of type xr.Dataset or xr.DataArray.")
+            
         else:
             _data = xr.open_dataset(data)
         
