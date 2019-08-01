@@ -150,7 +150,20 @@ class TheDataFrame:
                                               np.sum(1e-15*earth_ocean_sink[lat>23])])
 
 
-        return total_values.reset_index(drop=True)
+        da = total_values.reset_index(drop=True)
+        
+        ds = xr.Dataset({'Earth_Land': (('time'), da.iloc[:,1]),
+                         'South_Land': (('time'), da.iloc[:,2]),
+                         'Tropical_Land': (('time'), da.iloc[:,3]),
+                         'North_Land': (('time'), da.iloc[:,4]),
+                         'Earth_Ocean': (('time'), da.iloc[:,5]),
+                         'South_Ocean': (('time'), da.iloc[:,6]),
+                         'Tropical_Ocean': (('time'), da.iloc[:,7]),
+                         'North_Ocean': (('time'), da.iloc[:,8])},
+                        coords={'time': (('time'), da['time'])}
+          )
+        
+        return ds
 
 
     def year_integration(self):
