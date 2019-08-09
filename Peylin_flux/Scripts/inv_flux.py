@@ -80,7 +80,7 @@ class TheDataFrame:
 
 
     def spatial_integration(self, start_time=None, end_time=None):
-        """Returns a pd.DataFrame of total global and regional sinks at a specific time point or a range of time points.
+        """Returns a xr.Dataset of total global and regional sinks at a specific time point or a range of time points.
         The regions are split into land and ocean and are latitudinally split as follows:
         90 degN to 23 degN, 23 degN to 23 degS and 23 degS to 90 degS.
         Globally integrated fluxes are also included for each of land and ocean.
@@ -98,10 +98,9 @@ class TheDataFrame:
         
         df = self.data
 
-        columns = ['time',
-                   'earth_land_total', 'south_land_total', 'trop_land_total', 'north_land_total',
-                   'earth_ocean_total','south_ocean_total', 'trop_ocean_total','north_ocean_total']
-        total_values = pd.DataFrame(columns=columns)
+        values = {'Time':[],
+                  'Earth_Land':[], 'South_Land':[], 'Tropical_Land':[], 'North_Land':[],
+                  'Earth_Ocean':[],'South_Ocean':[], 'Tropical_Ocean':[],'North_Ocean':[]}
 
         if start_time == None:
             start_time = df.time.values[0].strftime('%Y-%m')
@@ -139,128 +138,26 @@ class TheDataFrame:
             earth_land_sink = earth_grid_area*earth_land_flux
             earth_ocean_sink = earth_grid_area*earth_ocean_flux
 
-            total_values.loc[index,:] = np.array([df.sel(time=time_point).time.values[0],
-                                              np.sum(1e-15*earth_land_sink),
-                                              np.sum(1e-15*earth_land_sink[lat<-23]),
-                                              np.sum(1e-15*earth_land_sink[(lat>-23) & (lat<23)]),
-                                              np.sum(1e-15*earth_land_sink[lat>23]),
-                                              np.sum(1e-15*earth_ocean_sink),
-                                              np.sum(1e-15*earth_ocean_sink[lat<-23]),
-                                              np.sum(1e-15*earth_ocean_sink[(lat>-23) & (lat<23)]),
-                                              np.sum(1e-15*earth_ocean_sink[lat>23])])
-
-
-        da = total_values.reset_index(drop=True)
+            values['Time'].append(df.sel(time=time_point).time.values[0])
+            values['Earth_Land'].append(np.sum(1e-15*earth_land_sink))
+            values['South_Land'].append(np.sum(1e-15*earth_land_sink[lat<-23]))
+            values['Tropical_Land'].append(np.sum(1e-15*earth_land_sink[(lat>-23) & (lat<23)]))
+            values['North_Land'].append(np.sum(1e-15*earth_land_sink[lat>23]))
+            values['Earth_Ocean'].append(np.sum(1e-15*earth_ocean_sink))
+            values['South_Ocean'].append(np.sum(1e-15*earth_ocean_sink[lat<-23]))
+            values['Tropical_Ocean'].append(np.sum(1e-15*earth_ocean_sink[(lat>-23) & (lat<23)]))
+            values['North_Ocean'].append(np.sum(1e-15*earth_ocean_sink[lat>23]))
+            
         
-        ds = xr.Dataset({'Earth_Land': (('time'), da.iloc[:,1]),
-                         'South_Land': (('time'), da.iloc[:,2]),
-                         'Tropical_Land': (('time'), da.iloc[:,3]),
-                         'North_Land': (('time'), da.iloc[:,4]),
-                         'Earth_Ocean': (('time'), da.iloc[:,5]),
-                         'South_Ocean': (('time'), da.iloc[:,6]),
-                         'Tropical_Ocean': (('time'), da.iloc[:,7]),
-                         'North_Ocean': (('time'), da.iloc[:,8])},
-                        coords={'time': (('time'), da['time'])}
+        ds = xr.Dataset({'Earth_Land': (('time'), values['Earth_Land']),
+                         'South_Land': (('time'), values['South_Land']),
+                         'Tropical_Land': (('time'), values['Tropical_Land']),
+                         'North_Land': (('time'), values['North_Land']),
+                         'Earth_Ocean': (('time'), values['Earth_Ocean']),
+                         'South_Ocean': (('time'), values['South_Ocean']),
+                         'Tropical_Ocean': (('time'), values['Tropical_Ocean']),
+                         'North_Ocean': (('time'), values['North_Ocean'])},
+                        coords={'time': (('time'), values['Time'])}
           )
         
         return ds
-
-
-    def year_integration(self):
-        """ Returns a pd.DataFrame with yearly integrated regional fluxes. """
-        
-        df = self.spatial_integration()
-
-        min_year = df.time[0].year
-        max_year = df.time[df.time.size-1].year
-
-        df_year = pd.DataFrame(columns= 
-                               ['Year',
-                                'earth_land_total', 'south_land_total', 'trop_land_total', 'north_land_total',
-                                'earth_ocean_total','south_ocean_total', 'trop_ocean_total','north_ocean_total']
-                              )
-
-        for (j,year) in enumerate(range(min_year, max_year+1)):
-            index = []
-            for (i,time) in enumerate(df.time):
-                if time.year == year:
-                    index.append(i)
-            df_year.loc[j,:] = df.iloc[index,1:].sum()
-
-        df_year['Year'] = range(min_year, max_year+1)
-        
-        return df_year
-
-
-    def decade_integration(self):
-        """ Returns a pd.DataFrame with decadal integrated regional fluxes. """
-        
-        df = self.spatial_integration()
-
-        min_decade = int(df.time[0].year/10)*10
-        max_decade = int(df.time[df.time.size-1].year/10)*10
-
-        df_decade = pd.DataFrame(columns= 
-                               ['Decade',
-                                'earth_land_total', 'south_land_total', 'trop_land_total', 'north_land_total',
-                                'earth_ocean_total','south_ocean_total', 'trop_ocean_total','north_ocean_total']
-                              )
-
-        for (j,decade) in enumerate(range(min_decade, max_decade+10,10)):
-            index = []
-            for (i,time) in enumerate(df['time']):
-                if time.year in range(decade, decade+10):
-                    index.append(i)
-            df_decade.loc[j,:] = df.iloc[index,1:].sum()
-
-        df_decade['Decade'] = range(min_decade, max_decade+10,10)
-        return df_decade
-
-
-    def whole_time_integration(self):
-        """ Returns a pd.DataFrame with regional fluxes integrated through the entire time period. """
-        
-        df = self.spatial_integration()
-        
-        df_whole_time = pd.DataFrame(columns=
-                                     ['earth_land_total', 'south_land_total', 'trop_land_total', 'north_land_total',
-                                      'earth_ocean_total','south_ocean_total', 'trop_ocean_total','north_ocean_total']
-                                    )
-        df_whole_time.loc[0,:] = df.iloc[:,1:].sum()
-        
-        return df_whole_time
-    
-    def single_time_output(self, fname, time):
-        """ Writes a text file of spatially integrated regional fluxes at a specific time point.
-
-        Parameters
-        ----------
-        fname: Name of the file to be written.
-        time: Must be a single date string in the format %Y-%M.
-        
-        """
-        
-        df = self.spatial_integration()
-        
-        time_year = int(time[:4])
-        time_month = int(time[-2:])
-        time_indices = np.array([(datetime.year, datetime.month) for i,datetime in enumerate(df.time.values)])
-        year_index = np.where(time_year == time_indices[:,0])
-        month_index = np.where(time_month == time_indices[year_index,1][0])[0][0]
-        time_index = year_index[0][month_index]
-
-        output = open(fname, "w")
-        output.write(
-            
-            "Time: " + str(df.loc[time_index,'time']) + "\n\n"
-            "Earth Land Total Sink: " + str(df.loc[time_index,'earth_land_total']) +" GtC\n"
-            "South Land Total Sink: " + str(df.loc[time_index,'south_land_total']) +" GtC\n"
-            "Tropical Land Total Sink: " + str(df.loc[time_index,'trop_land_total']) +" GtC\n"
-            "North Land Total Sink: " + str(df.loc[time_index,'north_land_total']) +" GtC\n\n"
-            "Earth Ocean Total Sink: " + str(df.loc[time_index,'earth_ocean_total']) +" GtC\n"
-            "South Ocean Total Sink: " + str(df.loc[time_index,'south_ocean_total']) +" GtC\n"
-            "Tropical Ocean Total Sink: " + str(df.loc[time_index,'trop_ocean_total']) +" GtC\n"
-            "North Ocean Total Sink: " + str(df.loc[time_index,'north_ocean_total']) +" GtC\n"
-        )
-        output.close()
-
