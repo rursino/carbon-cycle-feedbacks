@@ -5,7 +5,8 @@ Run this script is run from the shell. """
 
 import sys
 import inv_flux
-import pickle
+import xarray as xr
+import pandas as pd
 
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
@@ -18,32 +19,42 @@ if __name__ == "__main__":
     if input_file.endswith(".pickle"):
         input_file = pickle.load(open(input_file, 'rb'))
     
-    df = inv_flux.TheDataFrame(data=input_file)
+    ds = inv_flux.TheDataFrame(data=input_file)
     
     # For plotting land and ocean fluxes (global, yearly).
-    df_year = df.year_integration()
-    output_df = df_year[['Year', 'earth_land_total', 'earth_ocean_total']]
-    output_df.to_csv(output_file, index=False) # Save dataframe as a csv file.
+    ds_year = ds.spatial_integration().resample({'time': 'Y'}).sum()
+    
+    year_array = [year.year for year in ds_year.time.values]
+    
+    df = pd.DataFrame({'Earth_Land': ds_year.Earth_Land.values,
+                       'Earth_Ocean': ds_year.Earth_Ocean.values,
+                       'Year': year_array
+                      }).set_index('Year')
+    
+    df.to_csv(output_file) # Save dataframe as a csv file.
+    print("Successfully saved file {}".format(output_file))
     
     if len(sys.argv) > 3:
         ax = plt.figure().gca()
-        ax.plot(output_df.Year, output_df.earth_land_total)
+        ax.plot(df.index, df.Earth_Land)
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.title("Annual Global Land Flux")
         plt.xlabel("Year")
         plt.ylabel("C flux to the atmosphere (GtC/yr)")
-        plt.ylim([-15,0])
+        plt.ylim([-5,11])
         plt.savefig(sys.argv[3])
+        print("Successfully saved plot {}".format(sys.argv[3]))
     if len(sys.argv) > 4:
         plt.clf()
         ax = plt.figure().gca()
-        ax.plot(output_df.Year, output_df.earth_ocean_total)
+        ax.plot(df.index, df.Earth_Ocean)
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.title("Annual Global Ocean Flux")
         plt.xlabel("Year")
         plt.ylabel("C flux to the atmosphere (GtC/yr)")
-        plt.ylim([-15,0])
+        plt.ylim([-5,2])
         plt.savefig(sys.argv[4])
+        print("Successfully saved plot {}".format(sys.argv[4]))
     
     print("Files created successfully.")
 

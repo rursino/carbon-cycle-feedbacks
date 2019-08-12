@@ -18,9 +18,9 @@ if __name__ == "__main__":
     df = inv_flux.TheDataFrame(data=input_file)
     
     df_spatial = df.spatial_integration()
-    df_year = df.year_integration()
-    df_decade = df.decade_integration()
-    df_whole = df.whole_time_integration()
+    df_year = df_spatial.resample({'time': 'Y'}).sum()
+    df_decade = df_spatial.resample({'time': '10Y'}).sum()
+    df_whole = df_spatial.sum()
     
     
     try:
@@ -33,14 +33,14 @@ if __name__ == "__main__":
     
     
     # Output files after directory successfully created.
-    pickle.dump(df_spatial, open("{}/spatial.pickle".format(output_folder), "wb"))
-    print ("Successfully created %s/spatial.pickle " % output_folder)
+    pickle.dump(df_spatial, open("{}/spatial.pik".format(output_folder), "wb"))
+    print ("Successfully created %s/spatial.pik " % output_folder)
     
-    pickle.dump(df_year, open("{}/year.pickle".format(output_folder), "wb"))
-    print ("Successfully created %s/year.pickle " % output_folder)
+    pickle.dump(df_year, open("{}/year.pik".format(output_folder), "wb"))
+    print ("Successfully created %s/year.pik " % output_folder)
     
-    pickle.dump(df_decade, open("{}/decade.pickle".format(output_folder), "wb"))
-    print ("Successfully created %s/decade.pickle " % output_folder)
+    pickle.dump(df_decade, open("{}/decade.pik".format(output_folder), "wb"))
+    print ("Successfully created %s/decade.pik" % output_folder)
     
-    pickle.dump(df_whole, open("{}/whole_time.pickle".format(output_folder), "wb"))
-    print ("Successfully created %s/whole_time.pickle " % output_folder)
+    pickle.dump(df_whole, open("{}/whole_time.pik".format(output_folder), "wb"))
+    print ("Successfully created %s/whole_time.pik" % output_folder)
