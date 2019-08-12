@@ -41,7 +41,7 @@ if __name__ == "__main__":
         plt.title("Annual Global Land Flux")
         plt.xlabel("Year")
         plt.ylabel("C flux to the atmosphere (GtC/yr)")
-        plt.ylim([-5,11])
+        plt.ylim([-5,2])
         plt.savefig(sys.argv[3])
         print("Successfully saved plot {}".format(sys.argv[3]))
     if len(sys.argv) > 4:
@@ -52,7 +52,7 @@ if __name__ == "__main__":
         plt.title("Annual Global Ocean Flux")
         plt.xlabel("Year")
         plt.ylabel("C flux to the atmosphere (GtC/yr)")
-        plt.ylim([-5,2])
+        plt.ylim([-4,2])
         plt.savefig(sys.argv[4])
         print("Successfully saved plot {}".format(sys.argv[4]))
     
