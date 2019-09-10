@@ -54,8 +54,7 @@ def earth_area_grid(lats,lons):
 
 class TheDataFrame:
     """ This class takes an instance of the netCDF datasets from the Peylin_flux/data folder.
-    It provides features to analyse the carbon flux data from the netCDF files,
-    including the integration of fluxes on spatial and temporal scales.
+    It provides features to prepare the datasets for compatibility for the functions in the inv.Analysis class. This includes the integration of fluxes on spatial and temporal scales and conversion of cfdatetime time objects to datetime.
     
     Parameters
     ----------
@@ -78,7 +77,7 @@ class TheDataFrame:
         
         self.data = _data
 
-
+    
     def spatial_integration(self, start_time=None, end_time=None):
         """Returns a xr.Dataset of total global and regional sinks at a specific time point or a range of time points.
         The regions are split into land and ocean and are latitudinally split as follows:
@@ -161,4 +160,68 @@ class TheDataFrame:
           )
         
         return ds
+    
+    def cftime_to_datetime(self, format='%Y-%m'):
+    """Takes a xr.Dataset with cftime values and converts them into datetimes.
+    
+    Variables
+    ---
+    self: xr.Dataset.
+    format: format of datetime.
+    ---
+    """
+    
+    time_list = []
+    for time in self.time.values:
+        time_value = datetime.strptime(time.strftime('%Y-%m'), '%Y-%m')
+        time_list.append(time_value)
+    
+    return self.assign_coords(time=time_list)
 
+
+class Analysis:
+    """ This class takes an instance of spatially and/or temporally integrated datasets and provides
+    analysis and visualisations on the data as required, including linear regression over whole and
+    decadal periods and ...
+    
+    Parameters
+    ----------
+    data: an instance of an xarray.Dataset.
+    
+    """
+
+    def __init__(self, data):
+        self.data = data
+    
+    def plot_all(self):
+        """ Displays a set of subplots of each variable in self dataset.
+        """
+        return self.data.plot()
+    
+    def linear_regression_whole(self, variable, coord="time"):
+        """ Displays a plot of variable chosen from dataset with coordinate time or CO2 and its linear regression over the whole period.
+        
+        Parameters
+        ----------
+        variable: variable to regress.
+        coord: coordinate of variable to regress.
+        
+        """
+        
+        x=np.array(self.data[coord].values)
+        y=np.array(self.data[variable].values)
+        
+        reg_land = stats.linregress(x, y)
+        slope_land = reg_land[0]
+        intercept_land = reg_land[1]
+
+        line = slope_land*x+intercept_land
+
+        self.data[variable].plot()
+        plt.plot(x, line, color ='r')
+        
+        return reg_land
+        
+        
+    def linear_regression_decadal():
+        return self.data
