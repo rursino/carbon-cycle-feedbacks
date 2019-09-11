@@ -3,7 +3,8 @@ import xarray as xr
 import sys
 import pandas as pd
 import pickle
-
+from datetime import datetime
+from scipy import stats
 
 
 
@@ -162,21 +163,21 @@ class TheDataFrame:
         return ds
     
     def cftime_to_datetime(self, format='%Y-%m'):
-    """Takes a xr.Dataset with cftime values and converts them into datetimes.
-    
-    Variables
-    ---
-    self: xr.Dataset.
-    format: format of datetime.
-    ---
-    """
-    
-    time_list = []
-    for time in self.time.values:
-        time_value = datetime.strptime(time.strftime('%Y-%m'), '%Y-%m')
-        time_list.append(time_value)
-    
-    return self.assign_coords(time=time_list)
+        """Takes a xr.Dataset with cftime values and converts them into datetimes.
+
+        Parameters
+        ----------
+        self: xr.Dataset.
+        format: format of datetime.
+        ----------
+        """
+
+        time_list = []
+        for time in self.data.time.values:
+            time_value = datetime.strptime(time.strftime('%Y-%m'), '%Y-%m')
+            time_list.append(time_value)
+
+        return self.data.assign_coords(time=time_list)
 
 
 class Analysis:
@@ -193,10 +194,30 @@ class Analysis:
     def __init__(self, data):
         self.data = data
     
+    
+    def cftime_to_datetime(self, format='%Y-%m'):
+        """Takes a xr.Dataset with cftime values and converts them into datetimes.
+
+        Parameters
+        ----------
+        self: xr.Dataset.
+        format: format of datetime.
+        ----------
+        """
+
+        time_list = []
+        for time in self.data.time.values:
+            time_value = datetime.strptime(time.strftime('%Y-%m'), '%Y-%m')
+            time_list.append(time_value)
+
+        return self.data.assign_coords(time=time_list)
+
+
     def plot_all(self):
         """ Displays a set of subplots of each variable in self dataset.
         """
         return self.data.plot()
+    
     
     def linear_regression_whole(self, variable, coord="time"):
         """ Displays a plot of variable chosen from dataset with coordinate time or CO2 and its linear regression over the whole period.
