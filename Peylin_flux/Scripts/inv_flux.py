@@ -3,6 +3,7 @@ import xarray as xr
 import sys
 import pandas as pd
 import pickle
+import matplotlib.pyplot as plt
 from datetime import datetime
 from scipy import stats
 
@@ -207,7 +208,7 @@ class Analysis:
 
         time_list = []
         for time in self.data.time.values:
-            time_value = datetime.strptime(time.strftime('%Y-%m'), '%Y-%m')
+            time_value = datetime.strptime(time.strftime(format), format)
             time_list.append(time_value)
 
         return self.data.assign_coords(time=time_list)
@@ -229,7 +230,12 @@ class Analysis:
         
         """
         
-        x=np.array(self.data[coord].values)
+#         year_list = []
+#         for year in year_list:
+#             year_list.append(float(year.strftime(format='%Y')))
+#         year_list = np.array(Rayner_year)
+        
+        x=np.array(list(np.arange(1992,2013)))
         y=np.array(self.data[variable].values)
         
         reg_land = stats.linregress(x, y)
