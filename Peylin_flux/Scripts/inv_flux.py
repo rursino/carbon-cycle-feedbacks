@@ -220,28 +220,38 @@ class Analysis:
         return self.data.plot()
     
     
-    def linear_regression(self, x, variable, coord="time", save_plot=False):
+    def linear_regression_time(self, time, variable, save_plot=False):
         """ Displays a plot of variable chosen from dataset with coordinate time or CO2 and its linear regression over the whole period.
         
         Parameters
         ----------
-        x: range or np.arange like objects.
+        time: list of np.array objects of datetime values.
         variable: variable to regress.
-        coord: coordinate of variable to regress.
+        save_plot: save the plot as a jpg file.
         
         """
         
+        def time_list(t):
+            x = []
+            for year in t:
+                x.append(int(year.astype('str')[:4]))
+            return np.array(x)
         
-        y=self.data[variable].values
+        plt.plot(time_list(self.data['time'].values), self.data[variable])
+        plt.title(f'Linear regression: {variable}')
         
-        regression = stats.linregress(x, y)
-        slope = regression[0]
-        intercept = regression[1]
+        regression_list = []
+        for period in time:
+            x = time_list(period)
+            y=self.data[variable].sel({'time': period}).values
 
-        line = slope*x+intercept
+            regression = stats.linregress(x, y)
+            slope = regression[0]
+            intercept = regression[1]
+#             regression_list[period] = regression
+
+            line = slope*x+intercept
+
+            plt.plot(x, line) 
         
-        plt.plot(x, y)
-        plt.plot(x, line)
-        plt.title('Linear regression of 
-        
-        return regression
+        return regression_list
