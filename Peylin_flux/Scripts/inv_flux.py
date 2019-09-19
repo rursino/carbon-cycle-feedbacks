@@ -203,7 +203,7 @@ class Analysis:
         ----------
         self: xr.Dataset.
         format: format of datetime.
-        ----------
+        
         """
 
         time_list = []
@@ -220,35 +220,28 @@ class Analysis:
         return self.data.plot()
     
     
-    def linear_regression_whole(self, variable, coord="time"):
+    def linear_regression(self, x, variable, coord="time", save_plot=False):
         """ Displays a plot of variable chosen from dataset with coordinate time or CO2 and its linear regression over the whole period.
         
         Parameters
         ----------
+        x: range or np.arange like objects.
         variable: variable to regress.
         coord: coordinate of variable to regress.
         
         """
         
-#         year_list = []
-#         for year in year_list:
-#             year_list.append(float(year.strftime(format='%Y')))
-#         year_list = np.array(Rayner_year)
         
-        x=np.array(list(np.arange(1992,2013)))
-        y=np.array(self.data[variable].values)
+        y=self.data[variable].values
         
-        reg_land = stats.linregress(x, y)
-        slope_land = reg_land[0]
-        intercept_land = reg_land[1]
+        regression = stats.linregress(x, y)
+        slope = regression[0]
+        intercept = regression[1]
 
-        line = slope_land*x+intercept_land
-
-        self.data[variable].plot()
-        plt.plot(x, line, color ='r')
+        line = slope*x+intercept
         
-        return reg_land
+        plt.plot(x, y)
+        plt.plot(x, line)
+        plt.title('Linear regression of 
         
-        
-    def linear_regression_decadal():
-        return self.data
+        return regression
