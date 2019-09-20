@@ -225,7 +225,7 @@ class Analysis:
         
         Parameters
         ----------
-        time: list of np.array objects of datetime values.
+        time: dictionary of np.array objects of datetime values.
         variable: variable to regress.
         save_plot: save the plot as a jpg file.
         
@@ -240,18 +240,21 @@ class Analysis:
         plt.plot(time_list(self.data['time'].values), self.data[variable])
         plt.title(f'Linear regression: {variable}')
         
-        regression_list = []
-        for period in time:
-            x = time_list(period)
-            y=self.data[variable].sel({'time': period}).values
+        regression_list = {}
+        for period in time.keys():
+            x = time_list(time[period])
+            y=self.data[variable].sel({'time': time[period]}).values
 
             regression = stats.linregress(x, y)
             slope = regression[0]
             intercept = regression[1]
-#             regression_list[period] = regression
+            regression_list[period] = regression
 
             line = slope*x+intercept
 
-            plt.plot(x, line) 
+            plt.plot(x, line)
+        
+        if save_plot:
+            plt.savefig("./test.png")
         
         return regression_list
