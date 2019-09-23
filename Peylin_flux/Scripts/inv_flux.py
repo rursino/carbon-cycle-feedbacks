@@ -212,12 +212,6 @@ class Analysis:
             time_list.append(time_value)
 
         return self.data.assign_coords(time=time_list)
-
-
-    def plot_all(self):
-        """ Displays a set of subplots of each variable in self dataset.
-        """
-        return self.data.plot()
     
     
     def linear_regression_time(self, time, variable, save_plot=False):
