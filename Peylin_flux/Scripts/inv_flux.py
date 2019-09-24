@@ -231,8 +231,12 @@ class Analysis:
                 x.append(int(year.astype('str')[:4]))
             return np.array(x)
         
-        plt.plot(time_list(self.data['time'].values), self.data[variable])
-        plt.title(f'Linear regression: {variable}')
+        years=time_list(self.data['time'].values)
+        plt.plot(years, self.data[variable])
+        plt.title(f'{variable} Uptake with decadal trends')
+        plt.xlabel('Year')
+        plt.ylabel('C flux to the atmosphere (GtC/yr)')
+        plt.xticks(np.arange(years[0], years[-1], 5))
         
         regression_list = {}
         for period in time.keys():
@@ -248,7 +252,7 @@ class Analysis:
 
             plt.plot(x, line)
         
-        if save_plot:
-            plt.savefig("./test.png")
+        if type(save_plot)==str:
+            plt.savefig(save_plot)
         
         return regression_list

@@ -18,4 +18,3 @@ python output_all.py $CTRACKER ./../Output/CTRACKER_all/
 python output_all.py $JAMSTEC ./../Output/JAMSTEC_all/
 python output_all.py $JENA_s76 ./../Output/JENA_s76_all/
 python output_all.py $JENA_s85 ./../Output/JENA_s85_all/
-

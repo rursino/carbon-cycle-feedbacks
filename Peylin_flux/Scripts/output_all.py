@@ -12,7 +12,7 @@ if __name__ == "__main__":
     input_file = sys.argv[1]
     output_folder = sys.argv[2]
     
-    if input_file.endswith(".pickle"):
+    if input_file.endswith(".pik"):
         input_file = pickle.load(open(input_file, 'rb'))
     
     df = inv_flux.TheDataFrame(data=input_file)
