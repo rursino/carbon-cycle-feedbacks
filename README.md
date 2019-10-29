@@ -1,2 +1,7 @@
-# masters_project
-Repository of the work related to my MSc Thesis.
+# carbon-cycle-feedbacks.
+
+This repository contains the source code and data for the completion of my Master of Science (Atmospheric Sciences) research thesis, titled "Analysing trends in the climate-carbon cycle feedbacks and its drivers from observations" (@ The University of Melbourne).
+
+## Abstract
+
+Emissions of carbon dioxide (CO2) into the atmosphere are taken up by the biosphere and hydrosphere, regarded as carbon sinks or ‘uptake’. Two main feedback processes within the carbon cycle control the rate of carbon uptake: 1. The increase in CO2 concentrations enhances uptake, therefore the perturbed increase of concentrations is damped (β), and 2. The rise in the global mean surface temperature weakens uptake, therefore amplifying the perturbed increase in concentrations (γ). Quantifying β and γ on long-term timescales has been difficult to constrain, especially from C4MIP and CMIP5 modelled results (Friedlingstein et al., 2006, Arora et al., 2013). This project aims to analyse changes in the long-term trends of carbon uptake from the past and diagnose its response to the feedbacks β and γ. We will use observations from the Global Carbon Project (GCP, from 1959 to 2017) (Le Quéré et al., 2018), as well as 6 sets of atmospheric inversion model output (collectively ranging from 1976 to 2017) as observations. So far, linear regression analysis of GCP land and ocean uptake has shown that the gradient of consecutive 10-year trends from 1959-2017 is slowly decreasing. This indicates a deceleration of carbon uptake over the long-term. These results are currently being analysed for robustness. A deceleration of carbon uptake could be a response to a slowing of β and/or a strengthening of γ over the last six decades.
