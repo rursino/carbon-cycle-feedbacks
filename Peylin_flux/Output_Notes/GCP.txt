@@ -1,0 +1,8 @@
+1.1 Overview / Introduction about the Global Carbon Project
+
+1.2 Description and history of fluxes
+
+1.3 Results
+1.3.1 Uptake timeseries
+1.3.2 Rolling gradient
+1.3.3 Spectral Analysis and significance
