@@ -1,0 +1,12 @@
+1.1 Overview / Introduction about inversion models (inc. definition)
+
+1.2 Description of each inversion model
+[time periods]
+[any other differences]
+
+1.3 Model evaluation against observations (GCP)
+
+1.4 Results
+1.4.1 Uptake timeseries
+1.4.2 Rolling gradient
+1.4.3 Spectral Analysis and significance

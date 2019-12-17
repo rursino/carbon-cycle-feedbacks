@@ -1,3 +1,6 @@
+[Refer to GCP 2018 for full details about GCP. Sections 1.1 and 1.2 provide a brief description that are to be included in the thesis.]
+[Rayner believes that most of the GCP results are final, so writing results here will likely be included in the thesis without too much change b/w now and submission.]
+
 1.1 Overview / Introduction about the Global Carbon Project
 
 1.2 Description and history of fluxes

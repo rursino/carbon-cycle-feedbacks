@@ -1,35 +1,51 @@
 1.1 Overview / Introduction
 
-1.2 Basic Timeseries Analysis
+1.2 Models and observations
+- The "truth" or observations of land and ocean carbon uptake used for this project will be from the Global Carbon Project (GCB). Analyses will need to be conducted on these datasets first before it can be done on any models that try to replicate the observational data.
+- There are also 6 sets of inversion model output of global land and ocean uptake. These outputs will need to be compared to observations (which are the GCP uptakes) for the following analyses before classifying them as robust enough to conduct analysis using the same methods as used for the GCP.
+- The advantages to using the inversion models over the GCP is that the models provide monthly data, whereas the GCP only provide annual resolution. This means that there are 12 times more data points available for analysis, however, the seasonality of the monthly data will need to be removed successfully first.
+- Together, there will be seven sets of analyses (one truth + 6 models) which its results can be compared to try and determine a multi-model result (and that can be compared to GCP).
 
+1.3 Basic Timeseries Analysis
 - Of most significance here is to look at the land and ocean carbon uptake timeseries (observations - GCP) and discuss the most important timescales, which is seasonal, interannual, decadal and long-term, as well as the differences between each of the timescales when analysing uptake.
 - For example, [this is more of a point in the Introduction or early in the Results] while there is large interannual variability, it is shown clearly that there is a long-term increase in both land and ocean uptake over the last 60 years and this increase can be clearly explained by physical drivers (CO2 fertilisation effect).
 - [also a point to go in the early part of Results] Then compare the uptake of the inversion models to show that the trend over the whole time period is consistent with GCP observations. The mean of the timeseries is not important, but it is worth noting that the shift in the mean ocean uptake in Rayner's model is *possibly* due to an error made during the inversion or its output.
 
 
-1.3 Rolling gradient analysis
+1.4 Rolling gradient analysis
+[The following definition and explanation of "rolling gradient analysis" needs work. Understandably however, this analysis is not commonly applied and therefore is not clearly defined in statistical analysis.]
+The "rolling gradient" describes the behaviour/trend of the linear slope of carbon uptake for a specified window of time (e.g. the trend of the 10-year slope of land uptake).
 
-1.4 Deseasonalisation and low-pass filtering
-1.4.1 Monthly vs. annual temporal resolution of carbon uptake fluxes
+The "rolling gradient" analysis takes the trend for a window of time (or period) from the first set of years and increment the window by one year until the last set of years is reached, or in other words, "roll" with the windows to get the trend.\
+
+The size of the window is not fixed and many can be chosen. The best sizes are 10 and 25 year windows.
+
+The analysis intends to determine how the long-term trend of carbon uptake changes year by year. Effectively, it is the "trend of the trend" and can be seen as the accerelation of uptake, but for linear trend analysis rather than taking the derivative. This is useful for looking at uptake as the idea is to analyse the long-term trend of uptake, rather than its "derivative" behaviour.
+
+The rolling gradient can be plotted as a timeseries and its behaviour can be interpreted by taking a linear fit over the whole period to determine the net acceralation of uptake. If the linear fit slope is positive, then it shows that uptake is accerelating over the whole period. If the linear fit is negative, then uptake is deceralating over the whole period.
+
+
+1.5 Deseasonalisation and low-pass filtering
+1.5.1 Monthly vs. annual temporal resolution of carbon uptake fluxes
 - Annual fluxes do not provide a high enough temporal resolution to conduct analyses to determine the long-term trends of carbon uptake.
 - Monthly fluxes increase the temporal resolution 12 times over, providing much more capability to analyse uptake and determine long-term trends.
 - Monthly fluxes of land carbon uptake contain large seasonal (less than one year) variability which makes it difficult to dissect the long-term trends. This is not a problem for oceanic fluxes.
 - We can remove these variabilities to enable the usefulness of monthly data.
 
 
-1.4.2 Deseasonalisation technique
+1.5.2 Deseasonalisation technique
 - Deseasonalisation can provide an easy and efficient way of removing the seasonal variabilities in land fluxes by removing the mean of each month in all the values.
 - [Explain mathematically and qualitatively how it works].
 - Spectral analysis (power spectral density) of land uptake with and without the deseasonalisation shows clearly the removal of the frequencies in the timeseries (exactly the ones we wanted to remove - 12 month and the others which is 6 and 3 months)
 [show plot in low-pass-filter.ipynb].
 
 
-1.5 Spectral Analysis
+1.6 Spectral Analysis
 - Use welch method to obtain periodogram of timeseries and therefore a power spectral density (PSD).
 - The higher the resolution, the better the sampling frequencies and therefore the more resolved the PSD will be. Hence, must use either deseasonaliation or low-pass-filter on the land fluxes before applying spectral analysis.
 
 
-1.6 Beta and Gamma feedbacks and equations
+1.7 Beta and Gamma feedbacks and equations
 - [Explain beta and gamma - already completed in the Lit Review although needs some touches].
 - Trends in uptake will be analysed through the use of a set of two equations in Friedlingstein2003:
     - (Land,Ocean) dU = beta*dCO2 + gamma*dT
@@ -37,8 +53,7 @@
 - Another approach might be to take a non-linear fit and compare it to the long-term linear fit.
 - The use of the full equation means the application of a Ordinary Least Squares (OLS) regression. This would need to be applied on decadal timescales (or possibly could take the "rolling gradient approach" here).
 
-
-1.7 Linking climate and carbon feedbacks to radiative forcing
+1.8 Linking climate and carbon feedbacks to radiative forcing
 - [Introduction to topic and definition of key terms.]
 - [Explanation on how to do it]
 - [Significance]
