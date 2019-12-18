@@ -1,0 +1,43 @@
+[Refer to GCP 2019 (or 2018) for full details about GCP. Sections 1.1 and 1.2 provide a brief description that are to be included in the thesis.]
+[Rayner believes that most of the GCP results are final, so writing results here will likely be included in the thesis without too much change b/w now and submission.]
+
+Global Carbon Budget 2019: Friedlingstein2019
+Global Carbon Budget 2018: LeQuere2018
+
+1.1 Overview / Introduction about the Global Carbon Project
+The Global Carbon Project (GCP) is a project with an aim to provide two of the following:
+- global carbon budget estimates, including fossil fuel emissions, land use change emissions, land and ocean uptake, atmospheric growth and the budget imbalance.
+- a detailed description of the data sets and methodology used to compute the global carbon budget estimates for the industrial period, from 1750 to 2018, and in more detail since 1959.
+
+The GCP releases a paper every year with updates of the budget estimates.
+
+1.2 Description and history of fluxes
+The observations of carbon uptake in this study will be the GCP's carbon budget estimates from 1959 to 2018 (or 2017).
+Until recently, the GCP estimated annual land carbon sinks by taking the residual of the carbon budget of annual carbon fluxes, and treated it as observations.
+The GCP then changed its method of estimation by using an ensemble of Dynamical Global Vegetation Models (DGVMs) and classifying the residual of the budget as the imbalance of the budget.
+The land residual flux can still be estimated by simply adding the DGVM estimate of the flux to the budget imbalance.
+The land residual flux will be used in this study as it is classified as observations.
+
+1.3 Results
+The land and ocean carbon uptake fluxes from 1959 to 2018 has been analysed as a timeseries.
+Results from various analyses are shown below.
+
+1.3.1 Uptake timeseries
+(Figure 1)
+NOTE: Plots show carbon flux directed positive to the atmosphere, meaning that negative values indicate either a net positive sink or a positive uptake, and vice versa.
+
+- GCP data of land and ocean carbon fluxes shows a persisent increase from 1959 to 2017 on long-term scales, despite large interannual variability.
+This is expected because of the CO2 fertilisation effect, which is a dominant contributor of the behaviour of changes in carbon uptake, and the CO2 concentration levels have been increasing steadily.
+
+- Land carbon uptake displays large interannual variability (which can be quantified by conducting spectral analysis on the GCP timeseries, see section 1.3.3).
+The oceanic carbon uptake displays much less variability on interannual timescales.
+This is expected because vegetation is highly influenced by interannual climate variability, mainly ENSO. Oceanic uptake is not influenced by climate variability, at least on the same scale as land uptake.
+[Try "regressing" land and oceanic carbon uptake timeseries to see how correlated they are. Are they similar or are they influenced by separate contributors?]
+
+- What is important in looking at both the land and oceanic carbon uptake timeseries is the long-term change, rather than the interannual variability.
+This is despite interannual variability playing a significant part in behaviour of carbon uptake.
+
+1.3.2 Rolling gradient
+
+
+1.3.3 Spectral Analysis and significance
