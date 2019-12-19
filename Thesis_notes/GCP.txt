@@ -24,6 +24,7 @@ Results from various analyses are shown below.
 
 1.3.1 Uptake timeseries
 (Figure 1)
+Figure shows annual land and ocean carbon fluxes from 1959 to 2017 (change this to 2018).
 NOTE: Plots show carbon flux directed positive to the atmosphere, meaning that negative values indicate either a net positive sink or a positive uptake, and vice versa.
 
 - GCP data of land and ocean carbon fluxes shows a persisent increase from 1959 to 2017 on long-term scales, despite large interannual variability.
@@ -36,6 +37,24 @@ This is expected because vegetation is highly influenced by interannual climate 
 
 - What is important in looking at both the land and oceanic carbon uptake timeseries is the long-term change, rather than the interannual variability.
 This is despite interannual variability playing a significant part in behaviour of carbon uptake.
+
+(Figures 2a, 2b)
+Figure shows annual land and carbon uptake fluxes against corresponding annual CO2 concentrations.
+
+- CO2 concentrations axis is similar to time axis, noteably in that CO2 concentrations has always increased in the years 1959 to 2017.
+The only difference is that the increase is not by 1 unit but dilated higher. This stretches the uptake timeseries along the x axis.
+
+- Once again, the land flux shows large variability compared to oceanic flux.
+
+- R values are given and shown in Figure.
+The high r value for the ocean flux provides strong evidence that carbon uptake is indeed increasing over the last 60 years at a rate that is clearly consistent.
+It also shows that the interannual variability (or just variability) seen in land is not displayed in the ocean.
+The ocean flux could be used for many applications where the interannual variability would impede on the analysis and where it is not important where the uptake analysed should come from (land or ocean).
+The land flux has a weaker r value, but not weak (moderate). It is obvious that the interannual variability is the cause of this. The lower uncertainity associated with the ocean uptake means that we know that the land uptake is increasing steadily, despite containing the variability.
+
+- Since the r values represent the correlation between uptake and CO2 concentrations, it shows that there is a clear positive relationship between the two i.e. uptake is increasing with the increase in CO2 concentrations.
+There must still be a physical mechanism to explain the relationship. This is simply the CO2 fertilisation effect, which is a dominant influence on uptake.
+
 
 1.3.2 Rolling gradient
 
