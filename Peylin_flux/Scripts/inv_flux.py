@@ -5,7 +5,7 @@ import pandas as pd
 import pickle
 import matplotlib.pyplot as plt
 from datetime import datetime
-from scipy import stats
+from scipy import stats, signal
 
 
 
@@ -306,3 +306,42 @@ class Analysis:
 #             return roll_df, r_df            
 
         return roll_df
+
+
+    def psd(self, variable, fs, plot=False):
+        """ Calculates the power spectral density (psd) of a timeseries of a variable using the Welch method. Also provides the timeseries plot and psd plot if passed.
+        
+        Parameters
+        ----------
+        variable: carbon uptake variable to calculate psd.
+        plot: defaults to False. If assigned to True, shows two plots of timeseries and psd.
+        **kwargs: Keyword arguments for signal.welch function.
+        
+        """
+
+        if fs == 1:
+            period = " (months)"
+        elif fs == 12:
+            period = " (years)"
+        else:
+            period = ""
+        
+        x = self.data[variable]
+        freqs, spec = signal.welch(x.values, fs=fs)
+        
+        if plot:
+            plt.figure(figsize=(12,9))
+            
+            plt.subplot(211)
+            plt.plot(x.time.values, x.values)
+            
+            plt.subplot(212)
+            plt.semilogy(freqs, spec)
+            plt.gca().invert_xaxis()
+            plt.title(f"Power Spectrum of {variable}")
+            plt.xlabel(f"Period{period}")
+            plt.ylabel("Spectral Variance ((GtC/yr)$^2$.yr)")
+            
+            plt.show()
+
+        return pd.DataFrame({f"Period{period}": 1/freqs, "Spectral Variance ((GtC/yr)$^2$.yr)": spec}, index=freqs)
