@@ -345,3 +345,12 @@ class Analysis:
             plt.show()
 
         return pd.DataFrame({f"Period{period}": 1/freqs, "Spectral Variance ((GtC/yr)$^2$.yr)": spec}, index=freqs)
+    
+    def deseasonalise(self, x, y):
+        """ Deseasonalise a timeseries of a variable using a specific method (find name). function in low-pass-filtering notebook.
+        
+        
+        """
+    
+    def bandpass(self, ):
+        """ Band pass filtering (add again in low-pass-filter notebook and then on here).
