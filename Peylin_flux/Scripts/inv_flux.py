@@ -308,7 +308,7 @@ class Analysis:
         return roll_df
 
 
-    def psd(self, variable, fs, plot=False):
+    def psd(self, variable, fs=1, plot=False):
         """ Calculates the power spectral density (psd) of a timeseries of a variable using the Welch method. Also provides the timeseries plot and psd plot if passed.
         
         Parameters
@@ -346,11 +346,69 @@ class Analysis:
 
         return pd.DataFrame({f"Period{period}": 1/freqs, "Spectral Variance ((GtC/yr)$^2$.yr)": spec}, index=freqs)
     
-    def deseasonalise(self, x, y):
-        """ Deseasonalise a timeseries of a variable using a specific method (find name). function in low-pass-filtering notebook.
+    
+    def deseasonalise(self, variable):
+        """ Deseasonalise a timeseries of a variable by applying and using a seasonal index.
         
+        Parameters:
+        -----------
+        variable: variable to apply from self object.
         
         """
+        
+        x = self.data[variable].values
+        
+        mean_list = []
+        for i in range(12):
+            indices = range(i, len(x)+i, 12)
+            sub = x[indices]
+            mean_list.append(np.mean(sub))
+
+        s = []
+        for i in range(int(len(x)/12)):
+            for j in mean_list:
+                s.append(j)
+        s = np.array(s)
+
+        return x - (s-np.mean(s))
     
-    def bandpass(self, ):
-        """ Band pass filtering (add again in low-pass-filter notebook and then on here).
+    
+    def bandpass(self, variable, fc, fs=1, order=5, btype="low", deseasonalise_first=False):
+        """ Applies a bandpass filter to a dataset (either lowpass, highpass or bandpass) using the scipy.signal.butter function.
+
+        Parameters:
+        -----------
+        variable: variable to apply from self object.
+        fc: cut-off frequency or frequencies.
+        fs: sample frequency of x.
+        order: order of the filter. Defaults to 5.
+        btype: options are low, high and band.
+        deseasonalise_first: Defaults to False. Option to deseasonalise timeseries before applying bandpass filter.
+
+        """
+        
+        x = self.data[variable].values
+        
+        if deseasonalise_first:
+            mean_list = []
+            for i in range(12):
+                indices = range(i, len(x)+i, 12)
+                sub = x[indices]
+                mean_list.append(np.mean(sub))
+
+            s = []
+            for i in range(int(len(x)/12)):
+                for j in mean_list:
+                    s.append(j)
+            s = np.array(s)
+
+            x = x - (s-np.mean(s))
+            
+        if btype == "band":
+            assert type(fc) == list, "fc must be a list of two values."
+            fc = np.array(fc)
+
+        w = fc / (fs / 2) # Normalize the frequency.
+        b, a = signal.butter(order, w, btype)
+        
+        return signal.filtfilt(b, a, x)
