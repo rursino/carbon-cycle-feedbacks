@@ -183,8 +183,8 @@ class TheDataFrame:
 
 class Analysis:
     """ This class takes an instance of spatially and/or temporally integrated datasets and provides
-    analysis and visualisations on the data as required, including linear regression over whole and
-    decadal periods and ...
+    analysis and visualisations on the data as required, including plotting timeseries, linear regression
+    over whole an decadal periods and frequency analyses.
     
     Parameters
     ----------
@@ -194,6 +194,9 @@ class Analysis:
 
     def __init__(self, data):
         self.data = data
+    
+    
+    def plot_var(self
     
     
     def cftime_to_datetime(self, format='%Y-%m'):
@@ -412,3 +415,19 @@ class Analysis:
         b, a = signal.butter(order, w, btype)
         
         return signal.filtfilt(b, a, x)
+
+
+
+
+class ModelEvaluation:
+    """ This class takes an instance of spatially and/or temporally integrated datasets and provides
+    evaluations against the 
+    
+    Parameters
+    ----------
+    data: an instance of an xarray.Dataset.
+    
+    """
+
+    def __init__(self, data):
+        self.data = data
