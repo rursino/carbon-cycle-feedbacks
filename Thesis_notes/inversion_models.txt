@@ -1,12 +1,55 @@
-1.1 Overview / Introduction about inversion models (inc. definition)
+1.1 Overview / Introduction about inversion models
+[defn of inversion model]
+[what they do, why they came about].
+[how do they output the uptake timeseries used in the project?]
+
+
 
 1.2 Description of each inversion model
-[time periods]
-[any other differences]
+- Each inversion model has been run in different time periods as shown [in the table] below:
+(Table)
+Rayner: 1992-2012
+JAMSTEC: 1996-2017
+CTRACKER: 2000-2017
+CAMS: ?-2017
+JENA_s76: 1976-2017
+JENA_s85: 1985-2017
+[any other differences, which might include things like how they were run, if anything cuased the output of one model to be different from the others etc.]
+
+
 
 1.3 Model evaluation against observations (GCP)
+1.3.1 Uptake timeseries against GCP
+(Figures 5a & 5b)
+- Timeseries from all of the six inversion models show good agreement in the mean and trend against the GCP (details in 1.4.1) [perhaps reverse roles of these subsections].
+
+1.3.2 ...
+
 
 1.4 Results
 1.4.1 Uptake timeseries
+(Figures 6a & 6b)
+- Timeseries from all of the six inversion models show good agreement in the mean and the trend.
+This is with the exception of the ocean uptake from Rayner's model, where the mean is shifted upwards from the five models, however the trend is still consistent.
+This is being investigated by the [author?].
+
+
 1.4.2 Rolling gradient
+
+
+
 1.4.3 Spectral Analysis and significance
+1.4.3.1 Power Spectrums of monthly uptake after deseasonalisation
+- There are spikes at 1 year and 4 year periods.
+This could be related to temperature. A comparison of the power spectrum of uptake to global monthly temperature can help to verify this.
+- [What are the long-term periods showing?]
+- [Show AR1 process to see which frequencies/periods are statistically signficant (over the 95% confidence interval).
+Also don't forget how much frequencies go outside the interval, as there is a considerably high chance that at least one will go outside].
+
+1.4.3.2 Comparison with global monthly temperature
+- The power spectral density (psd) of the land uptake timeseries from the inversion model and the global monthly land temperature (HadCRUT) can be compared.
+- There are common periods of significance (where there is power or "spikes") at around the 1 and 4 year periods.
+- 4 year period: This can be explained by the influence of ENSO on temperature, which in turn is affecting uptake [confirm this, plus will need more elobaration/evidence].
+Could this show how temperature is affecting uptake and on interannual scales [there are many papers showing this, just refer to them for evidence and elobaration].
+- 1 year period: this is clearly the visualisation of the seasonal cycle.
+Could simply be that the sun's seasonal cycle is affecting both temperature and uptake in the same way but independently [not confirmed, some papers might confirm this].

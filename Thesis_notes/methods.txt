@@ -39,6 +39,16 @@ The rolling gradient can be plotted as a timeseries and its behaviour can be int
 - Spectral analysis (power spectral density) of land uptake with and without the deseasonalisation shows clearly the removal of the frequencies in the timeseries (exactly the ones we wanted to remove - 12 month and the others which is 6 and 3 months)
 [show plot in low-pass-filter.ipynb].
 
+1.5.3 Low-pass filtering
+- Use Butterworth filtering to filter out the high frequencies that are unwanted for long-term analysis of uptake.
+- [reference Thoning(1989)?]
+- Can apply a low-pass filter with a cut off of the 10 year period to obtain a low pass uptake timeseries.
+The low frequencies are exposed which shows a much smoother representation of the timeseries and provides a clear visual of how uptake is behaving in the long run (on decadal time scales).
+- Other analyses can be applied to the filtered timeseries to see whether there is a clearer conclusion on how uptake is behaving on decadal time scales.
+- In this project, the original timeseries will be deseasonalised before low-passed filtered with a 10 year period cut-off.
+This is because the deseasonalisation method does a much better job at removing the power from the seasonal frequencies than band-pass filtering.
+Band-pass filtering was found to be much harder to implement for a much worse result due to the frequency response being applied.
+
 
 1.6 Spectral Analysis
 - Use welch method to obtain periodogram of timeseries and therefore a power spectral density (PSD).
