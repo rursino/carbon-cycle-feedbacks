@@ -194,28 +194,12 @@ class Analysis:
 
     
     def __init__(self, data):
-        """Take the xr.Dataset with cftime values and converts them into datetimes."""
-        time_list = [datetime.strptime(time.strftime('%Y-%m'), '%Y-%m') for time in data.time.values]
-        self.data = data.assign_coords(time=time_list)
-    
-    
-    
-    def cftime_to_datetime(self, format='%Y-%m'):
-        """Take the xr.Dataset with cftime values and converts them into datetimes.
-
-        Parameters
-        ----------
-        self: xr.Dataset.
-        format: format of datetime.
+        """Take the xr.Dataset with cftime values and converts them into datetimes."""        
         
-        """
-
-        time_list = []
-        for time in self.data.time.values:
-            time_value = datetime.strptime(time.strftime(format), format)
-            time_list.append(time_value)
-
-        return self.data.assign_coords(time=time_list)
+        self.data = data
+        
+        time_list = [datetime.strptime(time.strftime('%Y-%m'), '%Y-%m') for time in data.time.values]
+        self.time = pd.to_datetime(time_list)
     
     
     def linear_regression_time(self, time, variable, save_plot=False):
@@ -230,12 +214,10 @@ class Analysis:
         """
         
         def time_list(t):
-            x = []
-            for year in t:
-                x.append(int(year.astype('str')[:4]))
+            x = [time.year for time in t]
             return np.array(x)
         
-        years=time_list(self.data['time'].values)
+        years=time_list(self.time)
         plt.plot(years, self.data[variable])
         plt.title(f'{variable} Uptake with decadal trends')
         plt.xlabel('Year')
@@ -274,8 +256,8 @@ class Analysis:
 
         """
         
-        start_year = self.data.time.values[0].year
-        end_year = self.data.time.values[-1].year
+        start_year = self.time[0].year
+        end_year = self.time[-1].year
 
         df = (pd
               .DataFrame({"CO2": self.data["CO2"].values,
@@ -321,7 +303,7 @@ class Analysis:
         plot: defaults to False. If assigned to True, shows two plots of timeseries and psd.
         **kwargs: Keyword arguments for signal.welch function.
         
-        """
+        """ """Aisle 30-31, then 33-34, Level 1, Row J, 6 seats, $120"""
 
         if fs == 1:
             period = " (months)"
@@ -337,7 +319,7 @@ class Analysis:
             plt.figure(figsize=(12,9))
             
             plt.subplot(211)
-            plt.plot(x.time.values, x.values)
+            plt.plot(self.time, x.values)
             
             plt.subplot(212)
             plt.semilogy(freqs, spec)
@@ -433,12 +415,15 @@ class ModelEvaluation:
     
     def __init__(self, data):
         """Take the xr.Dataset with cftime values and converts them into datetimes."""
+
+        self.data = data
+        
         time_list = [datetime.strptime(time.strftime('%Y-%m'), '%Y-%m') for time in data.time.values]
-        self.data = data.assign_coords(time=time_list)
+        self.time = pd.to_datetime(time_list)
         
-        start_year = data.time.values[0].year
-        end_year = data.time.values[-1].year
         
+        start_year = self.time[0].year
+        end_year = self.time[-1].year
         
         GCP = (pd
                .read_csv("./../../Prelim_Data_Analysis/gcb_data/budget.csv",
@@ -462,32 +447,36 @@ class ModelEvaluation:
         
         
     
-    def plot_vs_GCP(self, model_var, GCP_var, x="time"):
+    def plot_vs_GCP(self, sink, x="time"):
         """Plots variable chosen from model uptake timeseries and GCP uptake
         timeseries, either against time or CO2 concentration.
         
         Parameters:
         -----------
+        sink: either land or ocean.
         x: x axis; either time or CO2. Defaults to time.
-        model_var: variable chosen from model uptake.
-        GCP_var: variable chosen from GCP dataframe.
         
         """
         
         df = self.data
         GCP = self.GCP
         
+        if "land" in sink:
+            model_sink = "Earth_Land"
+        elif "ocean" in sink:
+            model_sink = "Earth_Ocean"
+        
         plt.figure(figsize=(20,10))
         plt.ylabel("C flux to the atmosphere (GtC/yr)", fontsize=24)
         
         if x == "time":
-            plt.plot(GCP.index, df[model_var].values) # FIX: Time needs to be integer on axes.
-            plt.plot(GCP.index, GCP[GCP_var])
+            plt.plot(GCP.index, df[model_sink].values) # FIX: Time needs to be integer on axes.
+            plt.plot(GCP.index, GCP[sink])
             plt.xlabel("Time", fontsize=24)
             
         elif x == "CO2":
-            plt.plot(GCP.CO2.values, GCP[GCP_var].values)
-            plt.plot(GCP.CO2.values, df[model_var].values)
+            plt.plot(GCP.CO2.values, GCP[sink].values)
+            plt.plot(GCP.CO2.values, df[model_sink].values)
             plt.xlabel("CO2 (ppm)", fontsize=24)
             
         else:
@@ -520,7 +509,7 @@ class ModelEvaluation:
             plt.legend(["GCP", "model"])
             plt.subplot(212).scatter(GCP[sink], df[model_sink].values)
             
-        return stats.linregress(GCP[sink], df[model_sink].values)
+        return stats.linregress(GCP[sink].values, df[model_sink].values)
     
     
     # NOT finished.
