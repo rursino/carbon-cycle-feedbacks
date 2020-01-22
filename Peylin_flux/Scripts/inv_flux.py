@@ -205,57 +205,51 @@ class Analysis:
     
     # This needs work.
     # - Optimise function for both monthly and annual timescales.
-    # - Improve appearance of plots.
-    def rolling_trend(self, variable, window_size=25, save_plot=False): #r_plot=False Add this later if need be.
+    
+    def rolling_trend(self, variable, window_size=25, plot=False, include_pearson=False):
         """ Calculates the slope of the trend of an uptake variable for each time window and for a given window size. The function also plots the slopes as a timeseries and, if prompted, the r-value of each slope as a timeseries.
 
         Parameters
         ----------
         variable: carbon uptake variable to regress.
         window_size: size of time window of trends.
-        r_plot: If true, plots the r values of each slope as a timeseries.
-        save_plot: save the plots as jpg files.
+        plot: Defaults to False. Option to show plots of the slopes.
+        include_pearson: Defaults to False. Option to include dataframe and plot of r-values for each year.
 
         """
+
+        roll_vals = []
+        r_vals = []
         
-        start_year = self.time[0].year
-        end_year = self.time[-1].year
+        for i in range(0, len(self.time) - window_size):
+            sub_time = self.time[i:i+window_size+1]
+            sub_vals = self.data[variable].sel(time = slice(self.data.time[i], self.data.time[i+window_size])).values
+            
+            linreg = stats.linregress(sub_time.year, sub_vals)
+            
+            roll_vals.append(linreg[0])
+            r_vals.append(linreg[2])
         
-        CO2 = pd.read_csv("./../co2_temp_data/co2/co2_global.csv", index_col="Year").loc[start_year:end_year]
-
-        df = (pd
-              .DataFrame({"CO2": CO2.CO2,
-                           variable: self.data[variable].values,
-                           "Year": np.arange(start_year, end_year+1)
-                 })
-              .set_index("Year")
-             )
-
-        roll_values = []
-        r_values = []
-
-        for i in range(0,len(self.data[variable])-window_size):
-            subdf = df.iloc[i:i+window_size+1]
-            stats_info = stats.linregress(subdf["CO2"], subdf[variable])
-            roll_values.append(stats_info[0])
-            r_values.append(stats_info[2])
-
-        df.plot(x="CO2", y=variable)
-        plt.ylabel("C flux to the atmosphere (GtC)")
-
-        roll_df = pd.DataFrame({f"{window_size}-year trend slope": roll_values}, index=df.index[:-window_size])
-        roll_df.plot(color='g')
-        plt.ylabel("Slope of C flux trend (GtC/ppm/yr)")
-        if type(save_plot)==str:
-            plt.savefig(save_plot)
         
-#         if r_plot:
-#             r_df = pd.DataFrame({"r-values of trends": r_values}, index=data.index[:-window_size])
-#             r_df.plot(color='k')
-#             plt.ylabel("r-value of slope")
-#             return roll_df, r_df            
+        roll_df = pd.DataFrame({f"{window_size}-year trend slope": roll_vals}, index=self.time[:-window_size].year)
+        
+        if plot:
+        
+            plt.figure(figsize=(22,16))
+            
+            plt.subplot(211)
+            plt.plot(self.time, self.data[variable].values)
+            plt.ylabel("C flux to the atmosphere (GtC)", fontsize=20)
 
-        return roll_df
+            plt.subplot(212)
+            plt.plot(roll_df, color='g')
+            plt.ylabel("Slope of C flux trend (GtC/ppm/yr)", fontsize=20)           
+
+        if include_pearson:
+            r_df = pd.DataFrame({"r-values of trends": r_vals}, index=self.time[:-window_size].year)
+            return roll_df, r_df
+        else:
+            return roll_df
 
 
     def psd(self, variable, fs=1, xlim=None, plot=False):
