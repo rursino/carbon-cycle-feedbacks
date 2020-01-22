@@ -183,8 +183,8 @@ class TheDataFrame:
 
 class Analysis:
     """ This class takes an instance of spatially and/or temporally integrated datasets and provides
-    analysis and visualisations on the data as required, including linear regression over whole and
-    decadal periods and ...
+    analysis and visualisations on the data as required, including plotting timeseries, linear regression
+    over whole an decadal periods and frequency analyses.
     
     Parameters
     ----------
@@ -192,72 +192,20 @@ class Analysis:
     
     """
 
+    
     def __init__(self, data):
+        """Take the xr.Dataset with cftime values and converts them into datetimes."""        
+        
         self.data = data
+        
+        time_list = [datetime.strptime(time.strftime('%Y-%m'), '%Y-%m') for time in data.time.values]
+        self.time = pd.to_datetime(time_list)
+        
     
     
-    def cftime_to_datetime(self, format='%Y-%m'):
-        """Takes a xr.Dataset with cftime values and converts them into datetimes.
-
-        Parameters
-        ----------
-        self: xr.Dataset.
-        format: format of datetime.
-        
-        """
-
-        time_list = []
-        for time in self.data.time.values:
-            time_value = datetime.strptime(time.strftime(format), format)
-            time_list.append(time_value)
-
-        return self.data.assign_coords(time=time_list)
-    
-    
-    def linear_regression_time(self, time, variable, save_plot=False):
-        """ Displays a plot of variable chosen from dataset with coordinate time and its linear regression over the whole period.
-        
-        Parameters
-        ----------
-        time: dictionary of np.array objects of datetime values.
-        variable: variable to regress.
-        save_plot: save the plot as a jpg file.
-        
-        """
-        
-        def time_list(t):
-            x = []
-            for year in t:
-                x.append(int(year.astype('str')[:4]))
-            return np.array(x)
-        
-        years=time_list(self.data['time'].values)
-        plt.plot(years, self.data[variable])
-        plt.title(f'{variable} Uptake with decadal trends')
-        plt.xlabel('Year')
-        plt.ylabel('C flux to the atmosphere (GtC/yr)')
-        plt.xticks(np.arange(years[0], years[-1], 5))
-        
-        regression_list = {}
-        for period in time.keys():
-            x = time_list(time[period])
-            y=self.data[variable].sel({'time': time[period]}).values
-
-            regression = stats.linregress(x, y)
-            slope = regression[0]
-            intercept = regression[1]
-            regression_list[period] = regression
-
-            line = slope*x+intercept
-
-            plt.plot(x, line)
-        
-        if type(save_plot)==str:
-            plt.savefig(save_plot)
-        
-        return regression_list
-    
-    
+    # This needs work.
+    # - Optimise function for both monthly and annual timescales.
+    # - Improve appearance of plots.
     def rolling_trend(self, variable, window_size=25, save_plot=False): #r_plot=False Add this later if need be.
         """ Calculates the slope of the trend of an uptake variable for each time window and for a given window size. The function also plots the slopes as a timeseries and, if prompted, the r-value of each slope as a timeseries.
 
@@ -270,11 +218,13 @@ class Analysis:
 
         """
         
-        start_year = self.data.time.values[0].year
-        end_year = self.data.time.values[-1].year
+        start_year = self.time[0].year
+        end_year = self.time[-1].year
+        
+        CO2 = pd.read_csv("./../co2_temp_data/co2/co2_global.csv", index_col="Year").loc[start_year:end_year]
 
         df = (pd
-              .DataFrame({"CO2": self.data["CO2"].values,
+              .DataFrame({"CO2": CO2.CO2,
                            variable: self.data[variable].values,
                            "Year": np.arange(start_year, end_year+1)
                  })
@@ -308,23 +258,27 @@ class Analysis:
         return roll_df
 
 
-    def psd(self, variable, fs=1, plot=False):
-        """ Calculates the power spectral density (psd) of a timeseries of a variable using the Welch method. Also provides the timeseries plot and psd plot if passed.
+    def psd(self, variable, fs=1, xlim=None, plot=False):
+        """ Calculates the power spectral density (psd) of a timeseries of a variable using the Welch method. Also provides the timeseries plot and psd plot if passed. This function is designed for the monthly timeseries, but otherwise plotting the dataframe is possible.
         
         Parameters
         ----------
         variable: carbon uptake variable to calculate psd.
+        fs: sampling frequency.
+        xlim: apply limit to x-axis of the psd. Must be a list of two values.
         plot: defaults to False. If assigned to True, shows two plots of timeseries and psd.
-        **kwargs: Keyword arguments for signal.welch function.
         
         """
 
         if fs == 1:
             period = " (months)"
+            unit = "((GtC/yr)$^2$.month)"
         elif fs == 12:
             period = " (years)"
+            unit = "((GtC/yr)$^2$.yr)"
         else:
             period = ""
+            unit = ""
         
         x = self.data[variable]
         freqs, spec = signal.welch(x.values, fs=fs)
@@ -333,18 +287,20 @@ class Analysis:
             plt.figure(figsize=(12,9))
             
             plt.subplot(211)
-            plt.plot(x.time.values, x.values)
+            plt.plot(self.time, x.values)
             
             plt.subplot(212)
-            plt.semilogy(freqs, spec)
+            plt.semilogy(1/freqs, spec)
             plt.gca().invert_xaxis()
+            plt.xlim(xlim)
+            
             plt.title(f"Power Spectrum of {variable}")
             plt.xlabel(f"Period{period}")
-            plt.ylabel("Spectral Variance ((GtC/yr)$^2$.yr)")
+            plt.ylabel(f"Spectral Variance {unit}")
             
             plt.show()
 
-        return pd.DataFrame({f"Period{period}": 1/freqs, "Spectral Variance ((GtC/yr)$^2$.yr)": spec}, index=freqs)
+        return pd.DataFrame({f"Period{period}": 1/freqs, f"Spectral Variance {unit}": spec}, index=freqs)
     
     
     def deseasonalise(self, variable):
@@ -412,3 +368,183 @@ class Analysis:
         b, a = signal.butter(order, w, btype)
         
         return signal.filtfilt(b, a, x)
+
+
+
+
+class ModelEvaluation:
+    """ This class takes an instance of the model uptake datasets and provides evaluations
+    against the Global Carbon Project (GCP) uptake timeseries. Must be annual resolution to match GCP.
+    
+    Parameters
+    ----------
+    data: an instance of an xarray.Dataset.
+    
+    """
+
+    
+    def __init__(self, data):
+        """Take the xr.Dataset with cftime values and converts them into datetimes."""
+
+        self.data = data
+        
+        time_list = [datetime.strptime(time.strftime('%Y-%m'), '%Y-%m') for time in data.time.values]
+        self.time = pd.to_datetime(time_list)
+        
+        
+        start_year = self.time[0].year
+        end_year = self.time[-1].year
+        
+        GCP = (pd
+               .read_csv("./../../Prelim_Data_Analysis/gcb_data/budget.csv",
+                         index_col=0,
+                         usecols=[0,4,5,6]
+                        )
+               .loc[start_year:end_year]
+              )
+        
+        GCP['CO2'] = pd.read_csv("./../co2_temp_data/co2/co2_global.csv", index_col=0, header=0)[2:]
+        GCP['land sink'] = -GCP['land sink']
+        GCP['ocean sink'] = -GCP['ocean sink']
+        GCP['budget imbalance'] = -GCP["budget imbalance"] + GCP['land sink']
+        GCP.rename(columns={"ocean sink": "ocean",
+                            "land sink": "land (model)",
+                            "budget imbalance": "land"
+                           },
+                   inplace=True)
+        
+        self.GCP = GCP
+        
+        
+    
+    def plot_vs_GCP(self, sink, x="time"):
+        """Plots variable chosen from model uptake timeseries and GCP uptake
+        timeseries, either against time or CO2 concentration.
+        
+        Parameters:
+        -----------
+        sink: either land or ocean.
+        x: x axis; either time or CO2. Defaults to time.
+        
+        """
+        
+        df = self.data
+        GCP = self.GCP
+        
+        if "land" in sink:
+            model_sink = "Earth_Land"
+        elif "ocean" in sink:
+            model_sink = "Earth_Ocean"
+        
+        plt.figure(figsize=(20,10))
+        plt.ylabel("C flux to the atmosphere (GtC/yr)", fontsize=24)
+        
+        if x == "time":
+            plt.plot(GCP.index, GCP[sink])
+            plt.plot(GCP.index, df[model_sink].values) # FIX: Time needs to be integer on axes.
+            plt.xlabel("Time", fontsize=24)
+            
+        elif x == "CO2":
+            plt.plot(GCP.CO2.values, GCP[sink].values)
+            plt.plot(GCP.CO2.values, df[model_sink].values)
+            plt.xlabel("CO2 (ppm)", fontsize=24)
+            
+        else:
+            raise ValueError("x must be 'time' or 'CO2'.")
+        
+        plt.legend(["GCP", "Model"], fontsize=20)
+            
+      
+    def regress_timeseries_to_GCP(self, sink, plot=False):
+        """Calculates linear regression of model uptake to GCP uptake and shows a plot
+        of the timeseries and scatter plot if requested.
+        
+        Parameters:
+        -----------
+        sink: either land or ocean.
+        plot: Plots timeseries and scatter plot of GCP and model uptake if True. Defaults to False.
+        
+        """
+        
+        if "land" in sink:
+            model_sink = "Earth_Land"
+        elif "ocean" in sink:
+            model_sink = "Earth_Ocean"
+        
+        df = self.data
+        GCP = self.GCP
+
+        if plot:
+            plt.figure(figsize=(14,9))
+            plt.subplot(211).plot(GCP.index, GCP[sink])
+            plt.subplot(211).plot(GCP.index, df[model_sink].values)
+            plt.legend(["GCP", "Model"], fontsize=16)
+            plt.subplot(212).scatter(GCP[sink], df[model_sink].values)
+            
+        return stats.linregress(GCP[sink].values, df[model_sink].values)
+    
+    
+    # NOT finished.
+    def regress_rolling_trend_to_GCP(self, sink, plot=False):
+        """Calculates linear regression of model rolling gradient to GCP rolling gradient
+        and shows a plot of the rolling gradients and scatter plot if requested.
+        
+        Parameters:
+        -----------
+        sink: either land or ocean.
+        plot: Plots rolling gradients and scatter plot of GCP and model uptake if True. Defaults to False.
+        
+        """
+        
+#         Analysis.
+        
+        plt.figure(figsize=(14,9))
+        plt.subplot(211).plot(model_df.index, GCP_df.loc[model_df.index])
+        plt.subplot(211).plot(model_df)
+        plt.legend(["GCP", "model"])
+        plt.subplot(212).scatter(GCP_df.loc[model_df.index], model_df)
+
+        return stats.linregress(GCP_df.loc[model_df.index].values.squeeze(), model_df.values.squeeze())
+        
+    
+    def compare_trend_to_GCP(self, sink):
+        """Calculates long-term trend of model uptake (over the whole time range) and GCP uptake.
+        Also calculates the percentage difference of the trends. 
+        
+        Parameters:
+        -----------
+        sink: either land or ocean.
+        
+        """
+        
+        if "land" in sink:
+            model_sink = "Earth_Land"
+        elif "ocean" in sink:
+            model_sink = "Earth_Ocean"
+        
+        df = self.data
+        GCP = self.GCP
+    
+        GCP_stats = stats.linregress(GCP.index, GCP[sink].values)
+        model_stats = stats.linregress(GCP.index, df[model_sink].values)
+
+        plt.bar(["GCP", "Model"], [GCP_stats[0], model_stats[0]])
+
+        print(f"GCP slope: {GCP_stats[0]*1e3:.3f} MtC/yr",
+              f"Model slope: {model_stats[0]*1e3:.3f} MtC/yr",
+              f"Percentage difference: {((GCP_stats[0]*100/model_stats[0])-100):.2f}%", sep="\n")
+        
+        return {"GCP_slope (MtC/yr)": GCP_stats[0]*1e3,
+                "Model_slope (MtC/yr)": model_stats[0]*1e3,
+                "%_diff": (GCP_stats[0]*100/model_stats[0])-100}
+    
+    
+    def autocorrelation_plot(self, variable):
+        """Plots autocorrelation of model uptake timeseries using pandas.plotting.
+                
+        Parameters:
+        -----------
+        variable: variable from self.data.
+        """
+        
+        return pd.plotting.autocorrelation_plot(self.data[variable].values)
