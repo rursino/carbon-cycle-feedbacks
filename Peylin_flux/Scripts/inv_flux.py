@@ -202,10 +202,7 @@ class Analysis:
         self.time = pd.to_datetime(time_list)
         
     
-    
-    # This needs work.
-    # - Optimise function for both monthly and annual timescales.
-    
+       
     def rolling_trend(self, variable, window_size=25, plot=False, include_pearson=False):
         """ Calculates the slope of the trend of an uptake variable for each time window and for a given window size. The function also plots the slopes as a timeseries and, if prompted, the r-value of each slope as a timeseries.
 
@@ -217,6 +214,9 @@ class Analysis:
         include_pearson: Defaults to False. Option to include dataframe and plot of r-values for each year.
 
         """
+        
+        def to_numeric(date):
+            return date.year + (date.month-1 + date.day/31)/12
 
         roll_vals = []
         r_vals = []
@@ -225,13 +225,13 @@ class Analysis:
             sub_time = self.time[i:i+window_size+1]
             sub_vals = self.data[variable].sel(time = slice(self.data.time[i], self.data.time[i+window_size])).values
             
-            linreg = stats.linregress(sub_time.year, sub_vals)
+            linreg = stats.linregress(to_numeric(sub_time), sub_vals)
             
             roll_vals.append(linreg[0])
             r_vals.append(linreg[2])
         
         
-        roll_df = pd.DataFrame({f"{window_size}-year trend slope": roll_vals}, index=self.time[:-window_size].year)
+        roll_df = pd.DataFrame({f"{window_size}-year trend slope": roll_vals}, index=to_numeric(self.time[:-window_size]))
         
         if plot:
         
@@ -246,7 +246,7 @@ class Analysis:
             plt.ylabel("Slope of C flux trend (GtC/ppm/yr)", fontsize=20)           
 
         if include_pearson:
-            r_df = pd.DataFrame({"r-values of trends": r_vals}, index=self.time[:-window_size].year)
+            r_df = pd.DataFrame({"r-values of trends": r_vals}, index=to_numeric(self.time[:-window_size]))
             return roll_df, r_df
         else:
             return roll_df
@@ -479,7 +479,7 @@ class ModelEvaluation:
     
     
     # NOT finished.
-    def regress_rolling_trend_to_GCP(self, sink, plot=False):
+    def regress_rolling_trend_to_GCP(self, sink, window_size, plot=False):
         """Calculates linear regression of model rolling gradient to GCP rolling gradient
         and shows a plot of the rolling gradients and scatter plot if requested.
         
@@ -489,16 +489,26 @@ class ModelEvaluation:
         plot: Plots rolling gradients and scatter plot of GCP and model uptake if True. Defaults to False.
         
         """
-        
-#         Analysis.
-        
-        plt.figure(figsize=(14,9))
-        plt.subplot(211).plot(model_df.index, GCP_df.loc[model_df.index])
-        plt.subplot(211).plot(model_df)
-        plt.legend(["GCP", "model"])
-        plt.subplot(212).scatter(GCP_df.loc[model_df.index], model_df)
 
-        return stats.linregress(GCP_df.loc[model_df.index].values.squeeze(), model_df.values.squeeze())
+        if "land" in sink:
+            model_sink = "Earth_Land"
+        elif "ocean" in sink:
+            model_sink = "Earth_Ocean"
+
+        df = self.data
+        GCP = self.GCP
+
+        roll_df = Analysis.rolling_trend(df, model_sink, window_size)
+
+        return roll_df
+        
+#         plt.figure(figsize=(14,9))
+#         plt.subplot(211).plot(model_df.index, GCP_df.loc[model_df.index])
+#         plt.subplot(211).plot(model_df)
+#         plt.legend(["GCP", "model"])
+#         plt.subplot(212).scatter(GCP_df.loc[model_df.index], model_df)
+
+#         return stats.linregress(GCP_df.loc[model_df.index].values.squeeze(), model_df.values.squeeze())
         
     
     def compare_trend_to_GCP(self, sink):
