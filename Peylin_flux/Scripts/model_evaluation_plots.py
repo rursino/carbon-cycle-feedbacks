@@ -9,8 +9,8 @@ import pickle
 import matplotlib.pyplot as plt
 
 def main():
-    input_file = "./../Output/output_raw/output_all/CAMS_all/year.pik"
-    output_folder = "./../Output/model_evaluation/CAMS/"
+    input_file = sys.argv[1]
+    output_folder = sys.argv[2]
     
     assert input_file.endswith("year.pik")
     
@@ -46,5 +46,5 @@ def main():
     pickle.dump(results, open(f"{output_folder}compare_trend_to_GCP_ocean.pik", "wb"))
     
 
-if "__name__" == "__main__":
+if __name__ == "__main__":
     main()
