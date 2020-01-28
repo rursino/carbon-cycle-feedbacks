@@ -436,12 +436,12 @@ class ModelEvaluation:
         if x == "time":
             plt.plot(GCP.index, GCP[sink])
             plt.plot(GCP.index, df[model_sink].values) # FIX: Time needs to be integer on axes.
-            plt.xlabel("Time", fontsize=24)
+            plt.xlabel("Time", fontsize=22)
             
         elif x == "CO2":
             plt.plot(GCP.CO2.values, GCP[sink].values)
             plt.plot(GCP.CO2.values, df[model_sink].values)
-            plt.xlabel("CO2 (ppm)", fontsize=24)
+            plt.xlabel("CO2 (ppm)", fontsize=22)
             
         else:
             raise ValueError("x must be 'time' or 'CO2'.")
@@ -467,15 +467,22 @@ class ModelEvaluation:
         
         df = self.data
         GCP = self.GCP
+        
+        linreg = stats.linregress(GCP[sink].values, df[model_sink].values)
 
         if plot:
             plt.figure(figsize=(14,9))
             plt.subplot(211).plot(GCP.index, GCP[sink])
             plt.subplot(211).plot(GCP.index, df[model_sink].values)
             plt.legend(["GCP", "Model"], fontsize=16)
-            plt.subplot(212).scatter(GCP[sink], df[model_sink].values)
+            plt.xlabel("Year", fontsize=16)
+            plt.ylabel("C flux to the atmosphere (GtC/yr)", fontsize=16)
             
-        return stats.linregress(GCP[sink].values, df[model_sink].values)
+            plt.subplot(212).scatter(GCP[sink], df[model_sink].values)
+            plt.xlabel("GCP (GtC/yr)", fontsize=16)
+            plt.ylabel("Model (GtC/yr)", fontsize=16)
+            
+        return linreg
     
     
     # NOT finished.
@@ -511,7 +518,7 @@ class ModelEvaluation:
 #         return stats.linregress(GCP_df.loc[model_df.index].values.squeeze(), model_df.values.squeeze())
         
     
-    def compare_trend_to_GCP(self, sink):
+    def compare_trend_to_GCP(self, sink, print_results=False):
         """Calculates long-term trend of model uptake (over the whole time range) and GCP uptake.
         Also calculates the percentage difference of the trends. 
         
@@ -533,10 +540,12 @@ class ModelEvaluation:
         model_stats = stats.linregress(GCP.index, df[model_sink].values)
 
         plt.bar(["GCP", "Model"], [GCP_stats[0], model_stats[0]])
+        plt.ylabel("Trend (GtC/yr)", fontsize=14)
 
-        print(f"GCP slope: {GCP_stats[0]*1e3:.3f} MtC/yr",
-              f"Model slope: {model_stats[0]*1e3:.3f} MtC/yr",
-              f"Percentage difference: {((GCP_stats[0]*100/model_stats[0])-100):.2f}%", sep="\n")
+        if print_results:
+            print(f"GCP slope: {GCP_stats[0]*1e3:.3f} MtC/yr",
+                  f"Model slope: {model_stats[0]*1e3:.3f} MtC/yr",
+                  f"Percentage difference: {((GCP_stats[0]*100/model_stats[0])-100):.2f}%", sep="\n")
         
         return {"GCP_slope (MtC/yr)": GCP_stats[0]*1e3,
                 "Model_slope (MtC/yr)": model_stats[0]*1e3,
