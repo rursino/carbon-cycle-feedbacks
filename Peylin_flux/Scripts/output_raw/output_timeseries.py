@@ -4,6 +4,8 @@ If prompted, a plot of each land and ocean timeseries is created and saved as pn
 Run this script is run from the shell. """
 
 import sys
+sys.path.append("./../core/")
+
 import inv_flux
 import xarray as xr
 import pandas as pd

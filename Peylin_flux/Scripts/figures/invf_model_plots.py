@@ -1,5 +1,7 @@
 """Python script (for the bash) to extract plots of carbon uptake timeseries of the six models and the GCP. Useful as a figure for the final thesis paper."""
 
+import sys
+sys.path.append("./../core/")
 
 import inv_flux as invf
 import xarray as xr
@@ -16,9 +18,9 @@ def main():
     
     dict_of_models = {}
     for model in list_of_models:
-        dict_of_models[model] = open_data(f"./../Output/output_raw/output_all/{model}_all/year.pik")
+        dict_of_models[model] = open_data(f"./../../Output/output_raw/output_all/{model}_all/year.pik")
     
-    dfGCP = pd.read_csv("./../../Prelim_Data_Analysis/gcb_data/budget.csv",
+    dfGCP = pd.read_csv("./../../../Prelim_Data_Analysis/gcb_data/budget.csv",
                         index_col=0,
                         usecols=[0,4,5,6],
                         skipfooter=1
