@@ -1,4 +1,4 @@
-## USAGE: bash lin_reg_all.sh
+## USAGE: bash model_evaluation.sh
 # to output model evaluation plots of all 6 model annual outputs.
 
 # Short-hand variables for the data paths of the 6 datasets.

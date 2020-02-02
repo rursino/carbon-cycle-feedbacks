@@ -19,7 +19,7 @@ def main():
     input_file = pickle.load(open(input_file, "rb"))
     df = inv_flux.ModelEvaluation(input_file)
     
-    # LAND
+    """ Land plots."""
     df.plot_vs_GCP("land", "time")
     plt.savefig(f"{output_folder}plot_vs_GCP_land.png")
     
@@ -33,7 +33,7 @@ def main():
     plt.savefig(f"{output_folder}compare_trend_to_GCP_land.png")
     pickle.dump(results, open(f"{output_folder}compare_trend_to_GCP_land.pik", "wb"))
     
-    # OCEAN
+    """ Ocean plots."""
     df.plot_vs_GCP("ocean", "time")
     plt.savefig(f"{output_folder}plot_vs_GCP_ocean.png")
     

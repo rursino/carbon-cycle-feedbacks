@@ -291,8 +291,6 @@ class Analysis:
             plt.title(f"Power Spectrum of {variable}")
             plt.xlabel(f"Period{period}")
             plt.ylabel(f"Spectral Variance {unit}")
-            
-            plt.show()
 
         return pd.DataFrame({f"Period{period}": 1/freqs, f"Spectral Variance {unit}": spec}, index=freqs)
     
