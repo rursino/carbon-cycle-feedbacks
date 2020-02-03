@@ -58,7 +58,16 @@ This is being investigated by the [author?].
 
 
 1.4.2 Rolling gradient
+1.4.2.1 Original timeseries
+- Between the six models, there are mixed results about the overall long-term trend of the rolling gradient.
+Some models are showing acceleration of uptake (-ve trend) for ocean and deceleration (+ve trend) for land, but some are showing the opposite.
+No models [check all to be sure] show the same sign.
+[Check this to be sure] All models have rolling gradients that trend significantly over the long run (with tests showing p<0.05).
+This is evidence to show that uptake is indeed changing over decadal timescales beyond the first order (i.e. there is acceleration).
+However, the opposite signs of land and ocean for each model means that they could cancel each other out.
+The magnitude is far greater for land over ocean for most [or all] of the models, however, the overall weights should be investigated further.
 
+1.4.2.2 With bandpass applied
 
 
 1.4.3 Spectral Analysis and significance

@@ -264,10 +264,7 @@ class Analysis:
         
         """
 
-        if fs == 1:
-            period = " (months)"
-            unit = "((GtC/yr)$^2$.month)"
-        elif fs == 12:
+        if fs == 12 or fs==1: #for analysis.py: fs==12 means that annual resolution timeseries is being passed as self. fs==1 means resolution is annual.
             period = " (years)"
             unit = "((GtC/yr)$^2$.yr)"
         else:

@@ -18,16 +18,16 @@ JENA_s76_monthly="./../../Output/output_raw/output_all/JENA_s76_all/spatial.pik"
 JENA_s85_monthly="./../../Output/output_raw/output_all/JENA_s85_all/spatial.pik"
 
 
-python analysis.py $Rayner Rayner 25 10
-python analysis.py $CAMS CAMS 25 10
-python analysis.py $CTRACKER CTRACKER 25 10
-python analysis.py $JAMSTEC JAMSTEC 25 10
-python analysis.py $JENA_s76 JENA_s76 25 10
-python analysis.py $JENA_s85 JENA_s85 25 10
+python analysis.py $Rayner Rayner 10 10
+python analysis.py $CAMS CAMS 10 10
+python analysis.py $CTRACKER CTRACKER 10 10
+python analysis.py $JAMSTEC JAMSTEC 10 10
+python analysis.py $JENA_s76 JENA_s76 10 10
+python analysis.py $JENA_s85 JENA_s85 10 10
 
-python analysis.py $Rayner_monthly Rayner 25 10
-python analysis.py $CAMS_monthly CAMS 25 10
-python analysis.py $CTRACKER_monthly CTRACKER 25 10
-python analysis.py $JAMSTEC_monthly JAMSTEC 25 10
-python analysis.py $JENA_s76_monthly JENA_s76 25 10
-python analysis.py $JENA_s85_monthly JENA_s85 25 10
+python analysis.py $Rayner_monthly Rayner 10 10
+python analysis.py $CAMS_monthly CAMS 10 10
+python analysis.py $CTRACKER_monthly CTRACKER 10 10
+python analysis.py $JAMSTEC_monthly JAMSTEC 10 10
+python analysis.py $JENA_s76_monthly JENA_s76 10 10
+python analysis.py $JENA_s85_monthly JENA_s85 10 10

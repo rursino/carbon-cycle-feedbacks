@@ -19,6 +19,10 @@ def main():
     df = inv_flux.Analysis(input_dataset)
     
     """Parameters."""
+    window_size = int(sys.argv[3]) # Usually 25.
+    fc = 1/float(sys.argv[4]) # Cut-off frequency for bandpass func.
+    btype = "low"
+
     if input_file.endswith("year.pik"):
         fs = 1
         output_folder = f"./../../Output/analysis/year/{model_name}/"
@@ -27,19 +31,16 @@ def main():
         fs = 12
         output_folder = f"./../../Output/analysis/monthly/{model_name}/"
         deseasonalise_first = True # Tune to false if deseasonalisation not wanted in bandpass func.
+        window_size *= 12
     else:
         raise TypeError("Input file must end in either year or spatial.")
-
-    window_size = sys.argv[3] # Usually 25.
-    fc = 1/float(sys.argv[4]) # Cut-off frequency for bandpass func.
-    btype = "low"
     
     
     """ Land plots."""
-    roll_df, r_df = df.rolling_trend("Earth_Land", int(window_size), True, True)
-    plt.savefig(f"{output_folder}rolling_trend_{window_size}_land.png")
-    pickle.dump(roll_df, open(f"{output_folder}rolling_trend_{window_size}_land.pik", "wb"))
-    pickle.dump(r_df, open(f"{output_folder}rolling_trend_pearson_{window_size}_land.pik", "wb"))
+    roll_df, r_df = df.rolling_trend("Earth_Land", window_size, True, True)
+    plt.savefig(f"{output_folder}rolling_trend_{str(window_size)}_land.png")
+    pickle.dump(roll_df, open(f"{output_folder}rolling_trend_{str(window_size)}_land.pik", "wb"))
+    pickle.dump(r_df, open(f"{output_folder}rolling_trend_pearson_{str(window_size)}_land.pik", "wb"))
     
     plt.clf()
     psd = df.psd("Earth_Land", fs, plot=True)
@@ -59,10 +60,10 @@ def main():
     
     
     """ Ocean plots."""
-    roll_df, r_df = df.rolling_trend("Earth_Ocean", int(window_size), True, True)
-    plt.savefig(f"{output_folder}rolling_trend_{window_size}_ocean.png")
-    pickle.dump(roll_df, open(f"{output_folder}rolling_trend_{window_size}_ocean.pik", "wb"))
-    pickle.dump(r_df, open(f"{output_folder}rolling_trend_pearson_{window_size}_ocean.pik", "wb"))
+    roll_df, r_df = df.rolling_trend("Earth_Ocean", window_size, True, True)
+    plt.savefig(f"{output_folder}rolling_trend_{str(window_size)}_ocean.png")
+    pickle.dump(roll_df, open(f"{output_folder}rolling_trend_{str(window_size)}_ocean.pik", "wb"))
+    pickle.dump(r_df, open(f"{output_folder}rolling_trend_pearson_{str(window_size)}_ocean.pik", "wb"))
     
     plt.clf()
     psd = df.psd("Earth_Ocean", fs, plot=True)
