@@ -22,15 +22,14 @@ def main():
     window_size = int(sys.argv[3]) # Usually 25.
     fc = 1/float(sys.argv[4]) # Cut-off frequency for bandpass func.
     btype = "low"
+    deseasonalise_first = True # Tune to false if deseasonalisation not wanted in bandpass func.
 
     if input_file.endswith("year.pik"):
         fs = 1
         output_folder = f"./../../Output/analysis/year/{model_name}/"
-        deseasonalise_first = False
     elif input_file.endswith("spatial.pik"):
         fs = 12
         output_folder = f"./../../Output/analysis/monthly/{model_name}/"
-        deseasonalise_first = True # Tune to false if deseasonalisation not wanted in bandpass func.
         window_size *= 12
     else:
         raise TypeError("Input file must end in either year or spatial.")
@@ -51,12 +50,12 @@ def main():
         deseason = df.deseasonalise("Earth_Land")
         pickle.dump(deseason, open(f"{output_folder}deseasonalise_land.pik", "wb"))
     
-    bandpass = df.bandpass("Earth_Land", fc, fs, btype=btype, deseasonalise_first=deseasonalise_first)
-    if deseasonalise_first:
-        bandpass_fname = f"{output_folder}bandpass_{sys.argv[4]}_{btype}_land_deseason.pik"
-    else:
-        bandpass_fname = f"{output_folder}bandpass_{sys.argv[4]}_{btype}_land.pik"
-    pickle.dump(bandpass, open(bandpass_fname, "wb"))
+        bandpass = df.bandpass("Earth_Land", fc, fs, btype=btype, deseasonalise_first=deseasonalise_first)
+        if deseasonalise_first:
+            bandpass_fname = f"{output_folder}bandpass_{sys.argv[4]}_{btype}_land_deseason.pik"
+        else:
+            bandpass_fname = f"{output_folder}bandpass_{sys.argv[4]}_{btype}_land.pik"
+        pickle.dump(bandpass, open(bandpass_fname, "wb"))
     
     
     """ Ocean plots."""
@@ -74,12 +73,12 @@ def main():
         deseason = df.deseasonalise("Earth_Ocean")
         pickle.dump(deseason, open(f"{output_folder}deseasonalise_ocean.pik", "wb"))
     
-    bandpass = df.bandpass("Earth_Ocean", fc, fs, btype=btype, deseasonalise_first=deseasonalise_first)
-    if deseasonalise_first:
-        bandpass_fname = f"{output_folder}bandpass_{sys.argv[4]}_{btype}_ocean_deseason.pik"
-    else:
-        bandpass_fname = f"{output_folder}bandpass_{sys.argv[4]}_{btype}_ocean.pik"
-    pickle.dump(bandpass, open(bandpass_fname, "wb"))
+        bandpass = df.bandpass("Earth_Ocean", fc, fs, btype=btype, deseasonalise_first=deseasonalise_first)
+        if deseasonalise_first:
+            bandpass_fname = f"{output_folder}bandpass_{sys.argv[4]}_{btype}_ocean_deseason.pik"
+        else:
+            bandpass_fname = f"{output_folder}bandpass_{sys.argv[4]}_{btype}_ocean.pik"
+        pickle.dump(bandpass, open(bandpass_fname, "wb"))
 
 
 
