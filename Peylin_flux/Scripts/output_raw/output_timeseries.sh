@@ -14,9 +14,9 @@ JENA_s85="./../../raw_data/fco2_JENA-s85-4-2-2018_June2018-ext3_1985-2017_monthl
 
 # Produce dataframes as csv files and time series plots.
 
-python output_timeseries.py $Rayner ./../../Output/output_Rayner.csv ./../../Output/land_Rayner.png ./../../Output/ocean_Rayner.png
-python output_timeseries.py $CAMS ./../../Output/output_CAMS.csv ./../../Output/land_CAMS.png ./../../Output/ocean_CAMS.png
-python output_timeseries.py $CTRACKER ./../../Output/output_CTRACKER.csv ./../../Output/land_CTRACKER.png ./../../Output/ocean_CTRACKER.png
-python output_timeseries.py $JAMSTEC ./../../Output/output_JAMSTEC.csv ./../../Output/land_JAMSTEC.png ./../../Output/ocean_JAMSTEC.png
-python output_timeseries.py $JENA_s76 ./../../Output/output_JENA_s76.csv ./../../Output/land_JENA_s76.png ./../../Output/ocean_JENA_s76.png
-python output_timeseries.py $JENA_s85 ./../../Output/output_JENA_s85.csv ./../../Output/land_JENA_s85.png ./../../Output/ocean_JENA_s85.png
+python output_timeseries.py $Rayner ./../../Output/output_Rayner.csv
+python output_timeseries.py $CAMS ./../../Output/output_CAMS.csv
+python output_timeseries.py $CTRACKER ./../../Output/output_CTRACKER.csv
+python output_timeseries.py $JAMSTEC ./../../Output/output_JAMSTEC.csv
+python output_timeseries.py $JENA_s76 ./../../Output/output_JENA_s76.csv
+python output_timeseries.py $JENA_s85 ./../../Output/output_JENA_s85.csv
