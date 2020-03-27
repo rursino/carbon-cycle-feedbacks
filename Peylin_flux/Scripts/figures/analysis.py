@@ -20,7 +20,8 @@ def main():
     
     """Parameters."""
     window_size = int(sys.argv[3]) # Usually 25.
-    fc = 1/float(sys.argv[4]) # Cut-off frequency for bandpass func.
+    period = sys.argv[4]
+    fc = 1/float(period) # Cut-off frequency for bandpass func.
     btype = "low"
     deseasonalise_first = True # Tune to false if deseasonalisation not wanted in bandpass func.
 
@@ -35,51 +36,51 @@ def main():
         raise TypeError("Input file must end in either year or spatial.")
     
     
-    """ Land plots."""
-    roll_df, r_df = df.rolling_trend("Earth_Land", window_size, True, True)
-    plt.savefig(f"{output_folder}rolling_trend_{str(window_size)}_land.png")
-    pickle.dump(roll_df, open(f"{output_folder}rolling_trend_{str(window_size)}_land.pik", "wb"))
-    pickle.dump(r_df, open(f"{output_folder}rolling_trend_pearson_{str(window_size)}_land.pik", "wb"))
+    """ Global plots."""
+    all_analyses("Earth_Land")
+    all_analyses("Earth_Ocean")
     
-    plt.clf()
-    psd = df.psd("Earth_Land", fs, plot=True)
-    plt.savefig(f"{output_folder}psd_land.png")
-    pickle.dump(psd, open(f"{output_folder}psd_land.pik", "wb"))
+    """ Regional plots."""
     
-    if input_file.endswith("spatial.pik"):
-        deseason = df.deseasonalise("Earth_Land")
-        pickle.dump(deseason, open(f"{output_folder}deseasonalise_land.pik", "wb"))
-    
-        bandpass = df.bandpass("Earth_Land", fc, fs, btype=btype, deseasonalise_first=deseasonalise_first)
-        if deseasonalise_first:
-            bandpass_fname = f"{output_folder}bandpass_{sys.argv[4]}_{btype}_land_deseason.pik"
-        else:
-            bandpass_fname = f"{output_folder}bandpass_{sys.argv[4]}_{btype}_land.pik"
-        pickle.dump(bandpass, open(bandpass_fname, "wb"))
-    
-    
-    """ Ocean plots."""
-    roll_df, r_df = df.rolling_trend("Earth_Ocean", window_size, True, True)
-    plt.savefig(f"{output_folder}rolling_trend_{str(window_size)}_ocean.png")
-    pickle.dump(roll_df, open(f"{output_folder}rolling_trend_{str(window_size)}_ocean.pik", "wb"))
-    pickle.dump(r_df, open(f"{output_folder}rolling_trend_pearson_{str(window_size)}_ocean.pik", "wb"))
-    
-    plt.clf()
-    psd = df.psd("Earth_Ocean", fs, plot=True)
-    plt.savefig(f"{output_folder}psd_ocean.png")
-    pickle.dump(psd, open(f"{output_folder}psd_ocean.pik", "wb"))
-    
-    if input_file.endswith("spatial.pik"):
-        deseason = df.deseasonalise("Earth_Ocean")
-        pickle.dump(deseason, open(f"{output_folder}deseasonalise_ocean.pik", "wb"))
-    
-        bandpass = df.bandpass("Earth_Ocean", fc, fs, btype=btype, deseasonalise_first=deseasonalise_first)
-        if deseasonalise_first:
-            bandpass_fname = f"{output_folder}bandpass_{sys.argv[4]}_{btype}_ocean_deseason.pik"
-        else:
-            bandpass_fname = f"{output_folder}bandpass_{sys.argv[4]}_{btype}_ocean.pik"
-        pickle.dump(bandpass, open(bandpass_fname, "wb"))
 
+def rolling_trend(variable):
+    
+    roll_df, r_df = df.rolling_trend(variable, window_size, True, True)
+    
+    plt.savefig(f"{output_folder}rolling_trend_{str(window_size)}_{variable}.png")
+    
+    pickle.dump(roll_df, open(f"{output_folder}rolling_trend_{str(window_size)}_{variable}.pik", "wb"))
+    pickle.dump(r_df, open(f"{output_folder}rolling_trend_pearson_{str(window_size)}_{variable}.pik", "wb"))
+    
+
+def psd(variable):
+    
+    psd = df.psd(variable, fs, plot=True)
+    plt.savefig(f"{output_folder}psd_{variable}.png")
+    pickle.dump(psd, open(f"{output_folder}psd_{variable}.pik", "wb"))
+
+    
+def deseasonalise(variable):
+    deseason = df.deseasonalise(variable)
+    pickle.dump(deseason, open(f"{output_folder}deseasonalise_{variable}.pik", "wb"))
+
+    
+def bandpass(variable):
+    bandpass = df.bandpass(variable, fc, fs, btype=btype, deseasonalise_first=deseasonalise_first)
+    if deseasonalise_first:
+        bandpass_fname = f"{output_folder}bandpass_{period}_{btype}_{variable}_deseason.pik"
+    else:
+        bandpass_fname = f"{output_folder}bandpass_{period}_{btype}_{variable}.pik"
+    pickle.dump(bandpass, open(bandpass_fname, "wb"))
+    
+
+def all_analyses(variable):
+    plt.clf()
+    rolling_trend(variable)
+    plt.clf()
+    psd(variable)
+    deseasonalise(variable)
+    bandpass(variable)
 
 
 if __name__ == "__main__":
