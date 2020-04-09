@@ -45,9 +45,9 @@ def main():
         plt.clf()
         rolling_trend(variable, df, output_folder, window_size)
         plt.clf()
-        psd(variable, fs, output_folder)
-        deseasonalise(variable, output_folder)
-        bandpass(variable, fc, fs, btype, deseasonalise_first, output_folder, period)
+        psd(variable, df, fs, output_folder)
+        deseasonalise(variable, df, output_folder)
+        bandpass(variable, df, fc, fs, btype, deseasonalise_first, output_folder, period)
     
     """ Regional plots."""
     
@@ -62,19 +62,19 @@ def rolling_trend(variable, df, output_folder, window_size):
     pickle.dump(r_df, open(f"{output_folder}rolling_trend_pearson_{str(window_size)}_{variable}.pik", "wb"))
 
 
-def psd(variable, fs, output_folder):
+def psd(variable, df, fs, output_folder):
 
     psd = df.psd(variable, fs, plot=True)
     plt.savefig(f"{output_folder}psd_{variable}.png")
     pickle.dump(psd, open(f"{output_folder}psd_{variable}.pik", "wb"))
 
 
-def deseasonalise(variable, output_folder):
+def deseasonalise(variable, df, output_folder):
     deseason = df.deseasonalise(variable)
     pickle.dump(deseason, open(f"{output_folder}deseasonalise_{variable}.pik", "wb"))
 
 
-def bandpass(variable, fc, fs, btype, deseasonalise_first, output_folder, period):
+def bandpass(variable, df, fc, fs, btype, deseasonalise_first, output_folder, period):
     bandpass = df.bandpass(variable, fc, fs, btype=btype, deseasonalise_first=deseasonalise_first)
     if deseasonalise_first:
         bandpass_fname = f"{output_folder}bandpass_{period}_{btype}_{variable}_deseason.pik"
