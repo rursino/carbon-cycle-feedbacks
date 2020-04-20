@@ -385,14 +385,14 @@ class ModelEvaluation:
         end_year = self.time[-1].year
         
         GCP = (pd
-               .read_csv("./../../../Prelim_Data_Analysis/gcb_data/budget.csv",
+               .read_csv("./../../data/GCP/budget.csv",
                          index_col=0,
                          usecols=[0,4,5,6]
                         )
                .loc[start_year:end_year]
               )
         
-        GCP['CO2'] = pd.read_csv("./../../co2_temp_data/co2/co2_global.csv", index_col=0, header=0)[2:]
+        GCP['CO2'] = pd.read_csv("./../../data/CO2/co2/co2_global.csv", index_col=0, header=0)[2:]
         GCP['land sink'] = -GCP['land sink']
         GCP['ocean sink'] = -GCP['ocean sink']
         GCP['budget imbalance'] = -GCP["budget imbalance"] + GCP['land sink']
