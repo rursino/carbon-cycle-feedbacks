@@ -18,9 +18,9 @@ def main():
     
     dict_of_models = {}
     for model in list_of_models:
-        dict_of_models[model] = open_data(f"./../../Output/output_raw/output_all/{model}_all/year.pik")
+        dict_of_models[model] = open_data(f"./../../output/inversions/raw/output_all/{model}_all/year.pik")
     
-    dfGCP = pd.read_csv("./../../../Prelim_Data_Analysis/gcb_data/budget.csv",
+    dfGCP = pd.read_csv("./../../data/GCP/budget.csv",
                         index_col=0,
                         usecols=[0,4,5,6],
                         skipfooter=1

@@ -3,19 +3,19 @@
 
 # Short-hand variables for the data paths of the 6 datasets.
 
-Rayner="./../../Output/output_raw/output_all/Rayner_all/year.pik"
-CAMS="./../../Output/output_raw/output_all/CAMS_all/year.pik"
-CTRACKER="./../../Output/output_raw/output_all/CTRACKER_all/year.pik"
-JAMSTEC="./../../Output/output_raw/output_all/JAMSTEC_all/year.pik"
-JENA_s76="./../../Output/output_raw/output_all/JENA_s76_all/year.pik"
-JENA_s85="./../../Output/output_raw/output_all/JENA_s85_all/year.pik"
+Rayner="./../../output/inversions/raw/output_all/Rayner_all/year.pik"
+CAMS="./../../output/inversions/raw/output_all/CAMS_all/year.pik"
+CTRACKER="./../../output/inversions/raw/output_all/CTRACKER_all/year.pik"
+JAMSTEC="./../../output/inversions/raw/output_all/JAMSTEC_all/year.pik"
+JENA_s76="./../../output/inversions/raw/output_all/JENA_s76_all/year.pik"
+JENA_s85="./../../output/inversions/raw/output_all/JENA_s85_all/year.pik"
 
-Rayner_monthly="./../../Output/output_raw/output_all/Rayner_all/spatial.pik"
-CAMS_monthly="./../../Output/output_raw/output_all/CAMS_all/spatial.pik"
-CTRACKER_monthly="./../../Output/output_raw/output_all/CTRACKER_all/spatial.pik"
-JAMSTEC_monthly="./../../Output/output_raw/output_all/JAMSTEC_all/spatial.pik"
-JENA_s76_monthly="./../../Output/output_raw/output_all/JENA_s76_all/spatial.pik"
-JENA_s85_monthly="./../../Output/output_raw/output_all/JENA_s85_all/spatial.pik"
+Rayner_monthly="./../../output/inversions/raw/output_all/Rayner_all/spatial.pik"
+CAMS_monthly="./../../output/inversions/raw/output_all/CAMS_all/spatial.pik"
+CTRACKER_monthly="./../../output/inversions/raw/output_all/CTRACKER_all/spatial.pik"
+JAMSTEC_monthly="./../../output/inversions/raw/output_all/JAMSTEC_all/spatial.pik"
+JENA_s76_monthly="./../../output/inversions/raw/output_all/JENA_s76_all/spatial.pik"
+JENA_s85_monthly="./../../output/inversions/raw/output_all/JENA_s85_all/spatial.pik"
 
 
 python analysis.py $Rayner Rayner 10 10

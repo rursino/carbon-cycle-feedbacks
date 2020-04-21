@@ -1,4 +1,4 @@
-""" Runs the linear_regression_time function from invf.Analaysis on all the 6 models with both land and ocean.
+""" Runs the linear_regression_time function from invf.Analysis on all the 6 models with both land and ocean.
 Run this script from the bash shell. """
 
 import sys

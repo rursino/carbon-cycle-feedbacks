@@ -28,10 +28,10 @@ def main():
 
     if input_file.endswith("year.pik"):
         fs = 1
-        output_folder = f"./../../Output/analysis/year/{model_name}/"
+        output_folder = f"./../../output/inversions/analysis/year/{model_name}/"
     elif input_file.endswith("spatial.pik"):
         fs = 12
-        output_folder = f"./../../Output/analysis/monthly/{model_name}/"
+        output_folder = f"./../../output/inversions/analysis/monthly/{model_name}/"
         window_size *= 12
     else:
         raise TypeError("Input file must end in either year or spatial.")
@@ -48,8 +48,8 @@ def main():
         psd(variable, df, fs, output_folder)
 
         if input_file.endswith("spatial.pik"):
-             deseasonalise(variable, df, output_folder)
-             bandpass(variable, df, fc, fs, btype, deseasonalise_first, output_folder, period)
+            deseasonalise(variable, df, output_folder)
+            bandpass(variable, df, fc, fs, btype, deseasonalise_first, output_folder, period)
     
 
 def rolling_trend(variable, df, output_folder, window_size):
