@@ -392,7 +392,7 @@ class ModelEvaluation:
                .loc[start_year:end_year]
               )
         
-        GCP['CO2'] = pd.read_csv("./../../data/CO2/co2/co2_global.csv", index_col=0, header=0)[2:]
+        GCP['CO2'] = pd.read_csv("./../../data/CO2/co2_global.csv", index_col=0, header=0)[2:]
         GCP['land sink'] = -GCP['land sink']
         GCP['ocean sink'] = -GCP['ocean sink']
         GCP['budget imbalance'] = -GCP["budget imbalance"] + GCP['land sink']

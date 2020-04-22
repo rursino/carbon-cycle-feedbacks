@@ -3,7 +3,7 @@
 Run this script from the bash shell. """
 
 import sys
-sys.path.append("./../core/")
+sys.path.append("./../../core/")
 
 import os
 import inv_flux
