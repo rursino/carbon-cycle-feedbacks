@@ -453,7 +453,7 @@ class ModelEvaluation:
         sink: either land or ocean.
         plot: Plots timeseries and scatter plot of GCP and model uptake if True. Defaults to False.
         
-        """
+        """        
         
         if "land" in sink:
             model_sink = "Earth_Land"
@@ -491,6 +491,10 @@ class ModelEvaluation:
         plot: Plots rolling gradients and scatter plot of GCP and model uptake if True. Defaults to False.
         
         """
+        
+        def to_numeric(date):
+            return date.year + (date.month-1 + date.day/31)/12
+        
 
         if "land" in sink:
             model_sink = "Earth_Land"
@@ -499,18 +503,20 @@ class ModelEvaluation:
 
         df = self.data
         GCP = self.GCP
-
-        roll_df = Analysis.rolling_trend(df, model_sink, window_size)
-
-        return roll_df
         
-#         plt.figure(figsize=(14,9))
-#         plt.subplot(211).plot(model_df.index, GCP_df.loc[model_df.index])
-#         plt.subplot(211).plot(model_df)
-#         plt.legend(["GCP", "model"])
-#         plt.subplot(212).scatter(GCP_df.loc[model_df.index], model_df)
+        model_roll_df = Analysis.rolling_trend(self, model_sink, window_size)
+        
+        GCP_roll_df = model_roll_df-1 #???
+        
+        # Plot
+        if plot:
+            plt.figure(figsize=(14,9))
+            plt.subplot(211).plot(GCP.index[:-window_size], GCP_roll_df.values) # FIX index
+            plt.subplot(211).plot(GCP.index[:-window_size], model_roll_df.values)
+            plt.legend(["GCP", "model"])
+            plt.subplot(212).scatter(GCP_roll_df.values, model_roll_df.values)
 
-#         return stats.linregress(GCP_df.loc[model_df.index].values.squeeze(), model_df.values.squeeze())
+        return stats.linregress(GCP.loc[self.time].values.squeeze(), roll_df.values.squeeze())
         
     
     def compare_trend_to_GCP(self, sink, print_results=False):
