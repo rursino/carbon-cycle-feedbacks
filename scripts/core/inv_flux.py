@@ -492,6 +492,8 @@ class ModelEvaluation:
         
         """
         
+        raise NotImplementedError
+        
         def to_numeric(date):
             return date.year + (date.month-1 + date.day/31)/12
         
@@ -504,19 +506,19 @@ class ModelEvaluation:
         df = self.data
         GCP = self.GCP
         
-        model_roll_df = Analysis.rolling_trend(self, model_sink, window_size)
+        model_roll = Analysis.rolling_trend(self, model_sink, window_size).values.squeeze()
         
-        GCP_roll_df = model_roll_df-1 #???
+        GCP_roll = # GCP scripts
         
         # Plot
         if plot:
             plt.figure(figsize=(14,9))
-            plt.subplot(211).plot(GCP.index[:-window_size], GCP_roll_df.values) # FIX index
-            plt.subplot(211).plot(GCP.index[:-window_size], model_roll_df.values)
+            plt.subplot(211).plot(GCP.index[:-window_size], GCP_roll)
+            plt.subplot(211).plot(GCP.index[:-window_size], model_roll)
             plt.legend(["GCP", "model"])
-            plt.subplot(212).scatter(GCP_roll_df.values, model_roll_df.values)
+            plt.subplot(212).scatter(GCP_roll, model_roll)
 
-        return stats.linregress(GCP.loc[self.time].values.squeeze(), roll_df.values.squeeze())
+        return stats.linregress(GCP_roll, model_roll)
         
     
     def compare_trend_to_GCP(self, sink, print_results=False):
