@@ -26,12 +26,9 @@ class Analysis:
         GCP = pd.read_csv('./../../data/GCP/budget.csv', index_col = 0)
 
         self.variable = variable
+        
         self.all_data = GCP
-
-        if variable = "land (obs)":
-            GCP_var = GCP["land sink"] + GCP["budget imbalance"]
-
-        self.data = GCP_var
+        self.data = GCP[variable]
         
     
        
@@ -96,6 +93,9 @@ class Analysis:
         
         freqs, spec = signal.welch(x.values, fs=1) # All GCP timeseries are annual, therefore fs is set to 1.
         
+        period = " (years)"
+        unit = "((GtC/yr)$^2$.yr)"
+        
         if plot:
             plt.figure(figsize=(12,9))
             
@@ -107,7 +107,7 @@ class Analysis:
             plt.gca().invert_xaxis()
             plt.xlim(xlim)
             
-            plt.title(f"Power Spectrum of {variable}")
+            plt.title(f"Power Spectrum of {self.variable}")
             plt.xlabel(f"Period{period}")
             plt.ylabel(f"Spectral Variance {unit}")
 

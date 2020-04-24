@@ -6,6 +6,7 @@ import pickle
 import matplotlib.pyplot as plt
 from datetime import datetime
 from scipy import stats, signal
+import GCP_flux as GCPf
 
 
 
@@ -393,12 +394,10 @@ class ModelEvaluation:
               )
         
         GCP['CO2'] = pd.read_csv("./../../data/CO2/co2_global.csv", index_col=0, header=0)[2:]
-        GCP['land sink'] = -GCP['land sink']
-        GCP['ocean sink'] = -GCP['ocean sink']
-        GCP['budget imbalance'] = -GCP["budget imbalance"] + GCP['land sink']
+        GCP['land sink'] = GCP['land sink']
+        GCP['ocean sink'] = GCP['ocean sink']
         GCP.rename(columns={"ocean sink": "ocean",
-                            "land sink": "land (model)",
-                            "budget imbalance": "land"
+                            "land sink": "land"
                            },
                    inplace=True)
         
@@ -480,7 +479,6 @@ class ModelEvaluation:
         return linreg
     
     
-    # NOT finished.
     def regress_rolling_trend_to_GCP(self, sink, window_size, plot=False):
         """Calculates linear regression of model rolling gradient to GCP rolling gradient
         and shows a plot of the rolling gradients and scatter plot if requested.
@@ -492,7 +490,6 @@ class ModelEvaluation:
         
         """
         
-        raise NotImplementedError
         
         def to_numeric(date):
             return date.year + (date.month-1 + date.day/31)/12
@@ -504,17 +501,19 @@ class ModelEvaluation:
             model_sink = "Earth_Ocean"
 
         df = self.data
-        GCP = self.GCP
+        time_range = self.GCP.index[:-window_size]
         
         model_roll = Analysis.rolling_trend(self, model_sink, window_size).values.squeeze()
         
-        GCP_roll = # GCP scripts
+        GCP_roll_df = GCPf.Analysis("land sink").rolling_trend(window_size=window_size)
+        GCP_roll = GCP_roll_df.loc[time_range].values.squeeze()
+        
         
         # Plot
         if plot:
             plt.figure(figsize=(14,9))
-            plt.subplot(211).plot(GCP.index[:-window_size], GCP_roll)
-            plt.subplot(211).plot(GCP.index[:-window_size], model_roll)
+            plt.subplot(211).plot(time_range, GCP_roll)
+            plt.subplot(211).plot(time_range, model_roll)
             plt.legend(["GCP", "model"])
             plt.subplot(212).scatter(GCP_roll, model_roll)
 
