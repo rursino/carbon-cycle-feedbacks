@@ -17,17 +17,17 @@ import pandas as pd
 if __name__ == "__main__":
     input_file = sys.argv[1]
     output_file = sys.argv[2]
-    
+
     if input_file.endswith(".pickle"):
         input_file = pickle.load(open(input_file, 'rb'))
-    
-    ds = inv_flux.TheDataFrame(data=input_file)
-    
+
+    ds = inv_flux.SpatialAgg(data=input_file)
+
     # For plotting land and ocean fluxes (global, yearly).
     ds_year = ds.spatial_integration().resample({'time': 'Y'}).sum()
-    
+
     year_array = [year.year for year in ds_year.time.values]
-    
+
     df = pd.DataFrame({'Earth_Land': ds_year.Earth_Land.values,
                        'Earth_Ocean': ds_year.Earth_Ocean.values,
                        'South_Land': ds_year.South_Land.values,
@@ -38,10 +38,10 @@ if __name__ == "__main__":
                        'North_Ocean': ds_year.North_Ocean.values,
                        'Year': year_array
                       }).set_index('Year')
-    
+
     df.to_csv(output_file) # Save dataframe as a csv file.
     print("Successfully saved file {}".format(output_file))
-    
+
 #     if len(sys.argv) > 3:
 #         ax = plt.figure().gca()
 #         ax.plot(df.index, df.Earth_Land)
