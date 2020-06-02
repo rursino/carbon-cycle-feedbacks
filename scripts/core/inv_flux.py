@@ -207,20 +207,20 @@ class SpatialAgg:
             earth_ocean_sink = earth_grid_area*earth_ocean_flux
 
             conditions = iter(lat_conditions)
-            for var in values[:4]:
+            for var in list(values.keys())[:4]:
                 sum = np.sum(1e-15*earth_land_sink)[next(conditions)]
                 values[var].append(sum)
 
             conditions = iter(lat_conditions)
-            for var in values[4:]:
+            for var in list(values.keys())[4:]:
                 sum = np.sum(1e-15*earth_ocean_sink)[next(conditions)]
                 values[var].append(sum)
 
-            time_vals.append(df.sel(time=time_point).time.values[0]))
+            time_vals.append(df.sel(time=time_point).time.values[0])
 
 
         ds = xr.Dataset(
-            {key: (('time', value) for (key, value) in values},
+            {key: (('time'), value) for (key, value) in values},
             coords={'time': (('time'), time_vals)}
         )
 
