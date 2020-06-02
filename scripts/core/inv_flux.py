@@ -102,7 +102,7 @@ class SpatialAgg:
         self.data = _data
 
     def spatial_integration(self, start_time=None, end_time=None,
-    lat_split=23, lon_range=None):
+    lat_split=30, lon_range=None):
         """Returns a xr.Dataset of total global and regional sinks at a
         specific time point or a range of time points.
         The regions are split into land and ocean and are latitudinally split
@@ -135,7 +135,7 @@ class SpatialAgg:
                 90 degN to 30 degN, 30 degN to 30 degS and 30 degS to 90 degS.
             And so on.
 
-            Default is 23.
+            Default is 30.
 
         lon_range: list-like, optional
 
@@ -145,12 +145,6 @@ class SpatialAgg:
         """
 
         df = self.data
-
-        values = {
-        'Time':[],
-        'Earth_Land':[], 'South_Land':[], 'Tropical_Land':[], 'North_Land':[],
-        'Earth_Ocean':[],'South_Ocean':[], 'Tropical_Ocean':[],'North_Ocean':[]
-        }
 
         if start_time == None:
             start_time = df.time.values[0].strftime('%Y-%m')
@@ -177,7 +171,18 @@ class SpatialAgg:
                 '05': 31, '06': 30, '07': 31, '08': 31,
                 '09': 30, '10': 31, '11': 30, '12': 31}
 
-        for index,time_point in enumerate(arg_time_range):
+        values = {
+        "Earth_Land": [], "South_Land": [], "Tropical_Land": [],
+        "North_Land": [], "Earth_Ocean": [], "South_Ocean": [],
+        "Tropical_Ocean": [], "North_Ocean": []}
+
+        lat_conditions = (
+        True, lat < -lat_split,
+        (lat>-lat_split) & (lat<lat_split), lat>lat_split
+        )
+
+
+        for index, time_point in enumerate(arg_time_range):
 
             days_in_month = days[time_point[-2:]]
 
@@ -201,38 +206,23 @@ class SpatialAgg:
             earth_land_sink = earth_grid_area*earth_land_flux
             earth_ocean_sink = earth_grid_area*earth_ocean_flux
 
-            # values['Time'].append(df.sel(time=time_point).time.values[0])
-            #
-            # lat_conditions = (
-            # True, lat < -lat_split,
-            # (lat>-lat_split) & (lat<lat_split), lat>lat_split,
-            # True, lat < -lat_split,
-            # (lat>-lat_split) & (lat<lat_split), lat>lat_split
-            # )
-            #
-            # for key in islice(values, 1, None):
-            #     values[key].append(np.sum(1e-15*earth_land_sink)[next(lat_conditions)])
+            conditions = iter(lat_conditions)
+            for var in values[:4]:
+                sum = np.sum(1e-15*earth_land_sink)[next(conditions)]
+                values[var].append(sum)
 
-            values['Time'].append(df.sel(time=time_point).time.values[0])
-            values['Earth_Land'].append(np.sum(1e-15*earth_land_sink))
-            values['South_Land'].append(np.sum(1e-15*earth_land_sink[lat<-lat_split]))
-            values['Tropical_Land'].append(np.sum(1e-15*earth_land_sink[(lat>-lat_split) & (lat<lat_split)]))
-            values['North_Land'].append(np.sum(1e-15*earth_land_sink[lat>lat_split]))
-            values['Earth_Ocean'].append(np.sum(1e-15*earth_ocean_sink))
-            values['South_Ocean'].append(np.sum(1e-15*earth_ocean_sink[lat<-lat_split]))
-            values['Tropical_Ocean'].append(np.sum(1e-15*earth_ocean_sink[(lat>-lat_split) & (lat<lat_split)]))
-            values['North_Ocean'].append(np.sum(1e-15*earth_ocean_sink[lat>lat_split]))
+            conditions = iter(lat_conditions)
+            for var in values[4:]:
+                sum = np.sum(1e-15*earth_ocean_sink)[next(conditions)]
+                values[var].append(sum)
 
-        ds = xr.Dataset({'Earth_Land': (('time'), values['Earth_Land']),
-                         'South_Land': (('time'), values['South_Land']),
-                         'Tropical_Land': (('time'), values['Tropical_Land']),
-                         'North_Land': (('time'), values['North_Land']),
-                         'Earth_Ocean': (('time'), values['Earth_Ocean']),
-                         'South_Ocean': (('time'), values['South_Ocean']),
-                         'Tropical_Ocean': (('time'), values['Tropical_Ocean']),
-                         'North_Ocean': (('time'), values['North_Ocean'])},
-                        coords={'time': (('time'), values['Time'])}
-          )
+            time_vals.append(df.sel(time=time_point).time.values[0]))
+
+
+        ds = xr.Dataset(
+            {key: (('time', value) for (key, value) in values},
+            coords={'time': (('time'), time_vals)}
+        )
 
         return ds
 
