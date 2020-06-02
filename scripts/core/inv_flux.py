@@ -1,3 +1,7 @@
+"""
+"""
+
+""" IMPORTS"""
 import numpy as np
 import xarray as xr
 import sys
@@ -7,11 +11,13 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 from scipy import stats, signal
 import GCP_flux as GCPf
+from itertools import *
 
 
-
-""" The following three functions obtain the area of specific grid boxes of the Earth in different formats.
-It is used in the spatial_integration function within the SpatialAgg class. """
+"""The following three functions obtain the area of specific grid boxes of the
+Earth in different formats. It is used in the spatial_integration function
+within the SpatialAgg class.
+"""
 
 from numpy import pi
 r_earth = 6.371e6 # Radius of Earth
@@ -22,11 +28,13 @@ def scalar_earth_area(minlat, maxlat, minlon, maxlon):
 
     diff_lon = np.unwrap((minlon,maxlon), discont=360.+1e-6)
 
-    return 2.*pi*r_earth**2 *(np.sin(dtor*maxlat) - np.sin(dtor*minlat))*(diff_lon[1]-diff_lon[0])/360.
+    return 2.*pi*r_earth**2 *(np.sin(dtor*maxlat) -
+    np.sin(dtor*minlat))*(diff_lon[1]-diff_lon[0])/360.
 
 
 def earth_area(minlat, maxlat, minlon, maxlon):
-    """Returns grid of areas with shape=(minlon, minlat) and earth area."""
+    """Returns grid of areas with shape=(minlon, minlat) and earth area.
+    """
 
     result = np.zeros((np.array(minlon).size, np.array(minlat).size))
     diffsinlat = 2.*pi*r_earth**2 *(np.sin(dtor*maxlat) - np.sin(dtor*minlat))
@@ -38,7 +46,9 @@ def earth_area(minlat, maxlat, minlon, maxlon):
     return result
 
 def earth_area_grid(lats,lons):
-    """Returns an array of the areas of each grid box within a defined set of lats and lons."""
+    """Returns an array of the areas of each grid box within a defined set of
+    lats and lons.
+    """
 
     result=np.zeros((lats.size, lons.size))
 
@@ -48,7 +58,12 @@ def earth_area_grid(lats,lons):
     maxlons=lons + 0.5*(lons[1]-lons[0])
 
     for i in range(lats.size):
-        result[i,:] = scalar_earth_area(minlats[i],maxlats[i],minlons[0],maxlons[0])
+        result[i,:] = scalar_earth_area(
+        minlats[i],
+        maxlats[i],
+        minlons[0],
+        maxlons[0]
+        )
 
     return result
 
@@ -56,12 +71,17 @@ def earth_area_grid(lats,lons):
 
 
 class SpatialAgg:
-    """ This class takes an instance of the netCDF datasets from the Peylin_flux/data folder.
-    It provides features to prepare the datasets for compatibility for the functions in the inv.Analysis class. This includes the integration of fluxes on spatial and temporal scales and conversion of cfdatetime time objects to datetime.
+    """This class takes an instance of the netCDF datasets from the
+    Peylin_flux/data folder.
+    It provides features to prepare the datasets for compatibility for the
+    functions in the inv.Analysis class. This includes the integration of
+    fluxes on spatial and temporal scales and conversion of cfdatetime time
+    objects to datetime.
 
     Parameters
-    ----------
-    data: an instance of an xarray.Dataset, xarray.DataArray or .nc file.
+    ==========
+
+    data: one of xarray.Dataset, xarray.DataArray and nc.file.
 
     """
 
@@ -69,6 +89,7 @@ class SpatialAgg:
         """ Initialise an instance of an SpatialAgg. """
         if isinstance(data, xr.Dataset) or isinstance(data, xr.DataArray):
             _data = data
+
         elif type(data) == str and data.endswith('.pickle'):
             read_file = open(data, 'rb')
             _data = pickle.load(read_file)
@@ -80,29 +101,56 @@ class SpatialAgg:
 
         self.data = _data
 
-
-    def spatial_integration(self, start_time=None, end_time=None):
-        """Returns a xr.Dataset of total global and regional sinks at a specific time point or a range of time points.
-        The regions are split into land and ocean and are latitudinally split as follows:
-        90 degN to 23 degN, 23 degN to 23 degS and 23 degS to 90 degS.
+    def spatial_integration(self, start_time=None, end_time=None,
+    lat_split=23, lon_range=None):
+        """Returns a xr.Dataset of total global and regional sinks at a
+        specific time point or a range of time points.
+        The regions are split into land and ocean and are latitudinally split
+        according to passed argument for lat_split.
+        A longitudinal range can also be chosen.
         Globally integrated fluxes are also included for each of land and ocean.
 
         Parameters
-        ----------
-        start_time: string, default None
-            The month and year of the time to start the integration in the format '%Y-%M'.
+        ==========
 
-        end_time: string, default None
-            The month and year of the time to end the integration in the format '%Y-%M'.
-            Note that the integration will stop the month before argument.
+        start_time: string, optional
+
+            The month and year of the time to start the integration in the
+            format '%Y-%M'.
+            Default is None.
+
+        end_time: string, optional
+
+            The month and year of the time to end the integration in the
+            format '%Y-%M'. Note that the integration will stop the month
+            before argument.
+            Default is None.
+
+        lat_split: integer, optional
+
+            Split the latitudes and output sums for each of those splits.
+            If 23 is chosen, the latitudes are split by:
+                90 degN to 23 degN, 23 degN to 23 degS and 23 degS to 90 degS.
+            If 30 is chosen, the latitudes are split by:
+                90 degN to 30 degN, 30 degN to 30 degS and 30 degS to 90 degS.
+            And so on.
+
+            Default is 23.
+
+        lon_range: list-like, optional
+
+            Range of longitudinal values to sum. Other longitudes are ignored.
+            Defaults to None, which sums over all longitudinal values.
 
         """
 
         df = self.data
 
-        values = {'Time':[],
-                  'Earth_Land':[], 'South_Land':[], 'Tropical_Land':[], 'North_Land':[],
-                  'Earth_Ocean':[],'South_Ocean':[], 'Tropical_Ocean':[],'North_Ocean':[]}
+        values = {
+        'Time':[],
+        'Earth_Land':[], 'South_Land':[], 'Tropical_Land':[], 'North_Land':[],
+        'Earth_Ocean':[],'South_Ocean':[], 'Tropical_Ocean':[],'North_Ocean':[]
+        }
 
         if start_time == None:
             start_time = df.time.values[0].strftime('%Y-%m')
@@ -115,7 +163,11 @@ class SpatialAgg:
 
             end_time = next_month.strftime('%Y-%m')
 
-        arg_time_range = pd.date_range(start=start_time, end=end_time, freq='M').strftime('%Y-%m')
+        arg_time_range = (
+        pd
+            .date_range(start=start_time, end=end_time, freq='M')
+            .strftime('%Y-%m')
+        )
 
         lat = df.latitude
         lon = df.longitude
@@ -129,27 +181,47 @@ class SpatialAgg:
 
             days_in_month = days[time_point[-2:]]
 
-            earth_land_flux = df['Terrestrial_flux'].sel(time=time_point).values[0]*(days_in_month/365)
+            earth_land_flux = (
+            df['Terrestrial_flux']
+                .sel(time=time_point).values[0]*(days_in_month/365)
+                )
 
-            # Rayner dataset has ocean variable as 'ocean' instead of 'Ocean_flux'.
+            # Rayner has ocean variable as 'ocean' instead of 'Ocean_flux'.
             try:
-                earth_ocean_flux = df['Ocean_flux'].sel(time=time_point).values[0]*(days_in_month/365)
+                earth_ocean_flux = (
+                df['Ocean_flux']
+                    .sel(time=time_point).values[0]*(days_in_month/365)
+                    )
             except KeyError:
-                earth_ocean_flux = df['ocean'].sel(time=time_point).values[0]*(days_in_month/365)
+                earth_ocean_flux = (
+                df['ocean']
+                    .sel(time=time_point).values[0]*(days_in_month/365)
+                    )
 
             earth_land_sink = earth_grid_area*earth_land_flux
             earth_ocean_sink = earth_grid_area*earth_ocean_flux
 
+            # values['Time'].append(df.sel(time=time_point).time.values[0])
+            #
+            # lat_conditions = (
+            # True, lat < -lat_split,
+            # (lat>-lat_split) & (lat<lat_split), lat>lat_split,
+            # True, lat < -lat_split,
+            # (lat>-lat_split) & (lat<lat_split), lat>lat_split
+            # )
+            #
+            # for key in islice(values, 1, None):
+            #     values[key].append(np.sum(1e-15*earth_land_sink)[next(lat_conditions)])
+
             values['Time'].append(df.sel(time=time_point).time.values[0])
             values['Earth_Land'].append(np.sum(1e-15*earth_land_sink))
-            values['South_Land'].append(np.sum(1e-15*earth_land_sink[lat<-23]))
-            values['Tropical_Land'].append(np.sum(1e-15*earth_land_sink[(lat>-23) & (lat<23)]))
-            values['North_Land'].append(np.sum(1e-15*earth_land_sink[lat>23]))
+            values['South_Land'].append(np.sum(1e-15*earth_land_sink[lat<-lat_split]))
+            values['Tropical_Land'].append(np.sum(1e-15*earth_land_sink[(lat>-lat_split) & (lat<lat_split)]))
+            values['North_Land'].append(np.sum(1e-15*earth_land_sink[lat>lat_split]))
             values['Earth_Ocean'].append(np.sum(1e-15*earth_ocean_sink))
-            values['South_Ocean'].append(np.sum(1e-15*earth_ocean_sink[lat<-23]))
-            values['Tropical_Ocean'].append(np.sum(1e-15*earth_ocean_sink[(lat>-23) & (lat<23)]))
-            values['North_Ocean'].append(np.sum(1e-15*earth_ocean_sink[lat>23]))
-
+            values['South_Ocean'].append(np.sum(1e-15*earth_ocean_sink[lat<-lat_split]))
+            values['Tropical_Ocean'].append(np.sum(1e-15*earth_ocean_sink[(lat>-lat_split) & (lat<lat_split)]))
+            values['North_Ocean'].append(np.sum(1e-15*earth_ocean_sink[lat>lat_split]))
 
         ds = xr.Dataset({'Earth_Land': (('time'), values['Earth_Land']),
                          'South_Land': (('time'), values['South_Land']),
@@ -165,13 +237,16 @@ class SpatialAgg:
         return ds
 
     def cftime_to_datetime(self, format='%Y-%m'):
-        """Takes a xr.Dataset with cftime values and converts them into datetimes.
+        """Takes a xr.Dataset with cftime values and converts them into
+        datetimes.
 
         Parameters
-        ----------
+        ==========
+
         self: xr.Dataset.
+
         format: format of datetime.
-        ----------
+
         """
 
         time_list = []
@@ -183,19 +258,23 @@ class SpatialAgg:
 
 
 class Analysis:
-    """ This class takes an instance of spatially and/or temporally integrated datasets and provides
-    analysis and visualisations on the data as required, including plotting timeseries, linear regression
-    over whole an decadal periods and frequency analyses.
+    """ This class takes an instance of spatially and/or temporally integrated
+    datasets and provides analysis and visualisations on the data as required,
+    including plotting timeseries, linear regression over whole an decadal
+    periods and frequency analyses.
 
     Parameters
-    ----------
+    ==========
+
     data: an instance of an xarray.Dataset.
 
     """
 
 
     def __init__(self, data):
-        """Take the xr.Dataset with cftime values and converts them into datetimes."""
+        """Take the xr.Dataset with cftime values and converts them into
+        datetimes.
+        """
 
         self.data = data
 
@@ -204,15 +283,35 @@ class Analysis:
 
 
 
-    def rolling_trend(self, variable, window_size=25, plot=False, include_pearson=False):
-        """ Calculates the slope of the trend of an uptake variable for each time window and for a given window size. The function also plots the slopes as a timeseries and, if prompted, the r-value of each slope as a timeseries.
+    def rolling_trend(self, variable, window_size=25, plot=False,
+    include_pearson=False):
+        """ Calculates the slope of the trend of an uptake variable for each
+        time window and for a given window size. The function also plots the
+        slopes as a timeseries and, if prompted, the r-value of each slope as
+        a timeseries.
 
         Parameters
-        ----------
-        variable: carbon uptake variable to regress.
-        window_size: size of time window of trends.
-        plot: Defaults to False. Option to show plots of the slopes.
-        include_pearson: Defaults to False. Option to include dataframe and plot of r-values for each year.
+        ==========
+
+        variable: string
+
+            carbon uptake variable to regress.
+
+        window_size: integer
+
+            size of time window of trends.
+
+        plot: bool, optional
+
+            Option to show plots of the slopes.
+            Defaults to False.
+
+        include_pearson: bool, optional
+
+            Option to include dataframe and plot of
+            r-values for each year.
+
+            Defaults to False.
 
         """
 
@@ -224,7 +323,8 @@ class Analysis:
 
         for i in range(0, len(self.time) - window_size):
             sub_time = self.time[i:i+window_size+1]
-            sub_vals = self.data[variable].sel(time = slice(self.data.time[i], self.data.time[i+window_size])).values
+            sub_vals = self.data[variable].sel(time = slice(self.data.time[i],
+            self.data.time[i+window_size])).values
 
             linreg = stats.linregress(to_numeric(sub_time), sub_vals)
 
@@ -232,7 +332,8 @@ class Analysis:
             r_vals.append(linreg[2])
 
 
-        roll_df = pd.DataFrame({f"{window_size}-year trend slope": roll_vals}, index=to_numeric(self.time[:-window_size]))
+        roll_df = pd.DataFrame({f"{window_size}-year trend slope": roll_vals},
+        index=to_numeric(self.time[:-window_size]))
 
         if plot:
 
@@ -247,25 +348,43 @@ class Analysis:
             plt.ylabel("Slope of C flux trend (GtC/ppm/yr)", fontsize=20)
 
         if include_pearson:
-            r_df = pd.DataFrame({"r-values of trends": r_vals}, index=to_numeric(self.time[:-window_size]))
+            r_df = pd.DataFrame({"r-values of trends": r_vals},
+            index=to_numeric(self.time[:-window_size]))
             return roll_df, r_df
         else:
             return roll_df
 
-
     def psd(self, variable, fs=1, xlim=None, plot=False):
-        """ Calculates the power spectral density (psd) of a timeseries of a variable using the Welch method. Also provides the timeseries plot and psd plot if passed. This function is designed for the monthly timeseries, but otherwise plotting the dataframe is possible.
+        """ Calculates the power spectral density (psd) of a timeseries of a
+        variable using the Welch method. Also provides the timeseries plot and
+        psd plot if passed. This function is designed for the monthly
+        timeseries, but otherwise plotting the dataframe is possible.
 
         Parameters
-        ----------
-        variable: carbon uptake variable to calculate psd.
-        fs: sampling frequency.
-        xlim: apply limit to x-axis of the psd. Must be a list of two values.
-        plot: defaults to False. If assigned to True, shows two plots of timeseries and psd.
+        ==========
+
+        variable: string
+
+            carbon uptake variable to calculate psd.
+
+        fs: integer
+
+            sampling frequency.
+
+        xlim: list-like
+
+            apply limit to x-axis of the psd. Must be a list of two values.
+
+        plot: bool, optional
+
+            If assigned to True, shows two plots of timeseries and psd.
+            Defaults to False.
 
         """
 
-        if fs == 12 or fs==1: #for analysis.py: fs==12 means that annual resolution timeseries is being passed as self. fs==1 means resolution is annual.
+        if fs == 12 or fs==1: #for analysis.py: fs==12 means that annual
+        # resolution timeseries is being passeD as self. fs==1 means
+        # resolution is annual.
             period = " (years)"
             unit = "((GtC/yr)$^2$.yr)"
         else:
@@ -290,15 +409,19 @@ class Analysis:
             plt.xlabel(f"Period{period}")
             plt.ylabel(f"Spectral Variance {unit}")
 
-        return pd.DataFrame({f"Period{period}": 1/freqs, f"Spectral Variance {unit}": spec}, index=freqs)
-
+        return pd.DataFrame({f"Period{period}": 1/freqs,
+        f"Spectral Variance {unit}": spec}, index=freqs)
 
     def deseasonalise(self, variable):
-        """ Deseasonalise a timeseries of a variable by applying and using a seasonal index.
+        """ Deseasonalise a timeseries of a variable by applying and using a
+        seasonal index.
 
         Parameters:
-        -----------
-        variable: variable to apply from self object.
+        ==========
+
+        variable: string
+
+            variable to apply from self object.
 
         """
 
@@ -318,18 +441,40 @@ class Analysis:
 
         return x - (s-np.mean(s))
 
-
-    def bandpass(self, variable, fc, fs=1, order=5, btype="low", deseasonalise_first=False):
-        """ Applies a bandpass filter to a dataset (either lowpass, highpass or bandpass) using the scipy.signal.butter function.
+    def bandpass(self, variable, fc, fs=1, order=5, btype="low",
+    deseasonalise_first=False):
+        """ Applies a bandpass filter to a dataset (either lowpass, highpass
+        or bandpass) using the scipy.signal.butter function.
 
         Parameters:
-        -----------
-        variable: variable to apply from self object.
-        fc: cut-off frequency or frequencies.
-        fs: sample frequency of x.
-        order: order of the filter. Defaults to 5.
-        btype: options are low, high and band.
-        deseasonalise_first: Defaults to False. Option to deseasonalise timeseries before applying bandpass filter.
+        ===========
+
+        variable: string
+
+            variable to apply from self object.
+
+        fc: integer
+
+            cut-off frequency or frequencies.
+
+        fs: integer
+
+            sample frequency of x.
+
+        order: integer, optional
+
+            order of the filter.
+            Defaults to 5.
+
+        btype: string, optional
+
+            options are low, high and band.
+            Defaults to low.
+
+        deseasonalise_first: bool, optional
+
+            Option to deseasonalise timeseries before applying bandpass filter.
+            Defaults to False.
 
         """
 
@@ -360,21 +505,24 @@ class Analysis:
         return signal.filtfilt(b, a, x)
 
 
-
-
 class ModelEvaluation:
-    """ This class takes an instance of the model uptake datasets and provides evaluations
-    against the Global Carbon Project (GCP) uptake timeseries. Must be annual resolution to match GCP.
+    """ This class takes an instance of the model uptake datasets and provides
+    evaluations against the Global Carbon Project (GCP) uptake timeseries.
+    Must be annual resolution to match GCP.
 
     Parameters
-    ----------
-    data: an instance of an xarray.Dataset.
+    ==========
+
+    data: xarray.Dataset
+
+        dataset to use for model evaluation.
 
     """
 
-
     def __init__(self, data):
-        """Take the xr.Dataset with cftime values and converts them into datetimes."""
+        """Take the xr.Dataset with cftime values and converts them into
+        datetimes.
+        """
 
         self.data = data
 
@@ -393,7 +541,8 @@ class ModelEvaluation:
                .loc[start_year:end_year]
               )
 
-        GCP['CO2'] = pd.read_csv("./../../data/CO2/co2_global.csv", index_col=0, header=0)[2:]
+        GCP['CO2'] = pd.read_csv("./../../data/CO2/co2_global.csv",
+        index_col=0, header=0)[2:]
         GCP['land sink'] = GCP['land sink']
         GCP['ocean sink'] = GCP['ocean sink']
         GCP.rename(columns={"ocean sink": "ocean",
@@ -403,16 +552,20 @@ class ModelEvaluation:
 
         self.GCP = GCP
 
-
-
     def plot_vs_GCP(self, sink, x="time"):
         """Plots variable chosen from model uptake timeseries and GCP uptake
         timeseries, either against time or CO2 concentration.
 
         Parameters:
-        -----------
-        sink: either land or ocean.
-        x: x axis; either time or CO2. Defaults to time.
+        ===========
+        sink: string
+
+            either land or ocean.
+
+        x: string, optional
+
+            x axis; either time or CO2.
+            Defaults to 'time'.
 
         """
 
@@ -442,15 +595,21 @@ class ModelEvaluation:
 
         plt.legend(["GCP", "Model"], fontsize=20)
 
-
     def regress_timeseries_to_GCP(self, sink, plot=False):
-        """Calculates linear regression of model uptake to GCP uptake and shows a plot
-        of the timeseries and scatter plot if requested.
+        """Calculates linear regression of model uptake to GCP uptake and
+        shows a plot of the timeseries and scatter plot if requested.
 
         Parameters:
-        -----------
-        sink: either land or ocean.
-        plot: Plots timeseries and scatter plot of GCP and model uptake if True. Defaults to False.
+        ===========
+
+        sink: string
+
+            either land or ocean.
+
+        plot: bool, optional
+
+            Plots timeseries and scatter plot of GCP and model uptake if True.
+            Defaults to False.
 
         """
 
@@ -478,15 +637,23 @@ class ModelEvaluation:
 
         return linreg
 
-
     def regress_rolling_trend_to_GCP(self, sink, window_size, plot=False):
-        """Calculates linear regression of model rolling gradient to GCP rolling gradient
-        and shows a plot of the rolling gradients and scatter plot if requested.
+        """Calculates linear regression of model rolling gradient to GCP
+        rolling gradient and shows a plot of the rolling gradients and scatter
+        plot if requested.
 
         Parameters:
-        -----------
-        sink: either land or ocean.
-        plot: Plots rolling gradients and scatter plot of GCP and model uptake if True. Defaults to False.
+        ===========
+
+        sink: string
+
+            either land or ocean.
+
+        plot: bool, optional
+
+            Plots rolling gradients and scatter plot of GCP and model uptake
+            if True.
+            Defaults to False.
 
         """
 
@@ -503,9 +670,17 @@ class ModelEvaluation:
         df = self.data
         time_range = self.GCP.index[:-window_size]
 
-        model_roll = Analysis.rolling_trend(self, model_sink, window_size).values.squeeze()
+        model_roll = (
+        Analysis
+            .rolling_trend(self, model_sink, window_size).values
+            .squeeze()
+        )
 
-        GCP_roll_df = GCPf.Analysis("land sink").rolling_trend(window_size=window_size)
+        GCP_roll_df = (
+        GCPf
+            .Analysis("land sink")
+            .rolling_trend(window_size=window_size)
+        )
         GCP_roll = GCP_roll_df.loc[time_range].values.squeeze()
 
 
@@ -519,14 +694,17 @@ class ModelEvaluation:
 
         return stats.linregress(GCP_roll, model_roll)
 
-
     def compare_trend_to_GCP(self, sink, print_results=False):
-        """Calculates long-term trend of model uptake (over the whole time range) and GCP uptake.
-        Also calculates the percentage difference of the trends.
+        """Calculates long-term trend of model uptake (over the whole time
+        range) and GCP uptake. Also calculates the percentage difference of
+        the trends.
 
         Parameters:
-        -----------
-        sink: either land or ocean.
+        ===========
+
+        sink: string
+
+            either land or ocean.
 
         """
 
@@ -553,13 +731,17 @@ class ModelEvaluation:
                 "Model_slope (MtC/yr)": model_stats[0]*1e3,
                 "%_diff": (GCP_stats[0]*100/model_stats[0])-100}
 
-
     def autocorrelation_plot(self, variable):
-        """Plots autocorrelation of model uptake timeseries using pandas.plotting.
+        """Plots autocorrelation of model uptake timeseries using
+        pandas.plotting.
 
         Parameters:
-        -----------
-        variable: variable from self.data.
+        ===========
+
+        variable: string
+
+            variable from self.data.
+
         """
 
         return pd.plotting.autocorrelation_plot(self.data[variable].values)
