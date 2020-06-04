@@ -68,8 +68,6 @@ def earth_area_grid(lats,lons):
     return result
 
 
-
-
 class SpatialAgg:
     """This class takes an instance of the netCDF datasets from the
     Peylin_flux/data folder.
@@ -176,13 +174,15 @@ class SpatialAgg:
         "North_Land": [], "Earth_Ocean": [], "South_Ocean": [],
         "Tropical_Ocean": [], "North_Ocean": []}
 
+        time_vals = []
+
         lat_conditions = (
         True, lat < -lat_split,
         (lat>-lat_split) & (lat<lat_split), lat>lat_split
         )
 
 
-        for index, time_point in enumerate(arg_time_range):
+        for time_point in arg_time_range:
 
             days_in_month = days[time_point[-2:]]
 
@@ -206,21 +206,20 @@ class SpatialAgg:
             earth_land_sink = earth_grid_area*earth_land_flux
             earth_ocean_sink = earth_grid_area*earth_ocean_flux
 
-            conditions = iter(lat_conditions)
+            condition = iter(lat_conditions)
             for var in list(values.keys())[:4]:
-                sum = np.sum(1e-15*earth_land_sink)[next(conditions)]
+                sum = np.sum(1e-15*earth_land_sink[next(condition)])
                 values[var].append(sum)
 
-            conditions = iter(lat_conditions)
+            condition = iter(lat_conditions)
             for var in list(values.keys())[4:]:
-                sum = np.sum(1e-15*earth_ocean_sink)[next(conditions)]
+                sum = np.sum(1e-15*earth_ocean_sink[next(condition)])
                 values[var].append(sum)
 
             time_vals.append(df.sel(time=time_point).time.values[0])
 
-
         ds = xr.Dataset(
-            {key: (('time'), value) for (key, value) in values},
+            {key: (('time'), value) for (key, value) in values.items()},
             coords={'time': (('time'), time_vals)}
         )
 
