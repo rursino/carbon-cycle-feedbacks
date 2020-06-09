@@ -1,0 +1,110 @@
+"""Development of the TEMP.py script.
+"""
+
+
+""" IMPORTS """
+import xarray as xr
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+""" INPUTS """
+fname = "./../../data/temp/CRUTEM.4.6.0.0.anomalies.nc"
+
+
+""" FUNCTIONS """
+def spatial_averaging(df, start_time=None, end_time=None,
+lat_split=30, lon_range=None):
+    """Returns a xr.Dataset of total global and regional average temperature at
+    a specific time point or a range of time points.
+    The regions are split into land and ocean and are latitudinally split
+    according to passed argument for lat_split.
+    A longitudinal range can also be chosen.
+    Globally averaged temperatures are also included for each of land and ocean.
+
+    Parameters
+    ==========
+
+    start_time: int, optional
+
+        The year of the time to start the averaging. Must be an integer.
+        Default is None.
+
+    end_time: int, optional
+
+        The year of the time to end the averaging. Must be an integer. Note
+        that the averaging will stop the year before argument.
+        Default is None.
+
+    lat_split: integer, optional
+
+        Split the latitudes and output averages for each of those splits.
+        If 23 is chosen, the latitudes are split by:
+            90 degN to 23 degN, 23 degN to 23 degS and 23 degS to 90 degS.
+        If 30 is chosen, the latitudes are split by:
+            90 degN to 30 degN, 30 degN to 30 degS and 30 degS to 90 degS.
+        And so on.
+
+        Default is 30.
+
+    lon_range: list-like, optional
+
+        Range of longitudinal values to sum. Other longitudes are ignored.
+        Defaults to None, which sums over all longitudinal values.
+
+    """
+
+    if start_time == None:
+        start_time = df.time.values[0].__str__()[:7]
+    if end_time == None:
+        end_time = df.time.values[-1].__str__()[:7]
+
+        year, month = int(end_time[:4]), int(end_time[5:])
+        if month == 12:
+            end_time = f"{year+1}-01"
+        elif month < 9:
+            end_time = f"{year}-0{month+1}"
+        else:
+            end_time = f"{year}-{month+1}"
+
+    arg_time_range = (
+    pd
+        .date_range(start=start_time, end=end_time, freq='M')
+        .strftime('%Y-%m')
+    )
+
+    lat = df.latitude
+    lon = df.longitude
+
+    values = {
+    "Earth": [], "South": [], "Tropical": [], "North": []}
+
+    time_vals = []
+
+    lat_conditions = (
+    True, lat < -lat_split,
+    (lat>-lat_split) & (lat<lat_split), lat>lat_split
+    )
+
+    for time_point in arg_time_range:
+        temp = df['temperature_anomaly'].sel(time=time_point).values[0]
+
+        condition = iter(lat_conditions)
+        for var in list(values.keys()):
+            mean = np.nanmean(temp[next(condition)])
+            values[var].append(mean)
+
+        time_vals.append(df.sel(time=time_point).time.values[0])
+
+    ds = xr.Dataset(
+        {key: (('time'), value) for (key, value) in values.items()},
+        coords={'time': (('time'), time_vals)}
+    )
+
+    return ds
+
+
+""" EXECUTION """
+df = xr.open_dataset(fname)
+res = spatial_averaging(df)
