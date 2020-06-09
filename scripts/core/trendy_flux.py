@@ -114,17 +114,15 @@ class SpatialAgg:
         Parameters
         ==========
 
-        start_time: string, optional
+        start_time: int, optional
 
-            The month and year of the time to start the integration in the
-            format '%Y-%M'.
+            The year of the time to start the integration. Must be an integer.
             Default is None.
 
-        end_time: string, optional
+        end_time: int, optional
 
-            The month and year of the time to end the integration in the
-            format '%Y-%M'. Note that the integration will stop the month
-            before argument.
+            The year of the time to end the integration. Must be an integer. Note
+            that the integration will stop the year before argument.
             Default is None.
 
         lat_split: integer, optional
@@ -145,37 +143,39 @@ class SpatialAgg:
 
         """
 
+        raise NotImplementedError("Check source code for required tasks")
+
+        """Need to complete the following:
+        - check how the fluxes in raw files are calculated. Do they need to be
+        multiplied by the earth_area_grid and are already averaged? Or no?
+        """
+
         df = self.data
 
         if start_time == None:
-            start_time = df.time.values[0].strftime('%Y-%m')
+            start_time = df.time.values[0].strftime('%Y')
+
         if end_time == None:
             end_time = df.time.values[-1]
-            try:
-                next_month = end_time.replace(month=end_time.month+1)
-            except ValueError:
-                next_month = end_time.replace(year=end_time.year+1, month=1)
-
-            end_time = next_month.strftime('%Y-%m')
+            end_time = (
+                        end_time
+                            .replace(year=end_time.year+1)
+                            .strftime('%Y')
+                        )
 
         arg_time_range = (
         pd
-            .date_range(start=start_time, end=end_time, freq='M')
-            .strftime('%Y-%m')
+            .date_range(start=start_time, end=end_time, freq='Y')
+            .strftime('%Y')
         )
 
         lat = df.latitude
         lon = df.longitude
-        earth_grid_area = self.earth_area_grid(lat,lon)
 
-        days = {'01': 31, '02': 28, '03': 31, '04': 30,
-                '05': 31, '06': 30, '07': 31, '08': 31,
-                '09': 30, '10': 31, '11': 30, '12': 31}
+        earth_grid_area = earth_area_grid(df, lat, lon)
 
         values = {
-        "Earth_Land": [], "South_Land": [], "Tropical_Land": [],
-        "North_Land": [], "Earth_Ocean": [], "South_Ocean": [],
-        "Tropical_Ocean": [], "North_Ocean": []}
+        "Earth": [], "South": [], "Tropical": [], "North": []}
 
         time_vals = []
 
@@ -184,39 +184,13 @@ class SpatialAgg:
         (lat>-lat_split) & (lat<lat_split), lat>lat_split
         )
 
-
         for time_point in arg_time_range:
-
-            days_in_month = days[time_point[-2:]]
-
-            earth_land_flux = (
-            df['Terrestrial_flux']
-                .sel(time=time_point).values[0]*(days_in_month/365)
-                )
-
-            # Rayner has ocean variable as 'ocean' instead of 'Ocean_flux'.
-            try:
-                earth_ocean_flux = (
-                df['Ocean_flux']
-                    .sel(time=time_point).values[0]*(days_in_month/365)
-                    )
-            except KeyError:
-                earth_ocean_flux = (
-                df['ocean']
-                    .sel(time=time_point).values[0]*(days_in_month/365)
-                    )
-
-            earth_land_sink = earth_grid_area*earth_land_flux
-            earth_ocean_sink = earth_grid_area*earth_ocean_flux
+            flux = df['cVeg'].sel(time=time_point).values[0]
+            sink = earth_grid_area * flux
 
             condition = iter(lat_conditions)
             for var in list(values.keys())[:4]:
-                sum = np.sum(1e-15*earth_land_sink[next(condition)])
-                values[var].append(sum)
-
-            condition = iter(lat_conditions)
-            for var in list(values.keys())[4:]:
-                sum = np.sum(1e-15*earth_ocean_sink[next(condition)])
+                sum = np.nansum(1e-15 * sink[next(condition)])
                 values[var].append(sum)
 
             time_vals.append(df.sel(time=time_point).time.values[0])

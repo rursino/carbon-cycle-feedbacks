@@ -6,6 +6,7 @@
 import xarray as xr
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 """ INPUTS """
@@ -143,7 +144,7 @@ lat_split=30, lon_range=None):
 
         condition = iter(lat_conditions)
         for var in list(values.keys())[:4]:
-            sum = np.sum(1e-15 * sink[next(condition)]) #fix nan
+            sum = np.nansum(1e-15 * sink[next(condition)])
             values[var].append(sum)
 
         time_vals.append(df.sel(time=time_point).time.values[0])
