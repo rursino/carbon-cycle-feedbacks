@@ -109,7 +109,6 @@ class SpatialAgg:
         The regions are split into land and ocean and are latitudinally split
         according to passed argument for lat_split.
         A longitudinal range can also be chosen.
-        Globally integrated fluxes are also included for each of land and ocean.
 
         Parameters
         ==========
@@ -189,7 +188,7 @@ class SpatialAgg:
             sink = earth_grid_area * flux
 
             condition = iter(lat_conditions)
-            for var in list(values.keys())[:4]:
+            for var in list(values.keys()):
                 sum = np.nansum(1e-15 * sink[next(condition)])
                 values[var].append(sum)
 
