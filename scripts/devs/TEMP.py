@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 
 """ INPUTS """
-fname = "./../../data/temp/CRUTEM.4.6.0.0.anomalies.nc"
+fname = "./../../data/temp/crudata/HadSST.3.1.1.0.median.nc"
 
 
 """ FUNCTIONS """
@@ -88,7 +88,7 @@ lat_split=30, lon_range=None):
     )
 
     for time_point in arg_time_range:
-        temp = df['temperature_anomaly'].sel(time=time_point).values[0]
+        temp = df['sst'].sel(time=time_point).values[0]
 
         condition = iter(lat_conditions)
         for var in list(values.keys()):
@@ -107,4 +107,9 @@ lat_split=30, lon_range=None):
 
 """ EXECUTION """
 df = xr.open_dataset(fname)
+
+df
+
+
 res = spatial_averaging(df)
+res
