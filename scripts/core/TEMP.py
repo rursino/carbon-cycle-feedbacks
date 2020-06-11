@@ -129,7 +129,7 @@ class SpatialAve:
         )
 
         for time_point in arg_time_range:
-            temp = df[self.var].sel(time=time_point).values[0]
+            temp = df[self.var].sel(time=time_point).values.squeeze()
 
             condition = iter(lat_conditions)
             for var in list(values.keys()):
