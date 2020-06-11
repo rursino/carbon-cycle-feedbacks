@@ -142,13 +142,6 @@ class SpatialAgg:
 
         """
 
-        raise NotImplementedError("Check source code for required tasks")
-
-        """Need to complete the following:
-        - check how the fluxes in raw files are calculated. Do they need to be
-        multiplied by the earth_area_grid and are already averaged? Or no?
-        """
-
         df = self.data
 
         if start_time == None:
@@ -171,7 +164,7 @@ class SpatialAgg:
         lat = df.latitude
         lon = df.longitude
 
-        earth_grid_area = earth_area_grid(df, lat, lon)
+        earth_grid_area = self.earth_area_grid(lat, lon)
 
         values = {
         "Earth": [], "South": [], "Tropical": [], "North": []}
@@ -184,7 +177,7 @@ class SpatialAgg:
         )
 
         for time_point in arg_time_range:
-            flux = df['cVeg'].sel(time=time_point).values[0]
+            flux = df['cVeg'].sel(time=time_point).values.squeeze()
             sink = earth_grid_area * flux
 
             condition = iter(lat_conditions)
@@ -192,7 +185,7 @@ class SpatialAgg:
                 sum = np.nansum(1e-15 * sink[next(condition)])
                 values[var].append(sum)
 
-            time_vals.append(df.sel(time=time_point).time.values[0])
+            time_vals.append(df.sel(time=time_point).time.values.squeeze())
 
         ds = xr.Dataset(
             {key: (('time'), value) for (key, value) in values.items()},
