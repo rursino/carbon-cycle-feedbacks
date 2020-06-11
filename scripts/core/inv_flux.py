@@ -103,12 +103,11 @@ class SpatialAgg:
         return result
 
     def spatial_integration(self, start_time=None, end_time=None,
-    lat_split=30, lon_range=None):
+    lat_split=30):
         """Returns a xr.Dataset of total global and regional sinks at a
         specific time point or a range of time points.
         The regions are split into land and ocean and are latitudinally split
         according to passed argument for lat_split.
-        A longitudinal range can also be chosen.
         Globally integrated fluxes are also included for each of land and ocean.
 
         Parameters
@@ -137,12 +136,6 @@ class SpatialAgg:
             And so on.
 
             Default is 30.
-
-        lon_range: list-like, optional
-
-            Range of longitudinal values to sum. Other longitudes are ignored.
-            Defaults to None, which sums over all longitudinal values.
-
         """
 
         df = self.data

@@ -229,15 +229,34 @@ class SpatialAgg:
 
         return ds
 
+    def regional_cut(self, lat_range=None, lon_range=None):
+            """Calculates (aggregated) carbon sink for a chosen
+            latitude-longitude range.
+
+            Parameters
+            ==========
+
+            lat_range: list-like, optional
+
+                Range of latitudinal values to sum. Other latitudes are ignored.
+                Defaults to None, which sums over all latitudinal values.
+
+            lon_range: list-like, optional
+
+                Range of longitudinal values to sum. Other longitudes are
+                ignored.
+                Defaults to None, which sums over all longitudinal values.
+
+            """
+
+            df = self.data.sel(latitude = lat_range, longitude = lon_range)
+
+            df
+
 
 """ EXECUTION """
 df = SpatialAgg(data=fname)
-result = df.spatial_integration()
 
-result
+df.data.longitude
 
-""" TEST """
-import pickle
-
-ftest = "./../../output/inversions/raw/output_all/Rayner_all/spatial.pik"
-pickle.load(open(ftest, "rb"))
+df.data.sel(latitude=slice(30.5, 35.5), longitude=30.5)
