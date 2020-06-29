@@ -1,0 +1,38 @@
+import pickle
+import matplotlib.pyplot as plt
+import pandas as pd
+
+import sys
+sys.path.append("./../core/")
+
+import inv_flux as invf
+import GCP_flux as GCPf
+
+from importlib import reload
+reload(invf)
+reload(GCPf)
+
+# Inversion
+fname = "./../../output/inversions/raw/output_all/JENA_s76_all/year.pik"
+
+df = invf.Analysis(pickle.load(open(fname, 'rb')))
+
+variable = "Earth_Land"
+df.rolling_trend(variable, plot=True);
+plt.title(f"25-Year Rolling Trend: {variable}", fontsize=28)
+
+#GCP
+land = GCPf.Analysis("land sink")
+ocean = GCPf.Analysis("ocean sink")
+
+land.rolling_trend(plot=True);
+plt.title(f"25-Year Rolling Trend: GCP Land", fontsize=28)
+
+ocean.rolling_trend(plot=True);
+plt.title(f"25-Year Rolling Trend: GCP Ocean", fontsize=28)
+
+#model evaluation
+me = invf.ModelEvaluation(pickle.load(open(fname, 'rb')))
+
+variable = "land"
+me.regress_rolling_trend_to_GCP(variable, 25, True)
