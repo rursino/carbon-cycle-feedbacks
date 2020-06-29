@@ -1,9 +1,0 @@
-Variables to choose from:
-npp - net primary production
-cVeg - carbon flux from vegetation
-
-need a variable that details the carbon flux of land ecosystems.
-
-Models to choose from
-- LPJ-GUESS
-...
