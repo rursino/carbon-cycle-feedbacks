@@ -1,7 +1,8 @@
-""" Obtains timeseries data of land and ocean fluxes (global & regional, annual) for each model from inv_flux.py module and saves it as a csv file.
-If prompted, a plot of each of the global land and ocean timeseries is created and saved as png files.
-
-Run this script is run from the shell. """
+""" Obtains timeseries data of land and ocean fluxes (global & regional,
+annual) for each model from inv_flux.py module and saves it as a csv file.
+If prompted, a plot of each of the global land and ocean timeseries is created
+and saved as png files.
+"""
 
 import sys
 sys.path.append("./../core/")
