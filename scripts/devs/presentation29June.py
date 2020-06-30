@@ -34,5 +34,5 @@ plt.title(f"25-Year Rolling Trend: GCP Ocean", fontsize=28)
 #model evaluation
 me = invf.ModelEvaluation(pickle.load(open(fname, 'rb')))
 
-variable = "land"
-me.regress_rolling_trend_to_GCP(variable, 25, True)
+me.regress_rolling_trend_to_GCP("land", 25, True)
+me.regress_rolling_trend_to_GCP('ocean', 25, True)

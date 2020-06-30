@@ -256,7 +256,6 @@ class Analysis:
 
     """
 
-
     def __init__(self, data):
         """Take the xr.Dataset with cftime values and converts them into
         datetimes.
@@ -266,7 +265,6 @@ class Analysis:
 
         time_list = [datetime.strptime(time.strftime('%Y-%m'), '%Y-%m') for time in data.time.values]
         self.time = pd.to_datetime(time_list)
-
 
 
     def rolling_trend(self, variable, window_size=25, plot=False,
@@ -650,8 +648,10 @@ class ModelEvaluation:
 
         if "land" in sink:
             model_sink = "Earth_Land"
+            GCP_sink = "land sink"
         elif "ocean" in sink:
             model_sink = "Earth_Ocean"
+            GCP_sink = "ocean sink"
 
         df = self.data
         time_range = self.GCP.index[:-window_size]
@@ -664,7 +664,7 @@ class ModelEvaluation:
 
         GCP_roll_df = (
         GCPf
-            .Analysis("land sink")
+            .Analysis(GCP_sink)
             .rolling_trend(window_size=window_size)
         )
         GCP_roll = GCP_roll_df.loc[time_range].values.squeeze()
