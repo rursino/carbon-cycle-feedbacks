@@ -67,13 +67,14 @@ class SpatialAve:
 
         start_time: int, optional
 
-            The year of the time to start the averaging. Must be an integer.
+            The (year, month) of the time to start the averaging. Must be an
+            integer.
             Default is None.
 
         end_time: int, optional
 
-            The year of the time to end the averaging. Must be an integer. Note
-            that the averaging will stop the year before argument.
+            The (year, month) of the time to end the averaging. Must be an
+            integer. Note that the averaging will stop the year before argument.
             Default is None.
 
         lat_split: integer, optional

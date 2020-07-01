@@ -26,20 +26,20 @@ class SpatialAgg:
     Parameters
     ==========
 
-    data: one of xarray.Dataset, xarray.DataArray and nc.file.
+    data: xarray.Dataset or .nc file.
 
     """
 
     def __init__(self, data):
         """ Initialise an instance of an SpatialAgg. """
-        if isinstance(data, xr.Dataset) or isinstance(data, xr.DataArray):
+        if isinstance(data, xr.Dataset):
             _data = data
 
         elif type(data) == str and data.endswith('.pickle'):
             read_file = open(data, 'rb')
             _data = pickle.load(read_file)
-            if not (isinstance(_data, xr.Dataset) or isinstance(_data, xr.DataArray)):
-                raise TypeError("Pickle object must be of type xr.Dataset or xr.DataArray.")
+            if not isinstance(_data, xr.Dataset):
+                raise TypeError("Pickle object must be of type xr.Dataset.")
 
         else:
             _data = xr.open_dataset(data)
