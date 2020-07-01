@@ -3,8 +3,7 @@ Description of the inputs used, methodology and output generated from the
 
 INPUTS
 ========================
-1. spatially integrated uptake (monthly, yearly) (GCP, inversions, TRENDY)
-(global, regions)
+1. uptake (monthly, yearly) (GCP, inversions, TRENDY) (global, regions)
 2. CO2 concentrations (monthly, yearly) (global)
 3. temperature (monthly, yearly) (_TEMP_) (global, regions)
 ------------------------
