@@ -1,0 +1,56 @@
+Description of the inputs used, methodology and output generated from the
+"Feedback Analysis" sub-project of the thesis.
+
+INPUTS
+========================
+1. spatially integrated uptake (monthly, yearly) (GCP, inversions, TRENDY)
+(global, regions)
+2. CO2 concentrations (monthly, yearly) (global)
+3. temperature (monthly, yearly) (_TEMP_) (global, regions)
+------------------------
+
+METHODOLOGY
+========================
+1. Calculation of beta and gamma.
+2. Statistical significance.
+3. Uncertainty analysis.
+4. Preparation of output of figures.
+------------------------
+ONE
+Analysis will used the set of simultaneous equations in Friedlingstein (2003).
+For land and ocean:
+U = b*C + g*T
+where,
+U = carbon uptake
+b = beta, g = gamma
+C = CO2 concentrations
+T = temperature
+(and for any cut lat-lon region since equation is linear.)
+
+Need to calculate: b, g
+Therefore, need following inputs (refer above for indexing):
+U: 1.
+C: 2.
+T: 3.
+
+How to calculate it with the equation:
+- b, g value for each time point?
+- linear regression (leading to cascading window trend, but how can this be
+shown with two independent variables? It will also be nice to compare this
+analysis with the original cascading trend where there was only the CO2 var,
+and treated as an extension to the original cascading trend.)
+------------------------
+TWO
+
+------------------------
+THREE
+
+------------------------
+FOUR
+
+------------------------
+
+OUTPUT
+========================
+
+------------------------
