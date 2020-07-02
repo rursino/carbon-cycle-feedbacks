@@ -47,6 +47,9 @@ class SpatialAgg:
 
         self.data = _data
 
+        self.earth_radius = 6.371e6 # Radius of Earth
+
+
     """The following three functions obtain the area of specific grid boxes of
     the Earth in different formats. It is used in the spatial_integration
     function within the SpatialAgg class.
@@ -55,7 +58,7 @@ class SpatialAgg:
     def scalar_earth_area(self, minlat, maxlat, minlon, maxlon):
         """Returns the area of earth in the defined grid box."""
 
-        r_earth = 6.371e6 # Radius of Earth
+        r_earth = self.earth_radius
         dtor = np.pi / 180. # conversion from degrees to radians.
 
         diff_lon = np.unwrap((minlon, maxlon), discont=360.+1e-6)
@@ -68,7 +71,7 @@ class SpatialAgg:
         """Returns grid of areas with shape=(minlon, minlat) and earth area.
         """
 
-        r_earth = 6.371e6 # Radius of Earth
+        r_earth = self.earth_radius
         dtor = np.pi / 180. # conversion from degrees to radians.
 
         result = np.zeros((np.array(minlon).size, np.array(minlat).size))
@@ -221,6 +224,39 @@ class SpatialAgg:
         )
 
         return ds
+
+    def regional_cut(self, lats, lons, sum=False):
+        """ Cuts the dataset into selected latitude and longitude values and
+        sums the values if requested.
+
+        Parameters
+        ----------
+
+        lats: slice
+
+            slice of latitude values to select in the cut.
+
+        lons: slice
+
+            slice of longitude values to select in the cut.
+
+        sum: bool, optional
+
+            Sums the dataset with selected values if True.
+            Defaults to False.
+
+        """
+
+        raise NotImplementedError()
+
+        df = self.data
+
+        cut_df = df.sel(latitude=lats, longitude=lons)
+
+        if sum:
+            cut_df = cut_df.sum()
+
+        return cut_df
 
     def cftime_to_datetime(self, format='%Y-%m'):
         """Takes a xr.Dataset with cftime values and converts them into
