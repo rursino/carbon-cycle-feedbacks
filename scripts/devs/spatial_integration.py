@@ -8,6 +8,7 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 from itertools import *
+from cftime import Datetime360Day
 
 
 """ INPUTS """
@@ -163,6 +164,10 @@ def regional_cut(df, lats, lons, start_time=None, end_time=None): # add: sum
 
         end_time = next_month.strftime('%Y-%m')
 
+    # arg_time_range = (
+    # Datetime360Day('1992-01')
+    # )
+
     arg_time_range = (
     pd
         .date_range(start=start_time, end=end_time, freq='M')
@@ -174,7 +179,7 @@ def regional_cut(df, lats, lons, start_time=None, end_time=None): # add: sum
     df = df.sum(axis=(1,2))
     df = df * (np.ones(252) * 30/365)
 
-    df = df.assign_coords(('time', arg_time_range))
+    df['time'] = arg_time_range
 
     # Degree math symbol
     deg = u'\N{DEGREE SIGN}'
@@ -189,10 +194,48 @@ def regional_cut(df, lats, lons, start_time=None, end_time=None): # add: sum
 
     return df
 
+def latitudinal_splits(df, lat_split):
+
+    vars = {
+            "Earth_Land": (-90, 90),
+            "South_Land": (-90, -lat_split),
+            "Tropical_Land": (-lat_split, lat_split),
+            "North_Land": (lat_split, 90),
+            "Earth_Ocean": (-90, 90),
+            "South_Ocean": (-90, -lat_split),
+            "Tropical_Ocean": (-lat_split, lat_split),
+            "North_Ocean": (lat_split, 90)
+            }
+
+    land_array = df['Terrestrial_flux']
+
+    # Rayner has ocean variable as 'ocean' instead of 'Ocean_flux'.
+    try:
+        ocean_array = df['Ocean_flux']
+    except KeyError:
+        ocean_array = df['ocean']
+
+    values = {var: regional_cut(df, vars[var], (-180,180)) for var in vars}
+
+    ds = xr.Dataset(
+        {key: (('time'), value) for (key, value) in values.items()},
+        coords={'time': (('time'), df.time.values)}
+    )
+
+    return ds
+
+
+
+
+
 """ EXECUTION """
 df = xr.open_dataset(fname)
 
-res = regional_cut(df, (30,60), (-30,30))
-res
+lons, lats = (30,60), (-30,30)
+res = regional_cut(df, lats, lons)
+
+lat_split = 30
+lat_res = latitudinal_splits(df, lat_split)
+lat_res
 
 spatial_integration(df)
