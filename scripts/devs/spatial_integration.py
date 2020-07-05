@@ -296,4 +296,18 @@ import sys
 sys.path.append("./../core")
 import inv_flux as invf
 
-d = 
+from importlib import reload
+reload(invf);
+
+d = invf.SpatialAgg(fname)
+d.data
+
+
+d.time_range("1996-01", "1997-04")
+
+
+d.regional_cut((-30,10), (100,180), "1995-05", "2000-01")
+
+d.regional_cut((-90,90), (-180,180))
+
+d.latitudinal_splits(30, "1998-06", "1999-04")

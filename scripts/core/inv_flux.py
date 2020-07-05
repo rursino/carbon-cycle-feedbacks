@@ -159,19 +159,34 @@ class SpatialAgg:
         else:
             return arg_time_range
 
-    def regional_cut(self, lats, lons):
+    def regional_cut(self, lats, lons, start_time=None, end_time=None):
         """ Cuts the dataset into selected latitude and longitude values.
 
         Parameters
         ==========
 
-        lats: slice
+        lats: tuple-like
 
-            slice of latitude values to select in the cut.
+            tuple of start and end of latitudinal range to select in the cut.
+            Must be of size two.
 
-        lons: slice
+        lons: tuple-like
 
-            slice of longitude values to select in the cut.
+            tuple of start and end of latitudinal range to select in the cut.
+            Must be of size two.
+
+        start_time: string, optional
+
+            The month and year of the time to start the integration in the
+            format '%Y-%M'.
+            Default is None.
+
+        end_time: string, optional
+
+            The month and year of the time to end the integration in the
+            format '%Y-%M'. Note that the integration will stop the month
+            before argument.
+            Default is None.
 
         """
 
@@ -202,7 +217,7 @@ class SpatialAgg:
 
         return df
 
-    def latitudinal_splits(df, start_time=None, end_time=None, lat_split=30):
+    def latitudinal_splits(self, lat_split=30, start_time=None, end_time=None):
         """ Returns a xr.Dataset of the total global and regional carbon sink
         values at each time point within a range of time points.
 
@@ -217,6 +232,17 @@ class SpatialAgg:
         Parameters
         ==========
 
+        lat_split: integer, optional
+
+            Split the latitudes and output sums for each of those splits.
+            If 23 is chosen, the latitudes are split by:
+                90 degN to 23 degN, 23 degN to 23 degS and 23 degS to 90 degS.
+            If 30 is chosen, the latitudes are split by:
+                90 degN to 30 degN, 30 degN to 30 degS and 30 degS to 90 degS.
+            And so on.
+
+            Default is 30.
+
         start_time: string, optional
 
             The month and year of the time to start the integration in the
@@ -229,17 +255,6 @@ class SpatialAgg:
             format '%Y-%M'. Note that the integration will stop the month
             before argument.
             Default is None.
-
-        lat_split: integer, optional
-
-            Split the latitudes and output sums for each of those splits.
-            If 23 is chosen, the latitudes are split by:
-                90 degN to 23 degN, 23 degN to 23 degS and 23 degS to 90 degS.
-            If 30 is chosen, the latitudes are split by:
-                90 degN to 30 degN, 30 degN to 30 degS and 30 degS to 90 degS.
-            And so on.
-
-            Default is 30.
 
         """
 
