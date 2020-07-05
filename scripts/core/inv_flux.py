@@ -106,13 +106,113 @@ class SpatialAgg:
 
         return result
 
-    def spatial_integration(self, start_time=None, end_time=None,
-    lat_split=30):
-        """Returns a xr.Dataset of total global and regional sinks at a
-        specific time point or a range of time points.
+    def time_range(self, start_time, end_time, slice_obj=False):
+        """ Returns a list or slice object of a range of time points, as is
+        required when selecting time points for other functions.
+
+        Parameters
+        ==========
+
+        start_time: string
+
+            The month and year of the time to start the integration in the
+            format '%Y-%M'.
+            If None is passed, then start_time refers to the first time point
+            in the Dataset.
+
+        end_time: string
+
+            The month and year of the time to end the integration in the
+            format '%Y-%M'. Note that the integration will stop the month
+            before argument.
+            If None is passed, then start_time refers to the last time point
+            in the Dataset.
+
+        slice_obj: bool, optional
+
+            If True, then function returns a slice object instead of a list.
+            Defaults to False.
+
+        """
+
+        df = self.data
+
+        if start_time == None:
+            start_time = df.time.values[0].strftime('%Y-%m')
+        if end_time == None:
+            end_time = df.time.values[-1]
+            try:
+                next_month = end_time.replace(month=end_time.month+1)
+            except ValueError:
+                next_month = end_time.replace(year=end_time.year+1, month=1)
+
+            end_time = next_month.strftime('%Y-%m')
+
+        arg_time_range = (
+        pd
+            .date_range(start=start_time, end=end_time, freq='M')
+            .strftime('%Y-%m')
+        )
+
+        if slice_obj:
+            return slice(arg_time_range[0], arg_time_range[-1])
+        else:
+            return arg_time_range
+
+    def regional_cut(self, lats, lons):
+        """ Cuts the dataset into selected latitude and longitude values.
+
+        Parameters
+        ==========
+
+        lats: slice
+
+            slice of latitude values to select in the cut.
+
+        lons: slice
+
+            slice of longitude values to select in the cut.
+
+        """
+
+        df = self.data
+
+        arg_time_range = self.time_range(start_time, end_time)
+        slice_time_range = self.time_range(start_time, end_time,
+                                           slice_obj=True)
+
+        df = df.sel(latitude=slice(*lats), longitude=slice(*lons),
+                    time=slice_time_range)
+        df = df * (self.earth_area_grid(df.latitude, df.longitude) * 1e-15)
+        df = df.sum(axis=(1,2))
+        df = df * (np.ones(len(df.time)) * 30/365)
+
+        df['time'] = arg_time_range
+
+        # Degree math symbol
+        deg = u'\N{DEGREE SIGN}'
+        df = df.assign_attrs(
+                            {
+                            "latitudes": "{}{} - {}{}".format(lats[0], deg,
+                                                              lats[1], deg),
+                            "longitudes": "{}{} - {}{}".format(lons[0], deg,
+                                                               lons[1], deg)
+                            }
+                            )
+
+        return df
+
+    def latitudinal_splits(df, start_time=None, end_time=None, lat_split=30):
+        """ Returns a xr.Dataset of the total global and regional carbon sink
+        values at each time point within a range of time points.
+
         The regions are split into land and ocean and are latitudinally split
         according to passed argument for lat_split.
-        Globally integrated fluxes are also included for each of land and ocean.
+        This function uses the regional_cut function to cut the gridded carbon
+        sinks to the latitudes required for the latitudinal splits.
+
+        Globally integrated fluxes are also included for each of land and
+        ocean.
 
         Parameters
         ==========
@@ -140,123 +240,44 @@ class SpatialAgg:
             And so on.
 
             Default is 30.
+
         """
 
         df = self.data
 
-        if start_time == None:
-            start_time = df.time.values[0].strftime('%Y-%m')
-        if end_time == None:
-            end_time = df.time.values[-1]
-            try:
-                next_month = end_time.replace(month=end_time.month+1)
-            except ValueError:
-                next_month = end_time.replace(year=end_time.year+1, month=1)
+        vars = {
+                "Earth": (-90, 90),
+                "South": (-90, -lat_split),
+                "Tropical": (-lat_split, lat_split),
+                "North": (lat_split, 90)
+                }
 
-            end_time = next_month.strftime('%Y-%m')
+        values = {}
+        for var in vars:
+            region_df = self.regional_cut(vars[var], (-180,180),
+                                    start_time=start_time, end_time=end_time)
 
-        arg_time_range = (
-        pd
-            .date_range(start=start_time, end=end_time, freq='M')
-            .strftime('%Y-%m')
-        )
+            land_var = var + "_Land"
+            land_region_vals = region_df["Terrestrial_flux"].values
+            values[land_var] = land_region_vals
 
-        lat = df.latitude
-        lon = df.longitude
-        earth_grid_area = self.earth_area_grid(lat,lon)
-
-        days = {'01': 31, '02': 28, '03': 31, '04': 30,
-                '05': 31, '06': 30, '07': 31, '08': 31,
-                '09': 30, '10': 31, '11': 30, '12': 31}
-
-        values = {
-        "Earth_Land": [], "South_Land": [], "Tropical_Land": [],
-        "North_Land": [], "Earth_Ocean": [], "South_Ocean": [],
-        "Tropical_Ocean": [], "North_Ocean": []}
-
-        time_vals = []
-
-        lat_conditions = (
-        True, lat < -lat_split,
-        (lat>-lat_split) & (lat<lat_split), lat>lat_split
-        )
-
-
-        for time_point in arg_time_range:
-
-            days_in_month = days[time_point[-2:]]
-
-            earth_land_flux = (
-            df['Terrestrial_flux']
-                .sel(time=time_point).values[0]*(days_in_month/365)
-                )
-
+            ocean_var = var + "_Ocean"
             # Rayner has ocean variable as 'ocean' instead of 'Ocean_flux'.
             try:
-                earth_ocean_flux = (
-                df['Ocean_flux']
-                    .sel(time=time_point).values[0]*(days_in_month/365)
-                    )
+                ocean_region_vals = region_df['Ocean_flux'].values
             except KeyError:
-                earth_ocean_flux = (
-                df['ocean']
-                    .sel(time=time_point).values[0]*(days_in_month/365)
-                    )
+                ocean_region_vals = region_df['ocean'].values
+            values[ocean_var] = ocean_region_vals
 
-            earth_land_sink = earth_grid_area*earth_land_flux
-            earth_ocean_sink = earth_grid_area*earth_ocean_flux
-
-            condition = iter(lat_conditions)
-            for var in list(values.keys())[:4]:
-                sum = np.sum(1e-15*earth_land_sink[next(condition)])
-                values[var].append(sum)
-
-            condition = iter(lat_conditions)
-            for var in list(values.keys())[4:]:
-                sum = np.sum(1e-15*earth_ocean_sink[next(condition)])
-                values[var].append(sum)
-
-            time_vals.append(df.sel(time=time_point).time.values[0])
+        slice_time_range = self.time_range(start_time, end_time, slice_obj=True)
+        ds_time = df.sel(time=slice_time_range).time.values
 
         ds = xr.Dataset(
             {key: (('time'), value) for (key, value) in values.items()},
-            coords={'time': (('time'), time_vals)}
+            coords={'time': (('time'), ds_time)}
         )
 
         return ds
-
-    def regional_cut(self, lats, lons, sum=False):
-        """ Cuts the dataset into selected latitude and longitude values and
-        sums the values if requested.
-
-        Parameters
-        ----------
-
-        lats: slice
-
-            slice of latitude values to select in the cut.
-
-        lons: slice
-
-            slice of longitude values to select in the cut.
-
-        sum: bool, optional
-
-            Sums the dataset with selected values if True.
-            Defaults to False.
-
-        """
-
-        raise NotImplementedError()
-
-        df = self.data
-
-        cut_df = df.sel(latitude=lats, longitude=lons)
-
-        if sum:
-            cut_df = cut_df.sum()
-
-        return cut_df
 
     def cftime_to_datetime(self, format='%Y-%m'):
         """Takes a xr.Dataset with cftime values and converts them into

@@ -69,7 +69,43 @@ def earth_area_grid(lats,lons):
 
     return result
 
-def spatial_integration(df, start_time=None, end_time=None, lat_split=30):
+def spatial_integration(self, start_time=None, end_time=None,
+lat_split=30):
+    """Returns a xr.Dataset of total global and regional sinks at a
+    specific time point or a range of time points.
+    The regions are split into land and ocean and are latitudinally split
+    according to passed argument for lat_split.
+    Globally integrated fluxes are also included for each of land and ocean.
+
+    Parameters
+    ==========
+
+    start_time: string, optional
+
+        The month and year of the time to start the integration in the
+        format '%Y-%M'.
+        Default is None.
+
+    end_time: string, optional
+
+        The month and year of the time to end the integration in the
+        format '%Y-%M'. Note that the integration will stop the month
+        before argument.
+        Default is None.
+
+    lat_split: integer, optional
+
+        Split the latitudes and output sums for each of those splits.
+        If 23 is chosen, the latitudes are split by:
+            90 degN to 23 degN, 23 degN to 23 degS and 23 degS to 90 degS.
+        If 30 is chosen, the latitudes are split by:
+            90 degN to 30 degN, 30 degN to 30 degS and 30 degS to 90 degS.
+        And so on.
+
+        Default is 30.
+    """
+
+    df = self.data
 
     if start_time == None:
         start_time = df.time.values[0].strftime('%Y-%m')
@@ -90,7 +126,7 @@ def spatial_integration(df, start_time=None, end_time=None, lat_split=30):
 
     lat = df.latitude
     lon = df.longitude
-    earth_grid_area = earth_area_grid(lat,lon)
+    earth_grid_area = self.earth_area_grid(lat,lon)
 
     days = {'01': 31, '02': 28, '03': 31, '04': 30,
             '05': 31, '06': 30, '07': 31, '08': 31,
@@ -107,6 +143,7 @@ def spatial_integration(df, start_time=None, end_time=None, lat_split=30):
     True, lat < -lat_split,
     (lat>-lat_split) & (lat<lat_split), lat>lat_split
     )
+
 
     for time_point in arg_time_range:
 
@@ -151,7 +188,8 @@ def spatial_integration(df, start_time=None, end_time=None, lat_split=30):
 
     return ds
 
-def regional_cut(df, lats, lons, start_time=None, end_time=None): # add: sum
+
+def time_range(df, start_time, end_time, slice_obj=False):
 
     if start_time == None:
         start_time = df.time.values[0].strftime('%Y-%m')
@@ -164,20 +202,27 @@ def regional_cut(df, lats, lons, start_time=None, end_time=None): # add: sum
 
         end_time = next_month.strftime('%Y-%m')
 
-    # arg_time_range = (
-    # Datetime360Day('1992-01')
-    # )
-
     arg_time_range = (
     pd
         .date_range(start=start_time, end=end_time, freq='M')
         .strftime('%Y-%m')
     )
 
-    df = df.sel(latitude=slice(*lats), longitude=slice(*lons))
+    if slice_obj:
+        return slice(arg_time_range[0], arg_time_range[-1])
+    else:
+        return arg_time_range
+
+def regional_cut(df, lats, lons, start_time=None, end_time=None):
+
+    arg_time_range = time_range(df, start_time, end_time)
+    slice_time_range = time_range(df, start_time, end_time, slice_obj=True)
+
+    df = df.sel(latitude=slice(*lats), longitude=slice(*lons),
+                time=slice_time_range)
     df = df * (earth_area_grid(df.latitude, df.longitude) * 1e-15)
     df = df.sum(axis=(1,2))
-    df = df * (np.ones(252) * 30/365)
+    df = df * (np.ones(len(df.time)) * 30/365)
 
     df['time'] = arg_time_range
 
@@ -194,48 +239,61 @@ def regional_cut(df, lats, lons, start_time=None, end_time=None): # add: sum
 
     return df
 
-def latitudinal_splits(df, lat_split):
+def latitudinal_splits(df, lat_split, start_time=None, end_time=None):
 
     vars = {
-            "Earth_Land": (-90, 90),
-            "South_Land": (-90, -lat_split),
-            "Tropical_Land": (-lat_split, lat_split),
-            "North_Land": (lat_split, 90),
-            "Earth_Ocean": (-90, 90),
-            "South_Ocean": (-90, -lat_split),
-            "Tropical_Ocean": (-lat_split, lat_split),
-            "North_Ocean": (lat_split, 90)
+            "Earth": (-90, 90),
+            "South": (-90, -lat_split),
+            "Tropical": (-lat_split, lat_split),
+            "North": (lat_split, 90)
             }
 
-    land_array = df['Terrestrial_flux']
+    values = {}
+    for var in vars:
+        region_df = regional_cut(df, vars[var], (-180,180),
+                                start_time=start_time, end_time=end_time)
 
-    # Rayner has ocean variable as 'ocean' instead of 'Ocean_flux'.
-    try:
-        ocean_array = df['Ocean_flux']
-    except KeyError:
-        ocean_array = df['ocean']
+        land_var = var + "_Land"
+        land_region_vals = region_df["Terrestrial_flux"].values
+        values[land_var] = land_region_vals
 
-    values = {var: regional_cut(df, vars[var], (-180,180)) for var in vars}
+        ocean_var = var + "_Ocean"
+        # Rayner has ocean variable as 'ocean' instead of 'Ocean_flux'.
+        try:
+            ocean_region_vals = region_df['Ocean_flux'].values
+        except KeyError:
+            ocean_region_vals = region_df['ocean'].values
+        values[ocean_var] = ocean_region_vals
+
+    slice_time_range = time_range(df, start_time, end_time, slice_obj=True)
+    ds_time = df.sel(time=slice_time_range).time.values
 
     ds = xr.Dataset(
         {key: (('time'), value) for (key, value) in values.items()},
-        coords={'time': (('time'), df.time.values)}
+        coords={'time': (('time'), ds_time)}
     )
 
     return ds
-
-
-
 
 
 """ EXECUTION """
 df = xr.open_dataset(fname)
 
 lons, lats = (30,60), (-30,30)
-res = regional_cut(df, lats, lons)
+res = regional_cut(df, lats, lons, "1992-06", "1993-01")
+res
 
 lat_split = 30
-lat_res = latitudinal_splits(df, lat_split)
-lat_res
+latitudinal_splits(df, lat_split)
 
 spatial_integration(df)
+
+
+""" TESTS
+To check if the invf class methods work.
+"""
+import sys
+sys.path.append("./../core")
+import inv_flux as invf
+
+d = 
