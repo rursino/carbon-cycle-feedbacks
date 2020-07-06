@@ -194,6 +194,180 @@ class SpatialAgg:
 
         return ds
 
+    def time_range(self, start_time=None, end_time=None, slice_obj=False):
+        """ Returns a list or slice object of a range of time points, as is
+        required when selecting time points for other functions.
+
+        Parameters
+        ==========
+
+        start_time: string, optional
+
+            The year of the time to start the integration in the format '%Y-%M'.
+            If None is passed, then start_time refers to the first time point
+            in the Dataset.
+            Defaults to None.
+
+        end_time: string, optional
+
+            The year of the time to end the integration in the format '%Y-%M'.
+            Note that the integration will stop at the year before argument.
+            If None is passed, then end_time refers to the last time point
+            in the Dataset.
+            Defaults to None.
+
+        slice_obj: bool, optional
+
+            If True, then function returns a slice object instead of a list.
+            Defaults to False.
+
+        """
+
+        df = self.data
+
+        if start_time == None:
+            start_time = df.time.values[0].strftime('%Y')
+        if end_time == None:
+            end_time = df.time.values[-1]
+            end_time = (end_time
+                            .replace(year = end_time.year+1)
+                            .strftime('%Y')
+                        )
+
+        arg_time_range = (
+        pd
+            .date_range(start=start_time, end=end_time, freq='Y')
+            .strftime('%Y')
+        )
+
+        if slice_obj:
+            return slice(arg_time_range[0], arg_time_range[-1])
+        else:
+            return arg_time_range
+
+    def regional_cut(self, lats, lons, start_time=None, end_time=None):
+        """ Cuts the dataset into selected latitude and longitude values.
+
+        Parameters
+        ==========
+
+        lats: tuple-like
+
+            tuple of start and end of latitudinal range to select in the cut.
+            Must be of size two.
+
+        lons: tuple-like
+
+            tuple of start and end of latitudinal range to select in the cut.
+            Must be of size two.
+
+        start_time: string, optional
+
+            The year of the time to start the integration in the format '%Y-%M'.
+            Default is None.
+
+        end_time: string, optional
+
+            The year of the time to end the integration in the format '%Y-%M'.
+            Note that the integration will stop the month before argument.
+            Default is None.
+
+        """
+
+        df = self.data
+
+        arg_time_range = self.time_range(start_time, end_time)
+        slice_time_range = self.time_range(start_time, end_time,
+                                           slice_obj=True)
+
+        df = df.sel(latitude=slice(*lats), longitude=slice(*lons),
+                    time=slice_time_range)
+        df = df * (self.earth_area_grid(df.latitude, df.longitude) * 1e-15)
+        df = df.sum(axis=(1,2))
+        df = df * np.ones(len(df.time))
+
+        df['time'] = arg_time_range
+
+        # Degree math symbol
+        deg = u'\N{DEGREE SIGN}'
+        df = df.assign_attrs(
+                            {
+                            "latitudes": "{}{} - {}{}".format(lats[0], deg,
+                                                              lats[1], deg),
+                            "longitudes": "{}{} - {}{}".format(lons[0], deg,
+                                                               lons[1], deg)
+                            }
+                            )
+
+        return df
+
+    def latitudinal_splits(self, lat_split=30, start_time=None, end_time=None):
+        """ Returns a xr.Dataset of the total global and regional carbon sink
+        values at each time point within a range of time points.
+
+        The regions are split into land and ocean and are latitudinally split
+        according to passed argument for lat_split.
+        This function uses the regional_cut function to cut the gridded carbon
+        sinks to the latitudes required for the latitudinal splits.
+
+        Globally integrated fluxes are also included for each of land and
+        ocean.
+
+        Parameters
+        ==========
+
+        lat_split: integer, optional
+
+            Split the latitudes and output sums for each of those splits.
+            If 23 is chosen, the latitudes are split by:
+                90 degN to 23 degN, 23 degN to 23 degS and 23 degS to 90 degS.
+            If 30 is chosen, the latitudes are split by:
+                90 degN to 30 degN, 30 degN to 30 degS and 30 degS to 90 degS.
+            And so on.
+
+            Default is 30.
+
+        start_time: string, optional
+
+            The month and year of the time to start the integration in the
+            format '%Y-%M'.
+            Default is None.
+
+        end_time: string, optional
+
+            The month and year of the time to end the integration in the
+            format '%Y-%M'. Note that the integration will stop the month
+            before argument.
+            Default is None.
+
+        """
+
+        df = self.data
+
+        vars = {
+                "Earth": (-90, 90),
+                "South": (-90, -lat_split),
+                "Tropical": (-lat_split, lat_split),
+                "North": (lat_split, 90)
+                }
+
+        values = {}
+        for var in vars:
+            region_df = self.regional_cut(vars[var], (-180,180),
+                                    start_time=start_time, end_time=end_time)
+
+            values[var] = region_df['cVeg'].values
+
+        slice_time_range = self.time_range(start_time, end_time, slice_obj=True)
+        ds_time = df.sel(time=slice_time_range).time.values
+
+        ds = xr.Dataset(
+            {key: (('time'), value) for (key, value) in values.items()},
+            coords={'time': (('time'), ds_time)}
+        )
+
+        return ds
+
     def cftime_to_datetime(self, format='%Y-%m'):
         """Takes a xr.Dataset with cftime values and converts them into
         datetimes.
