@@ -46,6 +46,8 @@ class SpatialAgg:
 
         self.data = _data
 
+        self.earth_radius = 6.371e6 # Radius of Earth
+
     """The following three functions obtain the area of specific grid boxes of
     the Earth in different formats. It is used in the spatial_integration
     function within the SpatialAgg class.
@@ -54,7 +56,7 @@ class SpatialAgg:
     def scalar_earth_area(self, minlat, maxlat, minlon, maxlon):
         """Returns the area of earth in the defined grid box."""
 
-        r_earth = 6.371e6 # Radius of Earth
+        r_earth = self.earth_radius
         dtor = np.pi / 180. # conversion from degrees to radians.
 
         diff_lon = np.unwrap((minlon, maxlon), discont=360.+1e-6)
@@ -67,7 +69,7 @@ class SpatialAgg:
         """Returns grid of areas with shape=(minlon, minlat) and earth area.
         """
 
-        r_earth = 6.371e6 # Radius of Earth
+        r_earth = self.earth_radius
         dtor = np.pi / 180. # conversion from degrees to radians.
 
         result = np.zeros((np.array(minlon).size, np.array(minlat).size))

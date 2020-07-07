@@ -226,7 +226,7 @@ class SpatialAve:
 
         """
 
-        df = self.data
+        df = self.data[self.var]
 
         arg_time_range = self.time_range(start_time, end_time)
         slice_time_range = self.time_range(start_time, end_time,
@@ -243,8 +243,8 @@ class SpatialAve:
         deg = u'\N{DEGREE SIGN}'
         df = df.assign_attrs(
                             {
-                            "latitudes": "{}{} - {}{}".format(lats[0], deg,
-                                                              lats[1], deg),
+                            "latitudes": "{}{} - {}{}".format(lats[1], deg,
+                                                              lats[0], deg),
                             "longitudes": "{}{} - {}{}".format(lons[0], deg,
                                                                lons[1], deg)
                             }
@@ -292,8 +292,6 @@ class SpatialAve:
 
         """
 
-        df = self.data
-
         vars = {
                 "Earth": (-90, 90),
                 "South": (-90, -lat_split),
@@ -301,14 +299,19 @@ class SpatialAve:
                 "North": (lat_split, 90)
                 }
 
+        if np.all(np.diff(self.data.latitude.values) < 0):
+            for var in vars:
+                vars[var] = vars[var][::-1]
+
         values = {}
         for var in vars:
-            region_df = self.regional_cut(vars[var], (-180,180),
+            lat_split = vars[var]
+            region_df = self.regional_cut(lat_split, (-180,180),
                                     start_time=start_time, end_time=end_time)
-            values[var] = region_df[self.var].values
+            values[var] = region_df.values
 
         slice_time_range = self.time_range(start_time, end_time, slice_obj=True)
-        ds_time = df.sel(time=slice_time_range).time.values
+        ds_time = self.data.sel(time=slice_time_range).time.values
 
         ds = xr.Dataset(
             {key: (('time'), value) for (key, value) in values.items()},
