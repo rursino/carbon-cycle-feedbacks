@@ -12,9 +12,9 @@ JENA_s76="./../../data/inversions/fco2_JENA-s76-4-2-2018_June2018-ext3_1976-2017
 JENA_s85="./../../data/inversions/fco2_JENA-s85-4-2-2018_June2018-ext3_1985-2017_monthlymean_XYT.nc"
 
 
-python output_all.py $Rayner ./../../../output/inversions/spatial/output_all/Rayner_all/
-python output_all.py $CAMS ./../../../output/inversions/spatial/output_all/CAMS_all/
-python output_all.py $CTRACKER ./../../../output/inversions/spatial/output_all/CTRACKER_all/
-python output_all.py $JAMSTEC ./../../../output/inversions/spatial/output_all/JAMSTEC_all/
-python output_all.py $JENA_s76 ./../../../output/inversions/spatial/output_all/JENA_s76_all/
-python output_all.py $JENA_s85 ./../../../output/inversions/spatial/output_all/JENA_s85_all/
+python output_all.py $Rayner ./../../../output/inversions/spatial/output_all/Rayner/
+python output_all.py $CAMS ./../../../output/inversions/spatial/output_all/CAMS/
+python output_all.py $CTRACKER ./../../../output/inversions/spatial/output_all/CTRACKER/
+python output_all.py $JAMSTEC ./../../../output/inversions/spatial/output_all/JAMSTEC/
+python output_all.py $JENA_s76 ./../../../output/inversions/spatial/output_all/JENA_s76/
+python output_all.py $JENA_s85 ./../../../output/inversions/spatial/output_all/JENA_s85/
