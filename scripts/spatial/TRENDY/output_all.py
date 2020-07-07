@@ -14,10 +14,7 @@ import os
 import xarray as xr
 import pickle
 
-if __name__ == "__main__":
-    input_file = sys.argv[1]
-    output_folder = sys.argv[2]
-
+def main(input_file, output_folder):
     ds = xr.open_dataset(input_file)
     df = (TRENDYf
             .SpatialAgg(data = ds)
@@ -47,3 +44,9 @@ if __name__ == "__main__":
         print(f"Successfully created {output_folder}/{freq}.pik")
 
     print("All files created!\n")
+
+if __name__ == "__main__":
+    input_file = sys.argv[1]
+    output_folder = sys.argv[2]
+
+    main(input_file, output_file)
