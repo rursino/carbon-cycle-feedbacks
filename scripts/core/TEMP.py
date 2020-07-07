@@ -53,8 +53,7 @@ class SpatialAve:
 
         self.var = _var
 
-    def spatial_averaging(self, start_time=None, end_time=None,
-    lat_split=30, lon_range=None):
+    def spatial_averaging(self, lat_split=30, start_time=None, end_time=None):
         """Returns a xr.Dataset of total global and regional average temperature at
         a specific time point or a range of time points.
         The regions are split into land and ocean and are latitudinally split
@@ -64,18 +63,6 @@ class SpatialAve:
 
         Parameters
         ==========
-
-        start_time: int, optional
-
-            The (year, month) of the time to start the averaging. Must be an
-            integer.
-            Default is None.
-
-        end_time: int, optional
-
-            The (year, month) of the time to end the averaging. Must be an
-            integer. Note that the averaging will stop the year before argument.
-            Default is None.
 
         lat_split: integer, optional
 
@@ -88,10 +75,17 @@ class SpatialAve:
 
             Default is 30.
 
-        lon_range: list-like, optional
+        start_time: int, optional
 
-            Range of longitudinal values to sum. Other longitudes are ignored.
-            Defaults to None, which sums over all longitudinal values.
+            The (year, month) of the time to start the averaging. Must be an
+            integer.
+            Default is None.
+
+        end_time: int, optional
+
+            The (year, month) of the time to end the averaging. Must be an
+            integer. Note that the averaging will stop the year before argument.
+            Default is None.
 
         """
 
@@ -146,13 +140,179 @@ class SpatialAve:
 
         return ds
 
+    def time_range(self, start_time, end_time, slice_obj=False):
+        """ Returns a list or slice object of a range of time points, as is
+        required when selecting time points for other functions.
 
-""" INPUTS """
-# fname = "./../../data/temp/crudata/HadSST.3.1.1.0.median.nc"
-# fname = "./../../data/temp/crudata/HadCRUT.4.6.0.0.median.nc"
-fname = "./../../data/temp/crudata/CRUTEM.4.6.0.0.anomalies.nc"
+        Parameters
+        ==========
 
-""" EXECUTION """
-df = SpatialAve(fname)
-df.data
-df.spatial_averaging()
+        start_time: string
+
+            The month and year of the time to start the integration in the
+            format '%Y-%M'.
+            If None is passed, then start_time refers to the first time point
+            in the Dataset.
+
+        end_time: string
+
+            The month and year of the time to end the integration in the
+            format '%Y-%M'. Note that the integration will stop the month
+            before argument.
+            If None is passed, then start_time refers to the last time point
+            in the Dataset.
+
+        slice_obj: bool, optional
+
+            If True, then function returns a slice object instead of a list.
+            Defaults to False.
+
+        """
+
+        df = self.data
+
+        if start_time == None:
+            start_time = df.time.values[0].__str__()[:7]
+        if end_time == None:
+            end_time = df.time.values[-1].__str__()[:7]
+
+            year, month = int(end_time[:4]), int(end_time[5:])
+            if month == 12:
+                end_time = f"{year+1}-01"
+            elif month < 9:
+                end_time = f"{year}-0{month+1}"
+            else:
+                end_time = f"{year}-{month+1}"
+
+        arg_time_range = (
+        pd
+            .date_range(start=start_time, end=end_time, freq='M')
+            .strftime('%Y-%m')
+        )
+
+        if slice_obj:
+            return slice(arg_time_range[0], arg_time_range[-1])
+        else:
+            return arg_time_range
+
+    def regional_cut(self, lats, lons, start_time=None, end_time=None):
+        """ Cuts the dataset into selected latitude and longitude values.
+
+        Parameters
+        ==========
+
+        lats: tuple-like
+
+            tuple of start and end of latitudinal range to select in the cut.
+            Must be of size two.
+
+        lons: tuple-like
+
+            tuple of start and end of latitudinal range to select in the cut.
+            Must be of size two.
+
+        start_time: string, optional
+
+            The month and year of the time to start the integration in the
+            format '%Y-%M'.
+            Default is None.
+
+        end_time: string, optional
+
+            The month and year of the time to end the integration in the
+            format '%Y-%M'. Note that the integration will stop the month
+            before argument.
+            Default is None.
+
+        """
+
+        df = self.data
+
+        arg_time_range = self.time_range(start_time, end_time)
+        slice_time_range = self.time_range(start_time, end_time,
+                                           slice_obj=True)
+
+        df = df.sel(latitude=slice(*lats), longitude=slice(*lons),
+                    time=slice_time_range)
+
+        df = df.mean(axis=(1,2), skipna=True)
+
+        df['time'] = arg_time_range
+
+        # Degree math symbol
+        deg = u'\N{DEGREE SIGN}'
+        df = df.assign_attrs(
+                            {
+                            "latitudes": "{}{} - {}{}".format(lats[0], deg,
+                                                              lats[1], deg),
+                            "longitudes": "{}{} - {}{}".format(lons[0], deg,
+                                                               lons[1], deg)
+                            }
+                            )
+
+        return df
+
+    def latitudinal_splits(self, lat_split=30, start_time=None, end_time=None):
+        """Returns a xr.Dataset of total global and regional average
+        temperature at a specific time point or a range of time points.
+
+        The regions are split into land and ocean and are latitudinally split
+        according to passed argument for lat_split.
+        This function uses the regional_cut function to cut the gridded
+        temperature to the latitudes required for the latitudinal splits.
+
+        Globally averaged temperatures are also included for each of land and
+        ocean.
+
+        Parameters
+        ==========
+
+        lat_split: integer, optional
+
+            Split the latitudes and output averages for each of those splits.
+            If 23 is chosen, the latitudes are split by:
+                90 degN to 23 degN, 23 degN to 23 degS and 23 degS to 90 degS.
+            If 30 is chosen, the latitudes are split by:
+                90 degN to 30 degN, 30 degN to 30 degS and 30 degS to 90 degS.
+            And so on.
+
+            Default is 30.
+
+        start_time: int, optional
+
+            The (year, month) of the time to start the averaging. Must be an
+            integer.
+            Default is None.
+
+        end_time: int, optional
+
+            The (year, month) of the time to end the averaging. Must be an
+            integer. Note that the averaging will stop the year before argument.
+            Default is None.
+
+        """
+
+        df = self.data
+
+        vars = {
+                "Earth": (-90, 90),
+                "South": (-90, -lat_split),
+                "Tropical": (-lat_split, lat_split),
+                "North": (lat_split, 90)
+                }
+
+        values = {}
+        for var in vars:
+            region_df = self.regional_cut(vars[var], (-180,180),
+                                    start_time=start_time, end_time=end_time)
+            values[var] = region_df[self.var].values
+
+        slice_time_range = self.time_range(start_time, end_time, slice_obj=True)
+        ds_time = df.sel(time=slice_time_range).time.values
+
+        ds = xr.Dataset(
+            {key: (('time'), value) for (key, value) in values.items()},
+            coords={'time': (('time'), ds_time)}
+        )
+
+        return ds
