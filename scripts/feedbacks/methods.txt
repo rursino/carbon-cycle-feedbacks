@@ -28,9 +28,9 @@ T = temperature
 
 Need to calculate: b, g
 Therefore, need following inputs (refer above for indexing):
-U: 1.
-C: 2.
-T: 3.
+U: INPUTS - 1
+C: INPUTS - 2
+T: INPUTS - 3
 
 How to calculate it with the equation:
 - b, g value for each time point?
