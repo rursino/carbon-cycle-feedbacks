@@ -32,15 +32,9 @@ def get_subnames(subname_type):
         subname_line = infoContent[subname_index]
         if '-' * 24 in subname_line:
             break
-        else:
-            subnames.append(subname_line.split('\t')[0])
-            subname_index += 1
-
-    if subname_type == 'variables':
-        for line in subnames:
-            if 'Primary' in line or 'Secondary' in line:
-                subnames.remove(line)
-
+        elif subname_line and (not subname_line.startswith('!')):
+            subnames.append(subname_line.split()[0])
+        subname_index += 1
 
     return subnames
 
@@ -64,4 +58,4 @@ if __name__ == "__main__":
     for name in product_subnames:
         input_file = './../../../data/TRENDY/models/' + generate_filename(name)
         output_folder = output_dir + "{}_{}_{}/".format(*name)
-        output_all(dir + fname, output_folder)
+        output_all.main(input_file, output_folder)

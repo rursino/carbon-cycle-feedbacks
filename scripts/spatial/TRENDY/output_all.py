@@ -39,9 +39,9 @@ def main(input_file, output_folder):
 
     # Output files after directory successfully created.
     for freq in arrays:
-        array = arrays[freq]
-        pickle.dump(array, open(f"{output_folder}/{freq}.pik", "wb"))
-        print(f"Successfully created {output_folder}/{freq}.pik")
+        destination = f"{output_folder}/{freq}.nc"
+        arrays[freq].to_netcdf(destination)
+        print(f"Successfully created {destination}")
 
     print("All files created!\n")
 

@@ -6,7 +6,7 @@
 
 CRUTEM="./../../../data/temp/crudata/CRUTEM.4.6.0.0.anomalies.nc"
 HadCRUT="./../../../data/temp/crudata/HadCRUT.4.6.0.0.median.nc"
-HadSST="./../../../data/temp/crudata/HadSST.3.1.1.0.anomalies.nc"
+HadSST="./../../../data/temp/crudata/HadSST.3.1.1.0.median.nc"
 
 
 python output_all.py $CRUTEM ./../../../output/TEMP/spatial/output_all/CRUTEM/

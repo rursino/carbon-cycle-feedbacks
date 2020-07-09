@@ -17,7 +17,7 @@ reload(TRENDYf);
 
 
 """ INPUTS """
-fname = "./../../data/TRENDY/models/LPJ-GUESS/S0/LPJ-GUESS_S0_cVeg.nc"
+fname = "./../../data/TRENDY/models/LPJ-GUESS/S1/LPJ-GUESS_S1_nbp.nc"
 
 
 """ FUNCTIONS """
@@ -30,3 +30,5 @@ df.time_range(slice_obj=True)
 res = df.regional_cut((30,60), (100, 120), '1900', '1905')
 
 df.latitudinal_splits(lat_split=40, start_time='1900', end_time='1908')
+
+var = list(df.data.var())[0]

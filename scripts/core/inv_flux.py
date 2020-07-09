@@ -51,8 +51,7 @@ class SpatialAgg:
 
 
     """The following three functions obtain the area of specific grid boxes of
-    the Earth in different formats. It is used in the spatial_integration
-    function within the SpatialAgg class.
+    the Earth in different formats. It is used within the SpatialAgg class.
     """
 
     def scalar_earth_area(self, minlat, maxlat, minlon, maxlon):

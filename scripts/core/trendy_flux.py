@@ -45,12 +45,12 @@ class SpatialAgg:
             _data = xr.open_dataset(data)
 
         self.data = _data
+        self.var = list(_data.var())[0]
 
         self.earth_radius = 6.371e6 # Radius of Earth
 
     """The following three functions obtain the area of specific grid boxes of
-    the Earth in different formats. It is used in the spatial_integration
-    function within the SpatialAgg class.
+    the Earth in different formats. It is used within the SpatialAgg class.
     """
 
     def scalar_earth_area(self, minlat, maxlat, minlon, maxlon):
@@ -103,98 +103,6 @@ class SpatialAgg:
             )
 
         return result
-
-    def spatial_integration(self, start_time=None, end_time=None,
-    lat_split=30, lon_range=None):
-        """Returns a xr.Dataset of total global and regional sinks at a
-        specific time point or a range of time points.
-        The regions are split into land and ocean and are latitudinally split
-        according to passed argument for lat_split.
-        A longitudinal range can also be chosen.
-
-        Parameters
-        ==========
-
-        start_time: int, optional
-
-            The year of the time to start the integration. Must be an integer.
-            Default is None.
-
-        end_time: int, optional
-
-            The year of the time to end the integration. Must be an integer. Note
-            that the integration will stop the year before argument.
-            Default is None.
-
-        lat_split: integer, optional
-
-            Split the latitudes and output sums for each of those splits.
-            If 23 is chosen, the latitudes are split by:
-                90 degN to 23 degN, 23 degN to 23 degS and 23 degS to 90 degS.
-            If 30 is chosen, the latitudes are split by:
-                90 degN to 30 degN, 30 degN to 30 degS and 30 degS to 90 degS.
-            And so on.
-
-            Default is 30.
-
-        lon_range: list-like, optional
-
-            Range of longitudinal values to sum. Other longitudes are ignored.
-            Defaults to None, which sums over all longitudinal values.
-
-        """
-
-        df = self.data
-
-        if start_time == None:
-            start_time = df.time.values[0].strftime('%Y')
-
-        if end_time == None:
-            end_time = df.time.values[-1]
-            end_time = (
-                        end_time
-                            .replace(year=end_time.year+1)
-                            .strftime('%Y')
-                        )
-
-        arg_time_range = (
-        pd
-            .date_range(start=start_time, end=end_time, freq='Y')
-            .strftime('%Y')
-        )
-
-        lat = df.latitude
-        lon = df.longitude
-
-        earth_grid_area = self.earth_area_grid(lat, lon)
-
-        values = {
-        "Earth": [], "South": [], "Tropical": [], "North": []}
-
-        time_vals = []
-
-        lat_conditions = (
-        True, lat < -lat_split,
-        (lat>-lat_split) & (lat<lat_split), lat>lat_split
-        )
-
-        for time_point in arg_time_range:
-            flux = df['cVeg'].sel(time=time_point).values.squeeze()
-            sink = earth_grid_area * flux
-
-            condition = iter(lat_conditions)
-            for var in list(values.keys()):
-                sum = np.nansum(1e-15 * sink[next(condition)])
-                values[var].append(sum)
-
-            time_vals.append(df.sel(time=time_point).time.values.squeeze())
-
-        ds = xr.Dataset(
-            {key: (('time'), value) for (key, value) in values.items()},
-            coords={'time': (('time'), time_vals)}
-        )
-
-        return ds
 
     def time_range(self, start_time=None, end_time=None, slice_obj=False):
         """ Returns a list or slice object of a range of time points, as is
@@ -358,7 +266,7 @@ class SpatialAgg:
             region_df = self.regional_cut(vars[var], (-180,180),
                                     start_time=start_time, end_time=end_time)
 
-            values[var] = region_df['cVeg'].values
+            values[var] = region_df[self.var].values
 
         slice_time_range = self.time_range(start_time, end_time, slice_obj=True)
         ds_time = df.sel(time=slice_time_range).time.values
