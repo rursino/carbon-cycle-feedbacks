@@ -1,0 +1,23 @@
+2020-07-10 10:47: INFO:numexpr.utils: NumExpr defaulting to 8 threads.
+2020-07-10 10:47: INFO:__main__:  LPJ-GUESS_S1_nbp:: pass
+2020-07-10 10:47: INFO:__main__:  LPJ-GUESS_S3_nbp:: pass
+2020-07-10 10:47: ERROR:__main__:  OCN_S1_nbp :: fail
+2020-07-10 10:47: ERROR:__main__: conflicting sizes for dimension 'time': length 319 on 'time' and length 3828 on 'nbp'
+2020-07-10 10:48: ERROR:__main__:  OCN_S3_nbp :: fail
+2020-07-10 10:48: ERROR:__main__: conflicting sizes for dimension 'time': length 319 on 'time' and length 3828 on 'nbp'
+2020-07-10 10:48: ERROR:__main__:  CABLE-POP_S1_nbp :: fail
+2020-07-10 10:48: ERROR:__main__: 'numpy.datetime64' object has no attribute 'strftime'
+2020-07-10 10:48: ERROR:__main__:  CABLE-POP_S3_nbp :: fail
+2020-07-10 10:48: ERROR:__main__: 'numpy.datetime64' object has no attribute 'strftime'
+2020-07-10 10:48: ERROR:__main__:  CLASS-CTEM_S1_nbp :: fail
+2020-07-10 10:48: ERROR:__main__: conflicting sizes for dimension 'time': length 318 on 'time' and length 3816 on 'nbp'
+2020-07-10 10:48: ERROR:__main__:  CLASS-CTEM_S3_nbp :: fail
+2020-07-10 10:48: ERROR:__main__: [Errno 2] No such file or directory: b'C:\\Users\\Ross\\Desktop\\Thesis\\masters-project\\data\\TRENDY\\models\\CLASS-CTEM\\S3\\CLASS-CTEM_S3_nbp.nc'
+2020-07-10 10:48: ERROR:__main__:  DLEM_S1_nbp :: fail
+2020-07-10 10:48: ERROR:__main__: unable to decode time units 'years since 1700-01-01 00:00:00' with calendar 'noleap'. Try opening your dataset with decode_times=False.
+2020-07-10 10:48: ERROR:__main__:  DLEM_S3_nbp :: fail
+2020-07-10 10:48: ERROR:__main__: unable to decode time units 'years since 1700-01-01 00:00:00' with calendar 'noleap'. Try opening your dataset with decode_times=False.
+2020-07-10 10:48: ERROR:__main__:  JSBACH_S1_nbp :: fail
+2020-07-10 10:48: ERROR:__main__: 'numpy.datetime64' object has no attribute 'strftime'
+2020-07-10 10:48: ERROR:__main__:  JSBACH_S3_nbp :: fail
+2020-07-10 10:48: ERROR:__main__: 'numpy.datetime64' object has no attribute 'strftime'

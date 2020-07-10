@@ -5,6 +5,8 @@ through the use of pickle.
 Run this script from the bash shell.
 """
 
+
+""" IMPORTS """
 import sys
 sys.path.append("./../../core/")
 import inv_flux
@@ -12,10 +14,15 @@ import inv_flux
 import os
 import xarray as xr
 import pickle
+import logging
 
-if __name__ == "__main__":
-    input_file = sys.argv[1]
-    output_folder = sys.argv[2]
+
+""" FUNCTIONS """
+def main(input_file, output_folder):
+    logger = logging.getLogger(__name__)
+    logging.basicConfig(filename = 'result.log', level = logging.INFO,
+                    format='%(asctime)s: %(levelname)s:%(name)s: %(message)s',
+                    datefmt='%Y-%m-%d %H:%M')
 
     ds = xr.open_dataset(input_file)
     df = (inv_flux
@@ -30,20 +37,26 @@ if __name__ == "__main__":
         "whole": df.sum()
     }
 
-    print("="*30)
-    print("INVERSIONS")
-    print("="*30)
-
-    if os.path.isdir(output_folder):
-        print("Directory %s already exists" % output_folder)
-    else:
+    if not os.path.isdir(output_folder):
         os.mkdir(output_folder)
-        print("Successfully created the directory %s " % output_folder)
 
     # Output files after directory successfully created.
-    for freq in arrays:
-        destination = f"{output_folder}/{freq}.nc"
-        arrays[freq].to_netcdf(destination)
-        print(f"Successfully created {destination}")
+    try:
+        for freq in arrays:
+            destination = f"{output_folder}/{freq}.nc"
+            arrays[freq].to_netcdf(destination)
 
-    print("All files created!\n")
+    except Exception as e:
+        logger.error( '{} :: fail'.format(input_file.split('/')[-1]))
+        logger.error(e)
+
+    else:
+        logger.info( '{} :: pass'.format(input_file.split('/')[-1]))
+
+
+""" EXECUTION """
+if __name__ == "__main__":
+    input_file = sys.argv[1]
+    output_folder = sys.argv[2]
+
+    main(input_file, output_folder)

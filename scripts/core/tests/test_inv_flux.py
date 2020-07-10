@@ -16,7 +16,7 @@ import pytest
 """ SETUP """
 def setup_module(module):
     print('--------------------setup--------------------')
-    global original_ds, test_ds
+    global original_ds, test_ds, output_ds
     global basic_test_result, lat, lon, land_vals, ocean_vals
 
     dir = "./../../../data/inversions/"
@@ -51,6 +51,10 @@ def setup_module(module):
 
     basic_test_result = test_ds.latitudinal_splits()
 
+    #Output dataframe
+    output_fname = './../../../output/inversions/spatial/output_all/CAMS/month.nc'
+    output_ds = xr.open_dataset(output_fname)
+
 
 """ TESTS """
 def test_check_instance():
@@ -77,6 +81,7 @@ def test_regions_add_to_global():
     assert np.all(differences(test_ds.latitudinal_splits(23)) < 1)
     assert np.all(differences(original_ds.latitudinal_splits()) < 1)
     assert np.all(differences(original_ds.latitudinal_splits(23)) < 1)
+    assert np.all(differences(output_ds) < 1)
 
 def test_earth_area_grid_equals_surface_area():
     earth_surface_area = 4 * np.pi * (test_ds.earth_radius ** 2)

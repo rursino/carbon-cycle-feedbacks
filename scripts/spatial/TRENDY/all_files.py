@@ -5,9 +5,15 @@ this script for each input file.
 """ IMPORTS """
 from itertools import *
 import output_all
+import logging
 
 """ SETUP """
 output_dir = "./../../../output/TRENDY/spatial/output_all/"
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename = 'result.log', level = logging.INFO,
+                    format='%(asctime)s: %(levelname)s:%(name)s: %(message)s',
+                    datefmt='%Y-%m-%d %H:%M')
 
 
 """ FUNCTIONS """
@@ -58,4 +64,10 @@ if __name__ == "__main__":
     for name in product_subnames:
         input_file = './../../../data/TRENDY/models/' + generate_filename(name)
         output_folder = output_dir + "{}_{}_{}/".format(*name)
-        output_all.main(input_file, output_folder)
+        try:
+            output_all.main(input_file, output_folder)
+        except Exception as e:
+            logger.error(' {}_{}_{} :: fail'.format(*name))
+            logger.error(e)
+        else:
+            logger.info(' {}_{}_{}:: pass'.format(*name))

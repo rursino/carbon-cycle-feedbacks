@@ -15,7 +15,7 @@ import pytest
 """ SETUP """
 def setup_module(module):
     print('--------------------setup--------------------')
-    global original_ds, test_ds
+    global original_ds, test_ds, output_ds
     global basic_test_result, lat, lon, land_vals, ocean_vals
 
     fname = "./../../../data/temp/crudata/HadSST.3.1.1.0.median.nc"
@@ -40,6 +40,10 @@ def setup_module(module):
     test_ds = TEMP.SpatialAve(testData)
 
     basic_test_result = test_ds.latitudinal_splits()
+
+    #Output dataframe
+    output_fname = './../../../output/TEMP/spatial/output_all/CRUTEM/month.nc'
+    output_ds = xr.open_dataset(output_fname)
 
 
 """ TESTS """
