@@ -58,7 +58,7 @@ def setup_module(module):
 
 """ TESTS """
 def test_check_instance():
-    assert isinstance(basic_test_result, xr.Dataset)
+    assert isinstance(basic_test_result, bool)
 
 def test_regions_add_to_global():
 
