@@ -17,9 +17,11 @@ reload(TRENDYf);
 
 
 """ INPUTS """
-fname = "./../../data/TRENDY/models/LPJ-GUESS/S1/LPJ-GUESS_S1_nbp.nc"
+model = "CLASS-CTEM"
+sim = "S1"
+fname = f"./../../data/TRENDY/models/{model}/{sim}/{model}_{sim}_nbp.nc"
 
-
+fname
 """ FUNCTIONS """
 
 

@@ -49,6 +49,16 @@ class SpatialAgg:
 
         self.earth_radius = 6.371e6 # Radius of Earth
 
+        # Metadata
+        models_info_fname = './../../data/TRENDY/models/models_info.txt'
+        models_info = pd.read_csv(models_info_fname,
+                                  delim_whitespace=True,
+                                  index_col="File"
+                                  )
+        if isinstance(data, str):
+            model_info = models_info.loc[data.split('/')[-1]]
+            self.time_resolution = model_info['time_resolution']
+
     """The following three functions obtain the area of specific grid boxes of
     the Earth in different formats. It is used within the SpatialAgg class.
     """
@@ -134,20 +144,22 @@ class SpatialAgg:
         """
 
         df = self.data
+        timeres = f'%{self.time_resolution}'
 
         if start_time == None:
-            start_time = df.time.values[0].strftime('%Y')
+            start_time = df.time.values[0].strftime(timeres)
         if end_time == None:
             end_time = df.time.values[-1]
             end_time = (end_time
                             .replace(year = end_time.year+1)
-                            .strftime('%Y')
+                            .strftime(timeres)
                         )
 
         arg_time_range = (
         pd
-            .date_range(start=start_time, end=end_time, freq='Y')
-            .strftime('%Y')
+            .date_range(start=start_time, end=end_time,
+                        freq=self.time_resolution)
+            .strftime(timeres)
         )
 
         if slice_obj:

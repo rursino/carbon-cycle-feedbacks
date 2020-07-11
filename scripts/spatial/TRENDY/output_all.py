@@ -28,9 +28,8 @@ def main(input_file, output_folder, ui=False):
         print(f"Working with: {input_file}")
         print('-'*30)
 
-    ds = xr.open_dataset(input_file)
     df = (TRENDYf
-            .SpatialAgg(data = ds)
+            .SpatialAgg(data = input_file)
             .latitudinal_splits()
          )
 
