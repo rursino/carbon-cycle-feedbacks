@@ -1,12 +1,15 @@
 language: python
 python:
-  - "3.7.6"
+    - "3.7.6"
+
+before-install:
+    -
 script:
-  - cd scripts/core/tests && py.test
+    - cd scripts/core/tests && py.test
 
 notifications:
-  email:
-    recipients:
-      - rursino@student.unimelb.edu.au
-     on_success: never
-     on_failure: always
+    email:
+        recipients:
+            - rursino@student.unimelb.edu.au
+            on_success: never
+            on_failure: always
