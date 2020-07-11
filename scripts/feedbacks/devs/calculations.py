@@ -18,6 +18,11 @@ U = xr.open_dataset(OUTPUT_DIR + 'inversions/spatial/output_all/CAMS/year.nc')
 C = pd.read_csv(DIR + 'data/CO2/co2_global.csv', index_col='Year')['CO2']
 T = xr.open_dataset(OUTPUT_DIR + 'TEMP/spatial/output_all/CRUTEM/year.nc')
 
+class FeedbackAnalysis:
+
+    def __init__(self):
+        return None
+
 
 U_time = pd.to_datetime([time.year for time in U.time.values], format='%Y').year
 C_time = C.index
@@ -27,7 +32,7 @@ def time_intersection(*args):
     """ Grabs a set of pd.DatetimeIndex objects and returns the intersection of
     time points as a slice object. This makes indexing dataframes and datasets
     to match time points easily accessible.
-    Note that slice obj represents each date as strings.\
+    Note that slice obj represents each date as strings.
 
     Parameters
     ==========
