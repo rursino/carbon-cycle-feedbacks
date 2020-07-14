@@ -42,7 +42,7 @@ class SpatialAgg:
                 raise TypeError("Pickle object must be of type xr.Dataset.")
 
         else:
-            _data = xr.open_dataset(data)
+            _data = xr.open_dataset(data, decode_times=False)
 
         self.data = _data
         self.var = list(_data.var())[0]
@@ -50,7 +50,7 @@ class SpatialAgg:
         self.earth_radius = 6.371e6 # Radius of Earth
 
         # Metadata
-        models_info_fname = './../../data/TRENDY/models/models_info.txt'
+        models_info_fname = './../../../data/TRENDY/models/models_info.txt'
         models_info = pd.read_csv(models_info_fname,
                                   delim_whitespace=True,
                                   index_col="File"
@@ -144,22 +144,34 @@ class SpatialAgg:
         """
 
         df = self.data
-        timeres = f'%{self.time_resolution}'
+
+        tformat = "%Y-%m" if self.time_resolution == "M" else "%Y"
+
+        def format_time(time):
+
+            return (pd
+                        .to_datetime(datetime.strptime(
+                        time.strftime(tformat), tformat)
+                        )
+                        .strftime(tformat)
+                    )
 
         if start_time == None:
-            start_time = df.time.values[0].strftime(timeres)
+            try:
+                start_time = format_time(df.time.values[0])
+            except AttributeError:
+                start_time = format_time(pd.to_datetime(df.time.values[0]))
         if end_time == None:
-            end_time = df.time.values[-1]
-            end_time = (end_time
-                            .replace(year = end_time.year+1)
-                            .strftime(timeres)
-                        )
+            try:
+                end_time = format_time(df.time.values[-1])
+            except AttributeError:
+                end_time = format_time(pd.to_datetime(df.time.values[-1]))
 
         arg_time_range = (
         pd
             .date_range(start=start_time, end=end_time,
                         freq=self.time_resolution)
-            .strftime(timeres)
+            .strftime(tformat)
         )
 
         if slice_obj:
