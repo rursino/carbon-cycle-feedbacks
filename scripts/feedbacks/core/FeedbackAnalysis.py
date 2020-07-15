@@ -10,6 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
 from datetime import datetime
+import os
 
 
 """ FUNCTIONS """
@@ -55,8 +56,9 @@ class FeedbackAnalysis:
 
         """
 
-        DIR = './../../../'
+        DIR = './../../'
         OUTPUT_DIR = DIR + 'output/'
+        self.OUTPUT_DIR = OUTPUT_DIR
 
         type, model = uptake
         Ufname = OUTPUT_DIR + f'{type}/spatial/output_all/{model}/{time}.nc'
@@ -158,7 +160,7 @@ class FeedbackAnalysis:
 
         return self.model.conf_int(alpha=alpha).loc[variable]
 
-    def feedback_output(self, fname, alpha=0.05):
+    def feedback_output(self, alpha=0.05):
         """ Extracts the relevant information from an OLS model (which should be
         created from the OLS_model method) and outputs it as a txt file in the
         output directory.
@@ -170,35 +172,48 @@ class FeedbackAnalysis:
         confint_CO2 = self.confidence_intervals('CO2', alpha)
         confint_temp = self.confidence_intervals('Temp.', alpha)
 
-        with open(fname, 'w') as f:
-            line_break = '=' * 25 + '\n\n'
+        line_break = '=' * 25 + '\n\n'
+        writeLines = [
+        "FEEDBACK ANALYSIS OUTPUT\n",
+        line_break,
+        f'Information\n' + '-' * 25 + '\n',
+        f'Uptake Type: {self.uptake_type} \n',
+        f'Uptake Model: {self.uptake_model} \n',
+        f'Temperature Model: {self.TEMP_model} \n',
+        f'Time Resolution: {self.time_res}\n',
+        f"Time Range: {self.start} - {self.stop}\n",
+        f'Sink: {self.sink} \n',
+        line_break,
+        'Results\n' + '-' * 25 + '\n\n',
+        f"Parameter\t\t\t{alpha*100:.2f}%\t{(1-alpha)*100:.2f}%\n",
+        '-' * 40 + '\n',
+        f"BETA\t{self.params['CO2']:.3f}\t\t{confint_CO2[0]:.3f}\t{confint_CO2[1]:.3f}\n",
+        f"GAMMA\t{self.params['Temp.']:.3f}\t\t{confint_temp[0]:.3f}\t{confint_temp[1]:.3f}",
+        "\n\n",
+        f'r: {np.sqrt(self.r_squared):.3f}, ',
+        f'r^2: {self.r_squared:.3f}\n\n',
+        f"\t\t\tBETA\tGAMMA\n",
+        '-' * 30 + '\n',
+        f"t-value:\t{self.tvalues['CO2']:.3f}\t{self.tvalues['Temp.']:.3f}\n",
+        f"p-value:\t{self.pvalues['CO2']:.3f}\t{self.pvalues['Temp.']:.3f}\n\n",
+        f"MSE Total: {self.mse_total:.3f}\n\n",
+        f"No. of observations: {self.nobs:.0f}\n",
+        line_break
+        ]
 
-            writeLines = [
-            "FEEDBACK ANALYSIS OUTPUT\n",
-            line_break,
-            f'Information\n' + '-' * 25 + '\n',
-            f'Uptake Type: {self.uptake_type} \n',
-            f'Uptake Model: {self.uptake_model} \n',
-            f'Temperature Model: {self.TEMP_model} \n',
-            f'Time Resolution: {self.time_res}\n',
-            f"Time Range: {self.start} - {self.stop}\n",
-            f'Sink: {self.sink} \n',
-            line_break,
-            'Results\n' + '-' * 25 + '\n\n',
-            f"Parameter\t\t\t{alpha*100:.2f}%\t{(1-alpha)*100:.2f}%\n",
-            '-' * 40 + '\n',
-            f"BETA\t{self.params['CO2']:.3f}\t\t{confint_CO2[0]:.3f}\t{confint_CO2[1]:.3f}\n",
-            f"GAMMA\t{self.params['Temp.']:.3f}\t\t{confint_temp[0]:.3f}\t{confint_temp[1]:.3f}",
-            "\n\n",
-            f'r: {np.sqrt(self.r_squared):.3f}, ',
-            f'r^2: {self.r_squared:.3f}\n\n',
-            f"\t\t\tBETA\tGAMMA\n",
-            '-' * 30 + '\n',
-            f"t-value:\t{self.tvalues['CO2']:.3f}\t{self.tvalues['Temp.']:.3f}\n",
-            f"p-value:\t{self.pvalues['CO2']:.3f}\t{self.pvalues['Temp.']:.3f}\n\n",
-            f"MSE Total: {self.mse_total:.3f}\n\n",
-            f"No. of observations: {self.nobs:.0f}\n",
-            line_break
-            ]
+        OUTPUT_DIR = self.OUTPUT_DIR + 'feedbacks/'
+        destination = f'{self.uptake_model}/{self.TEMP_model}/{self.start}-{self.stop}.txt'
+        fname = OUTPUT_DIR + destination
 
-            f.writelines(writeLines)
+        try:
+            with open(fname, 'w') as f:
+                f.writelines(writeLines)
+        except FileNotFoundError:
+            os.makedirs(OUTPUT_DIR + f'{self.uptake_model}/{self.TEMP_model}/')
+            with open(fname, 'w') as f:
+                f.writelines(writeLines)
+
+
+class FeedbackOutput:
+    def __init__():
+        pass
