@@ -18,7 +18,7 @@ def setup_module(module):
     global original_ds, test_ds, output_ds
     global basic_test_result, lat, lon, land_vals, ocean_vals
 
-    fname = "./../../../data/TRENDY/models/LPJ-GUESS/S0/LPJ-GUESS_S0_cVeg.nc"
+    fname = "./../../../data/TRENDY/models/CABLE-POP/S1/CABLE-POP_S1_nbp.nc"
 
     ds = xr.open_dataset(fname)
 
@@ -26,7 +26,7 @@ def setup_module(module):
     lon = ds.longitude.values
     time = ds.time.values
 
-    vals = ds.cVeg.values
+    vals = ds.nbp.values
     vals[np.isnan(vals)] = 0
     vals[vals > 0] = 1
 
@@ -44,7 +44,7 @@ def setup_module(module):
     basic_test_result = test_ds.latitudinal_splits()
 
     #Output dataframe
-    output_fname = './../../../output/TRENDY/spatial/output_all/LPJ-GUESS_S1_nbp/year.nc'
+    output_fname = './../../../output/TRENDY/spatial/output_all/CABLE-POP_S1_nbp/year.nc'
     output_ds = xr.open_dataset(output_fname)
 
 """ TESTS """

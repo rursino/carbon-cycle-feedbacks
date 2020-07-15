@@ -30,16 +30,18 @@ def main(input_file, output_folder, ui=False):
         print(f"Working with: {input_file}")
         print('-'*30)
 
-    df = (TRENDYf
-            .SpatialAgg(data = input_file)
-            .latitudinal_splits()
-         )
+    data = TRENDYf.SpatialAgg(data = input_file)
+    df = data.latitudinal_splits()
 
-    arrays = {
-        "year": df,
-        "decade": df.resample({'time': '10Y'}).sum(),
-        "whole": df.sum()
-    }
+    if data.time_resolution == "Y":
+        arrays = {"year": df}
+    else:
+        arrays = {
+                    "month": df,
+                    "year": df.resample({'time': 'Y'}).sum()
+                 }
+    arrays["decade"] = df.resample({'time': '10Y'}).sum()
+    arrays["whole"] = df.sum()
 
     if os.path.isdir(output_folder):
         if ui:
@@ -71,40 +73,11 @@ if __name__ == "__main__":
     main(input_file, output_folder, True)
 
 
-import pandas as pd
-from datetime import datetime
-
-
-df = TRENDYf.SpatialAgg('./../../../data/TRENDY/models/CABLE-POP/S1/CABLE-POP_S1_nbp.nc')
-df.time_range()
-
-
-df = df.data
-
-time_resolution = "M"
-tformat = "%Y-%m" if time_resolution == "M" else "%Y"
-
-def format_time(time):
-
-    return (pd
-                .to_datetime(datetime.strptime(
-                time.strftime(tformat), tformat)
-                )
-                .strftime(tformat)
-            )
-
-try:
-    start_time = format_time(df.time.values[0])
-except AttributeError:
-    start_time = format_time(pd.to_datetime(df.time.values[0]))
-
-try:
-    end_time = format_time(df.time.values[-1])
-except AttributeError:
-    end_time = format_time(pd.to_datetime(df.time.values[-1]))
-start_time
-end_time
-
-arg_time_range = pd.date_range(start=start_time, end=end_time,freq=time_resolution).strftime(tformat)
-
-arg_time_range if False else slice(arg_time_range[0], arg_time_range[-1])
+# import pandas as pd
+# from datetime import datetime
+#
+#
+# df = TRENDYf.SpatialAgg('./../../../data/TRENDY/models/JSBACH/S1/JSBACH_S1_nbp.nc')
+#
+#
+# df.regional_cut((0,30),(0,100))

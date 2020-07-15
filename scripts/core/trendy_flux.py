@@ -42,10 +42,10 @@ class SpatialAgg:
                 raise TypeError("Pickle object must be of type xr.Dataset.")
 
         else:
-            _data = xr.open_dataset(data, decode_times=False)
+            _data = xr.open_dataset(data)
 
-        self.data = _data
-        self.var = list(_data.var())[0]
+        self.var = 'nbp'
+        self.data = _data[self.var]
 
         self.earth_radius = 6.371e6 # Radius of Earth
 
@@ -55,6 +55,7 @@ class SpatialAgg:
                                   delim_whitespace=True,
                                   index_col="File"
                                   )
+
         if isinstance(data, str):
             model_info = models_info.loc[data.split('/')[-1]]
             self.time_resolution = model_info['time_resolution']
@@ -216,9 +217,9 @@ class SpatialAgg:
 
         df = df.sel(latitude=slice(*lats), longitude=slice(*lons),
                     time=slice_time_range)
-        df = df * (self.earth_area_grid(df.latitude, df.longitude) * 1e-15)
+        df = df * (self.earth_area_grid(df.latitude, df.longitude) * 1e-12)
         df = df.sum(axis=(1,2))
-        df = df * np.ones(len(df.time))
+        df = df * np.ones(len(df.time)) * 30*24*3600
 
         df['time'] = arg_time_range
 
@@ -290,7 +291,7 @@ class SpatialAgg:
             region_df = self.regional_cut(vars[var], (-180,180),
                                     start_time=start_time, end_time=end_time)
 
-            values[var] = region_df[self.var].values
+            values[var] = region_df.values
 
         slice_time_range = self.time_range(start_time, end_time, slice_obj=True)
         ds_time = df.sel(time=slice_time_range).time.values
