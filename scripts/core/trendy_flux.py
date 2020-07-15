@@ -350,7 +350,7 @@ class Analysis:
 
 
 
-    def rolling_trend(self, variable, window_size=25, plot=False,
+    def cascading_window_trend(self, variable, window_size=25, plot=False,
     include_pearson=False):
         """ Calculates the slope of the trend of an uptake variable for each
         time window and for a given window size. The function also plots the
@@ -704,10 +704,10 @@ class ModelEvaluation:
 
         return linreg
 
-    def regress_rolling_trend_to_GCP(self, sink, window_size, plot=False):
-        """Calculates linear regression of model rolling gradient to GCP
-        rolling gradient and shows a plot of the rolling gradients and scatter
-        plot if requested.
+    def regress_cascading_window_trend_to_GCP(self, sink, window_size, plot=False):
+        """Calculates linear regression of model cascading window gradient to
+        GCP cascading window gradient and shows a plot of the cascading
+        gradients and scatter plot if requested.
 
         Parameters:
         ===========
@@ -718,8 +718,8 @@ class ModelEvaluation:
 
         plot: bool, optional
 
-            Plots rolling gradients and scatter plot of GCP and model uptake
-            if True.
+            Plots cascading window gradients and scatter plot of GCP and model
+            uptake if True.
             Defaults to False.
 
         """
@@ -739,14 +739,14 @@ class ModelEvaluation:
 
         model_roll = (
         Analysis
-            .rolling_trend(self, model_sink, window_size).values
+            .cascading_window_trend(self, model_sink, window_size).values
             .squeeze()
         )
 
         GCP_roll_df = (
         GCPf
             .Analysis("land sink")
-            .rolling_trend(window_size=window_size)
+            .cascading_window_trend(window_size=window_size)
         )
         GCP_roll = GCP_roll_df.loc[time_range].values.squeeze()
 

@@ -14,11 +14,11 @@ import matplotlib.pyplot as plt
 def main():
     input_file = sys.argv[1]
     model_name = sys.argv[2]
-    
+
     input_dataset = pickle.load(open(input_file, "rb"))
 
     df = inv_flux.Analysis(input_dataset)
-    
+
     """Parameters."""
     window_size = int(sys.argv[3]) # Usually 25.
     period = sys.argv[4]
@@ -35,31 +35,31 @@ def main():
         window_size *= 12
     else:
         raise TypeError("Input file must end in either year or spatial.")
-    
+
 
     """ Plots"""
     variables = ["Earth_Land", "South_Land", "North_Land", "Tropical_Land",
                 "Earth_Ocean", "South_Ocean", "North_Ocean", "Tropical_Ocean"]
-    
+
     for variable in variables:
         plt.clf()
-        rolling_trend(variable, df, output_folder, window_size)
+        cascading_window_trend(variable, df, output_folder, window_size)
         plt.clf()
         psd(variable, df, fs, output_folder)
 
         if input_file.endswith("spatial.pik"):
             deseasonalise(variable, df, output_folder)
             bandpass(variable, df, fc, fs, btype, deseasonalise_first, output_folder, period)
-    
 
-def rolling_trend(variable, df, output_folder, window_size):
 
-    roll_df, r_df = df.rolling_trend(variable, window_size, True, True)
+def cascading_window_trend(variable, df, output_folder, window_size):
 
-    plt.savefig(f"{output_folder}{variable}/rolling_trend_{str(window_size)}_{variable}.png")
+    roll_df, r_df = df.cascading_window_trend(variable, window_size, True, True)
 
-    pickle.dump(roll_df, open(f"{output_folder}{variable}/rolling_trend_{str(window_size)}_{variable}.pik", "wb"))
-    pickle.dump(r_df, open(f"{output_folder}{variable}/rolling_trend_pearson_{str(window_size)}_{variable}.pik", "wb"))
+    plt.savefig(f"{output_folder}{variable}/cascading_window_{str(window_size)}_{variable}.png")
+
+    pickle.dump(roll_df, open(f"{output_folder}{variable}/cascading_window_{str(window_size)}_{variable}.pik", "wb"))
+    pickle.dump(r_df, open(f"{output_folder}{variable}/cascading_window_pearson_{str(window_size)}_{variable}.pik", "wb"))
 
 
 def psd(variable, df, fs, output_folder):
@@ -82,8 +82,7 @@ def bandpass(variable, df, fc, fs, btype, deseasonalise_first, output_folder, pe
         bandpass_fname = f"{output_folder}{variable}/bandpass_{period}_{btype}_{variable}.pik"
     pickle.dump(bandpass, open(bandpass_fname, "wb"))
 
-    
-    
+
+
 if __name__ == "__main__":
     main()
-
