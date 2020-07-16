@@ -5,6 +5,7 @@
 import numpy as np
 import xarray as xr
 import sys
+import os
 import pandas as pd
 import pickle
 import matplotlib.pyplot as plt
@@ -50,11 +51,12 @@ class SpatialAgg:
         self.earth_radius = 6.371e6 # Radius of Earth
 
         # Metadata
-        models_info_fname = './../../data/TRENDY/models/models_info.txt'
+        models_info_fname = (os.path.abspath('./../../../../') +
+                            '/data/TRENDY/models/models_info.txt')
         models_info = pd.read_csv(models_info_fname,
-                                  delim_whitespace=True,
-                                  index_col="File"
-                                  )
+                                 delim_whitespace=True,
+                                 index_col="File"
+                                 )
 
         if isinstance(data, str):
             model_info = models_info.loc[data.split('/')[-1]]

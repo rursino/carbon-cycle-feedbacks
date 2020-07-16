@@ -11,9 +11,6 @@ import sys
 sys.path.append("./../../../core/")
 import TRENDY_flux as TRENDYf
 
-from importlib import reload
-reload(TRENDYf)
-
 import os
 import xarray as xr
 import pickle
