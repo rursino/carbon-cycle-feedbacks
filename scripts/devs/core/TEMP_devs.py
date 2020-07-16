@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import sys
-sys.path.append("./../core/")
+sys.path.append("./../../core/")
 import TEMP
 
 from importlib import reload
@@ -17,9 +17,9 @@ reload(TEMP);
 
 
 """ INPUTS """
-# fname = "./../../data/temp/crudata/HadSST.3.1.1.0.median.nc"
-# fname = "./../../data/temp/crudata/HadCRUT.4.6.0.0.median.nc"
-# fname = "./../../data/temp/crudata/CRUTEM.4.6.0.0.anomalies.nc"
+# fname = "./../../../data/temp/crudata/HadSST.3.1.1.0.median.nc"
+# fname = "./../../../data/temp/crudata/HadCRUT.4.6.0.0.median.nc"
+# fname = "./../../../data/temp/crudata/CRUTEM.4.6.0.0.anomalies.nc"
 
 
 """ EXECUTION """

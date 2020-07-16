@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 import sys
-sys.path.append("./../core/")
+sys.path.append("./../../core/")
 
 import inv_flux as invf
 import GCP_flux as GCPf
@@ -13,7 +13,7 @@ reload(invf)
 reload(GCPf)
 
 # Inversion
-fname = "./../../output/inversions/raw/output_all/JENA_s76_all/year.pik"
+fname = "./../../../output/inversions/raw/output_all/JENA_s76_all/year.pik"
 
 df = invf.Analysis(pickle.load(open(fname, 'rb')))
 

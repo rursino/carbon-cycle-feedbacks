@@ -13,7 +13,7 @@ from cftime import Datetime360Day
 
 """ INPUTS """
 
-dir = "./../../data/inversions/"
+dir = "./../../../data/inversions/"
 file = "fco2_Rayner-C13-2018_June2018-ext3_1992-2012_monthlymean_XYT.nc"
 
 fname = dir + file
@@ -293,7 +293,7 @@ spatial_integration(df)
 To check if the invf class methods work.
 """
 import sys
-sys.path.append("./../core")
+sys.path.append("./../../core")
 import inv_flux as invf
 
 from importlib import reload

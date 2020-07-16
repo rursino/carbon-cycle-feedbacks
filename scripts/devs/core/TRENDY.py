@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import sys
-sys.path.append("./../core")
+sys.path.append("./../../core")
 import TRENDY_flux as TRENDYf
 
 from importlib import reload
@@ -19,7 +19,7 @@ reload(TRENDYf);
 """ INPUTS """
 model = "CLASS-CTEM"
 sim = "S1"
-fname = f"./../../data/TRENDY/models/{model}/{sim}/{model}_{sim}_nbp.nc"
+fname = f"./../../../data/TRENDY/models/{model}/{sim}/{model}_{sim}_nbp.nc"
 
 fname
 """ FUNCTIONS """

@@ -10,7 +10,7 @@ import statsmodels.api as sm
 from datetime import datetime
 
 import sys
-sys.path.append("./../core")
+sys.path.append("./../../core")
 import FeedbackAnalysis as FA
 
 from importlib import reload
