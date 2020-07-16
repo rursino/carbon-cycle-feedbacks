@@ -19,3 +19,10 @@ V. Arora, G. Boer, P. Friedlingstein, M. Eby, C. Jones, J. Christian, G. Bonan, 
 P. Friedlingstein, P. Cox, R. Betts, L. Bopp, W. Von Bloh, V. Brovkin, P. Cadule, S. Doney, M. Eby, I. Fung, G. Bala, J. John, C. Jones, F. Joos, T. Kato, M. Kawamiya, W. Knorr, K. Lindsay, H. Matthews, T. Raddatz, P. Rayner, C. Reick, E. Roeckner, K. Schnitzler, R. Schnur, K. Strassmann, A. Weaver, C. Yoshikawa, and N. Zeng. Climate-carbon cycle feedback analysis: Results from the C4MIP model intercomparison. Journal of Climate, 19 (14):3337–3353, 2006.
 
 C. Le Quéré, R. Andrew, P. Friedlingstein, S. Sitch, J. Hauck, J. Pongratz, P. Pickers, J. Korsbakken, G. Peters, J. Canadell, A. Arneth, V. Arora, L. Barbero, A. Bastos, L. Bopp, F. Chevallier, L. Chini, P. Ciais, S. Doney, T. Gkritzalis, D. Goll, I. Harris, V. Haverd, F. Hoffman, M. Hoppema, R. Houghton, G. Hurtt, T. Ilyina, A. Jain, T. Johannessen, C. Jones, E. Kato, R. Keeling, K. Goldewijk, P. Landschtzer, N. Lefvre, S. Lienert, Z. Liu, D. Lombardozzi, N. Metzl, D. Munro, J. Nabel, S. Nakaoka, C. Neill, A. Olsen, T. Ono, P. Patra, A. Peregon, W. Peters, P. Peylin, B. Pfeil, D. Pierrot, B. Poulter, G. Rehder, L. Resplandy, E. Robertson, M. Rocher, C. Rdenbeck, U. Schuster, J. Schwinger, R. Sfrian, I. Skjelvan, T. Steinhoff, A. Sutton, P. Tans, H. Tian, B. Tilbrook, F. Tubiello, I. Van Der Laan-Luijkx, G. Van Der Werf, N. Viovy, A. Walker, A. Wiltshire, R. Wright, S. Zaehle, and B. Zheng. Global Carbon Budget 2018. Earth System Science Data, 10 (4):2141–2194, 2018.
+
+
+<!--
+NOTES
+data/ and output/ are ignored by git. To access these files in another local
+repository, manually transfer the directories to it.
+ -->
