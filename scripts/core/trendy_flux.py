@@ -50,7 +50,7 @@ class SpatialAgg:
         self.earth_radius = 6.371e6 # Radius of Earth
 
         # Metadata
-        models_info_fname = './../../../data/TRENDY/models/models_info.txt'
+        models_info_fname = './../../data/TRENDY/models/models_info.txt'
         models_info = pd.read_csv(models_info_fname,
                                   delim_whitespace=True,
                                   index_col="File"
@@ -280,10 +280,10 @@ class SpatialAgg:
         df = self.data
 
         vars = {
-                "Earth": (-90, 90),
-                "South": (-90, -lat_split),
-                "Tropical": (-lat_split, lat_split),
-                "North": (lat_split, 90)
+                "Earth_Land": (-90, 90),
+                "South_Land": (-90, -lat_split),
+                "Tropical_Land": (-lat_split, lat_split),
+                "North_Land": (lat_split, 90)
                 }
 
         values = {}

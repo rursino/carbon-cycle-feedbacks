@@ -116,7 +116,7 @@ class FeedbackAnalysis:
                  )
 
         self.uptake = U.sel(time=slice(start, stop))[sink]
-        self.temp = T.sel(time=slice(start, stop))["Earth"] #sink
+        self.temp = T.sel(time=slice(start, stop))[sink]
         self.CO2 = C.loc[start:stop].CO2
 
         df = pd.DataFrame(data = {

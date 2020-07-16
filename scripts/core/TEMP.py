@@ -27,14 +27,20 @@ class SpatialAve:
 
     def __init__(self, data):
         """ Initialise an instance of an SpatialAve. """
+
+        regions = {
+            "HadCRUT": "",
+            "CRUTEM": "_Land",
+            "HadSST": "_Ocean"
+        }
+
         if isinstance(data, xr.Dataset) or isinstance(data, xr.DataArray):
             _data = data
+            self.region = ""
 
-        elif type(data) == str and data.endswith('.pickle'):
-            read_file = open(data, 'rb')
-            _data = pickle.load(read_file)
-            if not (isinstance(_data, xr.Dataset) or isinstance(_data, xr.DataArray)):
-                raise TypeError("Pickle object must be of type xr.Dataset or xr.DataArray.")
+        elif type(data) == str and data.endswith('.nc'):
+            _data = xr.open_dataset(data)
+            self.region = regions[data.split("/")[-1].split(".")[0]]
 
         else:
             _data = xr.open_dataset(data)
@@ -206,10 +212,10 @@ class SpatialAve:
         """
 
         vars = {
-                "Earth": (-90, 90),
-                "South": (-90, -lat_split),
-                "Tropical": (-lat_split, lat_split),
-                "North": (lat_split, 90)
+                "Earth" + self.region: (-90, 90),
+                "South" + self.region: (-90, -lat_split),
+                "Tropical" + self.region: (-lat_split, lat_split),
+                "North" + self.region: (lat_split, 90)
                 }
 
         if np.all(np.diff(self.data.latitude.values) < 0):

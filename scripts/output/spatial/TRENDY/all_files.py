@@ -62,7 +62,7 @@ if __name__ == "__main__":
     product_subnames = product(models, simulations, variables)
 
     for name in product_subnames:
-        input_file = './../../../data/TRENDY/models/' + generate_filename(name)
+        input_file = './../../../../data/TRENDY/models/' + generate_filename(name)
         output_folder = output_dir + "{}_{}_{}/".format(*name)
         try:
             output_all.main(input_file, output_folder)

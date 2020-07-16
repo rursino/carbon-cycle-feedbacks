@@ -26,15 +26,14 @@ TRENDYs = list(product(['TRENDY'],
               )
 uptake = inversions + TRENDYs
 
-temp = ['CRUTEM']
+temp, sink = 'CRUTEM', 'Earth_Land'
+# temp, sink = 'HadSST', 'Earth_Ocean'
 
 # timeCO2 = [('year', 'raw'),
 #            ('month', 'weighted'),
 #            ('month', 'deseasonal')
 #           ]
 time, CO2 = ['year'], ['raw']
-
-sink = ['Earth_Land']
 
 time_range = None
 

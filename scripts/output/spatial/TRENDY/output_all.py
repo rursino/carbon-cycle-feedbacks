@@ -71,13 +71,3 @@ if __name__ == "__main__":
     output_folder = sys.argv[2]
 
     main(input_file, output_folder, True)
-
-
-# import pandas as pd
-# from datetime import datetime
-#
-#
-# df = TRENDYf.SpatialAgg('./../../../data/TRENDY/models/JSBACH/S1/JSBACH_S1_nbp.nc')
-#
-#
-# df.regional_cut((0,30),(0,100))

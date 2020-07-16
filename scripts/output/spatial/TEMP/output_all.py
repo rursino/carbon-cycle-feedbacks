@@ -25,9 +25,8 @@ def main(input_file, output_folder):
                     format='%(asctime)s: %(levelname)s:%(name)s: %(message)s',
                     datefmt='%Y-%m-%d %H:%M')
 
-    ds = xr.open_dataset(input_file)
     df = (TEMP
-            .SpatialAve(data = ds)
+            .SpatialAve(data = input_file)
             .latitudinal_splits()
          )
 
