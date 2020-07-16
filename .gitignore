@@ -1,4 +1,5 @@
 data/
+output/
 notebooks/TRENDY/.ipynb_checkpoints/
 MSc_Timeline.xlsx
 scripts/*/*/__pycache__
