@@ -333,9 +333,19 @@ class Analysis:
         """
 
         self.data = data
+        _time = pd.to_datetime(data.time)
 
-        time_list = [datetime.strptime(time.strftime('%Y-%m'), '%Y-%m') for time in data.time.values]
-        self.time = pd.to_datetime(time_list)
+        # Extract time resolution
+        timediff = _time[1] - _time[0]
+
+        if timediff > pd.Timedelta('33 days'):
+            self.time_resolution = "Y"
+            self.tformat = "%Y"
+        else:
+            self.time_resolution = "M"
+            self.tformat = "%Y-%m"
+
+        self.time = _time.strftime(self.tformat)
 
 
     def cascading_window_trend(self, variable, window_size=25, plot=False,
@@ -371,7 +381,10 @@ class Analysis:
         """
 
         def to_numeric(date):
-            return date.year + (date.month-1 + date.day/31)/12
+            if self.tformat == "Y":
+                return date.year
+            else:
+                return date.year + (date.month-1)/12
 
         roll_vals = []
         r_vals = []
@@ -388,7 +401,8 @@ class Analysis:
 
 
         roll_df = pd.DataFrame({f"{window_size}-year trend slope": roll_vals},
-        index=to_numeric(self.time[:-window_size]))
+                        index=(self.time[:-window_size].strftime(self.tformat))
+                        )
 
         if plot:
 
@@ -399,12 +413,15 @@ class Analysis:
             plt.ylabel("C flux to the atmosphere (GtC)", fontsize=20)
 
             plt.subplot(212)
-            plt.plot(roll_df, color='g')
+            plt.plot(self.time[:-window_size], roll_df.values, color='g')
+            plt.xlabel(f"First year of {window_size}-year window",
+                        fontsize=20)
             plt.ylabel("Slope of C flux trend (GtC/ppm/yr)", fontsize=20)
 
         if include_pearson:
             r_df = pd.DataFrame({"r-values of trends": r_vals},
-            index=to_numeric(self.time[:-window_size]))
+                        index=self.time[:-window_size].strftime(self.tformat)
+                        )
             return roll_df, r_df
         else:
             return roll_df
