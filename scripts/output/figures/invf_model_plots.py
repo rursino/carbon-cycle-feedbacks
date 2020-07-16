@@ -12,36 +12,36 @@ import pickle
 
 
 def main():
-    
+
     list_of_models = ["Rayner", "CAMS", "CTRACKER",
                       "JAMSTEC", "JENA_s76", "JENA_s85"]
-    
+
     dict_of_models = {}
     for model in list_of_models:
-        dict_of_models[model] = open_data(f"./../../../output/inversions/raw/output_all/{model}_all/year.pik")
-    
+        dict_of_models[model] = open_data(f"./../../../../output/inversions/raw/output_all/{model}_all/year.pik")
+
     dfGCP = pd.read_csv("./../../../data/GCP/budget.csv",
                         index_col=0,
                         usecols=[0,4,5,6],
                         skipfooter=1
                        )
-    
+
     land = -dfGCP["land sink"] - dfGCP["budget imbalance"]
     ocean = -dfGCP["ocean sink"]
-    
+
     plot(dict_of_models, land, "Earth_Land")
     plot(dict_of_models, ocean, "Earth_Ocean")
 
 
 def open_data(fname):
-    
+
     data = pickle.load(open(fname, "rb"))
-    
+
     return invf.Analysis(data).cftime_to_datetime()
 
 
 def plot(dict_of_models, GCP, var):
-    
+
     plt.figure(figsize=(14,9))
 
     dict_of_models["Rayner"][var].plot()
@@ -50,7 +50,7 @@ def plot(dict_of_models, GCP, var):
     dict_of_models["JAMSTEC"][var].plot()
     dict_of_models["JENA_s76"][var].plot()
     dict_of_models["JENA_s85"][var].plot()
-    
+
     if var == "Earth_Land":
         GCP_legend = "GCP Land"
         title = "Land Uptake"
@@ -66,7 +66,7 @@ def plot(dict_of_models, GCP, var):
     plt.title(title, fontsize=30)
     plt.xlabel('Year', fontsize=20)
     plt.ylabel('C flux to the atmosphere (GtC/yr)', fontsize=20)
-    
+
     plt.show()
 
 

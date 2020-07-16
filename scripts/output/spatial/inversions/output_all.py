@@ -1,15 +1,15 @@
-""" Outputs dataframes of monthly, yearly, decadal and whole time
-temperature averages (for all globe and regions) for each model.
-Output format is binary csv through the use of pickle.
+""" Outputs dataframes of spatial, yearly, decadal and whole time integrations
+(for all globe and regions) for each model. Output format is binary csv
+through the use of pickle.
 
 Run this script from the bash shell.
-
 """
+
 
 """ IMPORTS """
 import sys
-sys.path.append("./../../core/")
-import TEMP
+sys.path.append("./../../../core/")
+import inv_flux
 
 import os
 import xarray as xr
@@ -19,23 +19,22 @@ import logging
 
 """ FUNCTIONS """
 def main(input_file, output_folder):
-
     logger = logging.getLogger(__name__)
     logging.basicConfig(filename = 'result.log', level = logging.INFO,
                     format='%(asctime)s: %(levelname)s:%(name)s: %(message)s',
                     datefmt='%Y-%m-%d %H:%M')
 
     ds = xr.open_dataset(input_file)
-    df = (TEMP
-            .SpatialAve(data = ds)
+    df = (inv_flux
+            .SpatialAgg(data = ds)
             .latitudinal_splits()
          )
 
     arrays = {
         "month": df,
-        "year": df.resample({'time': 'Y'}).mean(),
-        "decade": df.resample({'time': '10Y'}).mean(),
-        "whole": df.mean()
+        "year": df.resample({'time': 'Y'}).sum(),
+        "decade": df.resample({'time': '10Y'}).sum(),
+        "whole": df.sum()
     }
 
     if not os.path.isdir(output_folder):
@@ -53,7 +52,6 @@ def main(input_file, output_folder):
 
     else:
         logger.info( '{} :: pass'.format(input_file.split('/')[-1]))
-
 
 
 """ EXECUTION """

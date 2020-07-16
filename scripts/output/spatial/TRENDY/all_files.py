@@ -8,7 +8,7 @@ import output_all
 import logging
 
 """ SETUP """
-output_dir = "./../../../output/TRENDY/spatial/output_all/"
+output_dir = "./../../../../output/TRENDY/spatial/output_all/"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename = 'result.log', level = logging.INFO,
@@ -52,7 +52,7 @@ def generate_filename(name):
 """ EXECUTION """
 if __name__ == "__main__":
 
-    with open('./../../../data/TRENDY/models/info.txt', 'r') as info:
+    with open('./../../../../data/TRENDY/models/info.txt', 'r') as info:
         infoContent = info.read().splitlines()
 
     variables = get_subnames('variables')

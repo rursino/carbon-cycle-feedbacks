@@ -3,7 +3,7 @@
 Run this script from the bash shell. """
 
 import sys
-sys.path.append("./../../core/")
+sys.path.append("./../../../core/")
 
 import os
 import inv_flux
@@ -28,10 +28,10 @@ def main():
 
     if input_file.endswith("year.pik"):
         fs = 1
-        output_folder = f"./../../../output/inversions/analysis/year/{model_name}/"
+        output_folder = f"./../../../../output/inversions/analysis/year/{model_name}/"
     elif input_file.endswith("spatial.pik"):
         fs = 12
-        output_folder = f"./../../../output/inversions/analysis/monthly/{model_name}/"
+        output_folder = f"./../../../../output/inversions/analysis/monthly/{model_name}/"
         window_size *= 12
     else:
         raise TypeError("Input file must end in either year or spatial.")

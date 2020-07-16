@@ -8,7 +8,7 @@ Run this script from the bash shell.
 
 """ IMPORTS """
 import sys
-sys.path.append("./../../core/")
+sys.path.append("./../../../core/")
 import TRENDY_flux as TRENDYf
 
 from importlib import reload

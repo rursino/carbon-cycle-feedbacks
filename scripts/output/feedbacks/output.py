@@ -5,7 +5,7 @@
 from itertools import *
 
 import sys
-sys.path.append("./core")
+sys.path.append("./../../core/")
 import FeedbackAnalysis as FA
 
 from importlib import reload
