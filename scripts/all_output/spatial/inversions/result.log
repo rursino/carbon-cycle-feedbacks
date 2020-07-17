@@ -1,12 +1,6 @@
-2020-07-10 11:21: INFO:numexpr.utils: NumExpr defaulting to 8 threads.
-2020-07-10 11:21: INFO:__main__: fco2_Rayner-C13-2018_June2018-ext3_1992-2012_monthlymean_XYT.nc :: pass
-2020-07-10 11:21: INFO:numexpr.utils: NumExpr defaulting to 8 threads.
-2020-07-10 11:21: INFO:__main__: fco2_CAMS-V17-1-2018_June2018-ext3_1979-2017_monthlymean_XYT.nc :: pass
-2020-07-10 11:21: INFO:numexpr.utils: NumExpr defaulting to 8 threads.
-2020-07-10 11:21: INFO:__main__: fco2_CTRACKER-EU-v2018_June2018-ext3_2000-2017_monthlymean_XYT.nc :: pass
-2020-07-10 11:21: INFO:numexpr.utils: NumExpr defaulting to 8 threads.
-2020-07-10 11:21: INFO:__main__: fco2_JAMSTEC-V1-2-2018_June2018-ext3_1996-2017_monthlymean_XYT.nc :: pass
-2020-07-10 11:21: INFO:numexpr.utils: NumExpr defaulting to 8 threads.
-2020-07-10 11:21: INFO:__main__: fco2_JENA-s76-4-2-2018_June2018-ext3_1976-2017_monthlymean_XYT.nc :: pass
-2020-07-10 11:21: INFO:numexpr.utils: NumExpr defaulting to 8 threads.
-2020-07-10 11:21: INFO:__main__: fco2_JENA-s85-4-2-2018_June2018-ext3_1985-2017_monthlymean_XYT.nc :: pass
+2020-07-17 14:42: INFO:__main__: fco2_Rayner-C13-2018_June2018-ext3_1992-2012_monthlymean_XYT.nc :: pass
+2020-07-17 14:42: INFO:__main__: fco2_CAMS-V17-1-2018_June2018-ext3_1979-2017_monthlymean_XYT.nc :: pass
+2020-07-17 14:42: INFO:__main__: fco2_CTRACKER-EU-v2018_June2018-ext3_2000-2017_monthlymean_XYT.nc :: pass
+2020-07-17 14:42: INFO:__main__: fco2_JAMSTEC-V1-2-2018_June2018-ext3_1996-2017_monthlymean_XYT.nc :: pass
+2020-07-17 14:42: INFO:__main__: fco2_JENA-s76-4-2-2018_June2018-ext3_1976-2017_monthlymean_XYT.nc :: pass
+2020-07-17 14:42: INFO:__main__: fco2_JENA-s85-4-2-2018_June2018-ext3_1985-2017_monthlymean_XYT.nc :: pass

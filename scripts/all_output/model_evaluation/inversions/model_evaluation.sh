@@ -3,12 +3,12 @@
 
 # Short-hand variables for the data paths of the 6 datasets.
 
-Rayner="./../../../../output/inversions/raw/output_all/Rayner_all/year.pik"
-CAMS="./../../../../output/inversions/raw/output_all/CAMS_all/year.pik"
-CTRACKER="./../../../../output/inversions/raw/output_all/CTRACKER_all/year.pik"
-JAMSTEC="./../../../../output/inversions/raw/output_all/JAMSTEC_all/year.pik"
-JENA_s76="./../../../../output/inversions/raw/output_all/JENA_s76_all/year.pik"
-JENA_s85="./../../../../output/inversions/raw/output_all/JENA_s85_all/year.pik"
+Rayner="./../../../../output/inversions/spatial/output_all/Rayner/year.nc"
+CAMS="./../../../../output/inversions/spatial/output_all/CAMS/year.nc"
+CTRACKER="./../../../../output/inversions/spatial/output_all/CTRACKER/year.nc"
+JAMSTEC="./../../../../output/inversions/spatial/output_all/JAMSTEC/year.nc"
+JENA_s76="./../../../../output/inversions/spatial/output_all/JENA_s76/year.nc"
+JENA_s85="./../../../../output/inversions/spatial/output_all/JENA_s85/year.nc"
 
 
 python model_evaluation.py $Rayner ./../../../../output/inversions/model_evaluation/Rayner/

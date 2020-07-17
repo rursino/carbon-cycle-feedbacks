@@ -46,7 +46,6 @@ class SpatialAgg:
             _data = xr.open_dataset(data)
 
         self.data = _data
-
         self.earth_radius = 6.371e6 # Radius of Earth
 
 
@@ -285,6 +284,8 @@ class SpatialAgg:
 
         slice_time_range = self.time_range(start_time, end_time, slice_obj=True)
         ds_time = df.sel(time=slice_time_range).time.values
+        ds_time = [datetime.strptime(time.strftime('%Y-%m'), '%Y-%m')
+                     for time in ds_time]
 
         ds = xr.Dataset(
             {key: (('time'), value) for (key, value) in values.items()},
@@ -306,10 +307,8 @@ class SpatialAgg:
 
         """
 
-        time_list = []
-        for time in self.data.time.values:
-            time_value = datetime.strptime(time.strftime('%Y-%m'), '%Y-%m')
-            time_list.append(time_value)
+        time_list = [datetime.strptime(time.strftime('%Y-%m'), '%Y-%m')
+                     for time in self.data.time.values]
 
         return self.data.assign_coords(time=time_list)
 
