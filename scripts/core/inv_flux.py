@@ -294,24 +294,6 @@ class SpatialAgg:
 
         return ds
 
-    def cftime_to_datetime(self, format='%Y-%m'):
-        """Takes a xr.Dataset with cftime values and converts them into
-        datetimes.
-
-        Parameters
-        ==========
-
-        self: xr.Dataset.
-
-        format: format of datetime.
-
-        """
-
-        time_list = [datetime.strptime(time.strftime('%Y-%m'), '%Y-%m')
-                     for time in self.data.time.values]
-
-        return self.data.assign_coords(time=time_list)
-
 
 class Analysis:
     """ This class takes an instance of spatially and/or temporally integrated
@@ -332,7 +314,7 @@ class Analysis:
         """
 
         self.data = data
-        _time = pd.to_datetime(data.time)
+        _time = pd.to_datetime(data.time.values)
 
         # Extract time resolution
         timediff = _time[1] - _time[0]
@@ -343,9 +325,6 @@ class Analysis:
         else:
             self.time_resolution = "M"
             self.tformat = "%Y-%m"
-
-        self.time = _time.strftime(self.tformat)
-
 
     def cascading_window_trend(self, variable, window_size=25, plot=False,
     include_pearson=False):
@@ -363,7 +342,7 @@ class Analysis:
 
         window_size: integer
 
-            size of time window of trends.
+            size of time window of trends (in years).
 
         plot: bool, optional
 
@@ -379,47 +358,60 @@ class Analysis:
 
         """
 
-        def to_numeric(date):
-            if self.tformat == "Y":
-                return date.year
-            else:
-                return date.year + (date.month-1)/12
+        if self.time_resolution == "M":
+            window_size *= 12
+
+        def to_numerical(data):
+            return (pd.to_numeric(data) /
+                    (3600 * 24 * 365 *1e9) + 1969
+                    )
+
+        df = self.data
 
         roll_vals = []
         r_vals = []
 
-        for i in range(0, len(self.time) - window_size):
-            sub_time = self.time[i:i+window_size+1]
-            sub_vals = self.data[variable].sel(time = slice(self.data.time[i],
-            self.data.time[i+window_size])).values
+        for i in range(0, len(df.time) - window_size):
+            sub_time = df.time[i:i+window_size+1]
+            sub_vals = df[variable].sel(time = slice(df.time[i],
+            df.time[i+window_size])).values
 
-            linreg = stats.linregress(to_numeric(sub_time), sub_vals)
+            linreg = stats.linregress(to_numerical(sub_time), sub_vals)
 
             roll_vals.append(linreg[0])
             r_vals.append(linreg[2])
 
+        index = (pd
+                    .to_datetime(df.time[:-window_size].values)
+                    .strftime(self.tformat)
+                )
 
-        roll_df = pd.DataFrame({f"{window_size}-year trend slope": roll_vals},
-                        index=(self.time[:-window_size].strftime(self.tformat))
-                        )
+        if self.time_resolution == "M":
+            ws_plotlabel = f"{int(window_size / 12)}-year"
+        else:
+            ws_plotlabel = f"{window_size}-year"
+
+        roll_df = pd.DataFrame({f"{ws_plotlabel} trend slope": roll_vals},
+                               index=index
+                              )
 
         if plot:
 
             plt.figure(figsize=(22,16))
 
             plt.subplot(211)
-            plt.plot(self.time, self.data[variable].values)
+            plt.plot(df.time, self.data[variable].values)
             plt.ylabel("C flux to the atmosphere (GtC)", fontsize=20)
 
             plt.subplot(212)
-            plt.plot(self.time[:-window_size], roll_df.values, color='g')
-            plt.xlabel(f"First year of {window_size}-year window",
+            plt.plot(df.time[:-window_size], roll_df.values, color='g')
+            plt.xlabel(f"First year of {ws_plotlabel} window",
                         fontsize=20)
             plt.ylabel("Slope of C flux trend (GtC/ppm/yr)", fontsize=20)
 
         if include_pearson:
             r_df = pd.DataFrame({"r-values of trends": r_vals},
-                        index=self.time[:-window_size].strftime(self.tformat)
+                        index=df.time[:-window_size].strftime(self.tformat)
                         )
             return roll_df, r_df
         else:
@@ -469,7 +461,7 @@ class Analysis:
             plt.figure(figsize=(12,9))
 
             plt.subplot(211)
-            plt.plot(self.time, x.values)
+            plt.plot(df.time, x.values)
 
             plt.subplot(212)
             plt.semilogy(1/freqs, spec)
@@ -730,8 +722,10 @@ class ModelEvaluation:
         """
 
 
-        def to_numeric(date):
-            return date.year + (date.month-1 + date.day/31)/12
+        def to_numerical(data):
+            return (pd.to_numeric(data) /
+                    (3600 * 24 * 365 *1e9) + 1969
+                    )
 
 
         if "land" in sink:

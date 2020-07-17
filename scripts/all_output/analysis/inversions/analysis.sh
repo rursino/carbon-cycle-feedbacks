@@ -10,12 +10,12 @@ JAMSTEC_year="./../../../../output/inversions/spatial/output_all/JAMSTEC/year.nc
 JENA_s76_year_year="./../../../../output/inversions/spatial/output_all/JENA_s76/year.nc"
 JENA_s85="./../../../../output/inversions/spatial/output_all/JENA_s85/year.nc"
 
-Rayner_monthly="./../../../../output/inversions/spatial/output_all/Rayner/spatial.nc"
-CAMS_monthly="./../../../../output/inversions/spatial/output_all/CAMS/spatial.nc"
-CTRACKER_monthly="./../../../../output/inversions/spatial/output_all/CTRACKER/spatial.nc"
-JAMSTEC_monthly="./../../../../output/inversions/spatial/output_all/JAMSTEC/spatial.nc"
-JENA_s76_monthly="./../../../../output/inversions/spatial/output_all/JENA_s76/spatial.nc"
-JENA_s85_monthly="./../../../../output/inversions/spatial/output_all/JENA_s85/spatial.nc"
+Rayner_month="./../../../../output/inversions/spatial/output_all/Rayner/month.nc"
+CAMS_month="./../../../../output/inversions/spatial/output_all/CAMS/month.nc"
+CTRACKER_month="./../../../../output/inversions/spatial/output_all/CTRACKER/month.nc"
+JAMSTEC_month="./../../../../output/inversions/spatial/output_all/JAMSTEC/month.nc"
+JENA_s76_month="./../../../../output/inversions/spatial/output_all/JENA_s76/month.nc"
+JENA_s85_month="./../../../../output/inversions/spatial/output_all/JENA_s85/month.nc"
 
 
 python analysis.py $Rayner_year Rayner 10 10
@@ -25,9 +25,9 @@ python analysis.py $JAMSTEC_year JAMSTEC 10 10
 python analysis.py $JENA_s76_year JENA_s76 10 10
 python analysis.py $JENA_s85_year JENA_s85 10 10
 
-python analysis.py $Rayner_monthly Rayner 10 10
-python analysis.py $CAMS_monthly CAMS 10 10
-python analysis.py $CTRACKER_monthly CTRACKER 10 10
-python analysis.py $JAMSTEC_monthly JAMSTEC 10 10
-python analysis.py $JENA_s76_monthly JENA_s76 10 10
-python analysis.py $JENA_s85_monthly JENA_s85 10 10
+python analysis.py $Rayner_month Rayner 10 10
+python analysis.py $CAMS_month CAMS 10 10
+python analysis.py $CTRACKER_month CTRACKER 10 10
+python analysis.py $JAMSTEC_month JAMSTEC 10 10
+python analysis.py $JENA_s76_month JENA_s76 10 10
+python analysis.py $JENA_s85_month JENA_s85 10 10
