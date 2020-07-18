@@ -326,8 +326,23 @@ class Analysis:
             self.time_resolution = "M"
             self.tformat = "%Y-%m"
 
-    def cascading_window_trend(self, variable, window_size=25, plot=False,
-    include_pearson=False):
+    def _time_to_CO2(time):
+        """ Converts any time series array to corresponding atmospheric CO2
+        values
+
+        Parameters
+        ==========
+
+        time:
+
+            time series to convert.
+
+        """
+
+        return time
+
+    def cascading_window_trend(self, indep="time", variable="Earth_Land",
+                            window_size=25, plot=False, include_pearson=False):
         """ Calculates the slope of the trend of an uptake variable for each
         time window and for a given window size. The function also plots the
         slopes as a timeseries and, if prompted, the r-value of each slope as
@@ -336,13 +351,20 @@ class Analysis:
         Parameters
         ==========
 
-        variable: string
+        indep: string, optional
+
+            Regress uptake variable over "time" or "CO2.
+            Defaults to "time".
+
+        varaible: string, optional
 
             carbon uptake variable to regress.
+            Defaults to "Earth_Land".
 
-        window_size: integer
+        window_size: integer, optional
 
             size of time window of trends (in years).
+            Defaults to 25.
 
         plot: bool, optional
 
@@ -368,13 +390,18 @@ class Analysis:
 
         df = self.data
 
+        x = {
+            "time": df.time,
+            "CO2": self._time_to_CO2(df.time)
+        }
+
         roll_vals = []
         r_vals = []
 
-        for i in range(0, len(df.time) - window_size):
-            sub_time = df.time[i:i+window_size+1]
-            sub_vals = df[variable].sel(time = slice(df.time[i],
-            df.time[i+window_size])).values
+        for i in range(0, len(x[indep]) - window_size):
+            sub_time = x[indep][i:i+window_size+1]
+            sub_vals = df[variable].sel(time = slice(x[indep][i],
+            x[indep][i+window_size])).values
 
             linreg = stats.linregress(to_numerical(sub_time), sub_vals)
 
@@ -382,7 +409,7 @@ class Analysis:
             r_vals.append(linreg[2])
 
         index = (pd
-                    .to_datetime(df.time[:-window_size].values)
+                    .to_datetime(x[indep][:-window_size].values)
                     .strftime(self.tformat)
                 )
 
@@ -400,18 +427,18 @@ class Analysis:
             plt.figure(figsize=(22,16))
 
             plt.subplot(211)
-            plt.plot(df.time, self.data[variable].values)
+            plt.plot(x[indep], self.data[variable].values)
             plt.ylabel("C flux to the atmosphere (GtC)", fontsize=20)
 
             plt.subplot(212)
-            plt.plot(df.time[:-window_size], roll_df.values, color='g')
+            plt.plot(x[indep][:-window_size], roll_df.values, color='g')
             plt.xlabel(f"First year of {ws_plotlabel} window",
                         fontsize=20)
             plt.ylabel("Slope of C flux trend (GtC/ppm/yr)", fontsize=20)
 
         if include_pearson:
             r_df = pd.DataFrame({"r-values of trends": r_vals},
-                        index=df.time[:-window_size].strftime(self.tformat)
+                        index=x[indep][:-window_size].strftime(self.tformat)
                         )
             return roll_df, r_df
         else:
