@@ -83,8 +83,8 @@ class SpatialAgg:
         return result
 
     def earth_area_grid(self, lats, lons):
-        """Returns an array of the areas of each grid box within a defined set of
-        lats and lons.
+        """Returns an array of the areas of each grid box within a defined set
+        of lats and lons.
         """
 
         result = np.zeros((lats.size, lons.size))

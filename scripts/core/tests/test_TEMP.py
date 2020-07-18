@@ -15,7 +15,7 @@ import pytest
 """ SETUP """
 def setup_module(module):
     print('--------------------setup--------------------')
-    global original_ds, test_ds, output_ds
+    global original_ds, test_ds, month_output, year_output
     global basic_test_result, lat, lon, land_vals, ocean_vals
 
     fname = "./../../../data/temp/crudata/HadSST.3.1.1.0.median.nc"
@@ -42,8 +42,9 @@ def setup_module(module):
     basic_test_result = test_ds.latitudinal_splits()
 
     #Output dataframe
-    output_fname = './../../../output/TEMP/spatial/output_all/CRUTEM/month.nc'
-    output_ds = xr.open_dataset(output_fname)
+    output_dir = './../../../output/TEMP/spatial/output_all/HadSST/'
+    month_output = xr.open_dataset(output_dir + 'month.nc')
+    year_output = xr.open_dataset(output_dir + 'year.nc')
 
 
 """ TESTS """
@@ -76,3 +77,33 @@ def test_spatial_sum():
 
     assert differences(basic_test_result) == 0
     assert differences(test_ds.latitudinal_splits(23)) == 0
+
+def output_equals_result():
+
+    assert month_output == basic_test_result
+
+def months_add_to_years():
+
+    def sums(year, variable):
+        month_time = slice(f"{year}-01", f"{year}-12")
+        month_sum = (month_output
+                        .sel(time=month_time)[variable].values
+                        .sum()
+                    )
+        year_sum = (year_output
+                        .sel(time=year)[variable].values
+                        .sum()
+                   )
+
+        return month_sum, year_sum
+
+    args = [
+                ("1990", "Earth_Land"),
+                ("1800", "Earth_Land"),
+                ("1945", "South_Land"),
+                ("2006", "North_Land"),
+                ("1976", "Tropical_Land"),
+
+           ]
+    for arg in args:
+        assert np.subtract(*sums(*arg)) == 0
