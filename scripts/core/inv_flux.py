@@ -326,9 +326,11 @@ class Analysis:
             self.time_resolution = "M"
             self.tformat = "%Y-%m"
 
-    def _time_to_CO2(time):
+    def _time_to_CO2(self, time, type):
         """ Converts any time series array to corresponding atmospheric CO2
-        values
+        values.
+        This function should only be used within the 'cascading_window_trend'
+        method.
 
         Parameters
         ==========
@@ -339,7 +341,30 @@ class Analysis:
 
         """
 
-        return time
+        if self.time_resolution == "M":
+            timeres = "month"
+            index_col = ["Year", "Month"]
+        else:
+            timeres = "year"
+            index_col = "Year"
+
+        CO2fname = f"./../../../data/CO2/co2_{timeres}_{type}.csv"
+        CO2 = pd.read_csv(CO2fname, index_col=index_col)['CO2']
+
+        index = {
+            "year": pd.to_datetime(time).year,
+            "month": pd.to_datetime(time).month
+        }
+
+        if self.time_resolution == "M":
+            index_to_pass = index["year"], index["month"]
+        else:
+            index_to_pass = index["year"]
+
+        try:
+            return CO2.loc[index_to_pass].values
+        except AttributeError:
+            return CO2.loc[index_to_pass]
 
     def cascading_window_trend(self, indep="time", variable="Earth_Land",
                             window_size=25, plot=False, include_pearson=False):
@@ -353,10 +378,11 @@ class Analysis:
 
         indep: string, optional
 
-            Regress uptake variable over "time" or "CO2.
+            Regress uptake variable over time ("time") or CO2 ("weighted", 
+            "deseasonal for month and "raw" for ).
             Defaults to "time".
 
-        varaible: string, optional
+        variable: string, optional
 
             carbon uptake variable to regress.
             Defaults to "Earth_Land".
@@ -380,20 +406,20 @@ class Analysis:
 
         """
 
-        if self.time_resolution == "M":
-            window_size *= 12
+        df = self.data
 
         def to_numerical(data):
             return (pd.to_numeric(data) /
                     (3600 * 24 * 365 *1e9) + 1969
                     )
 
-        df = self.data
-
         x = {
-            "time": df.time,
-            "CO2": self._time_to_CO2(df.time)
+            "time": df.time.values,
+            "CO2": self._time_to_CO2(df.time.values)
         }
+
+        if self.time_resolution == "M":
+            window_size *= 12
 
         roll_vals = []
         r_vals = []
