@@ -15,14 +15,16 @@ from datetime import datetime
 from scipy import stats
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 """ INPUTS """
-fname = "./../../../output/inversions/spatial/output_all/JENA_s76/month.nc"
-CO2fname = "./../../../data/CO2/co2_month_weighted.csv"
+fname = "./../../../output/inversions/spatial/output_all/JENA_s76/year.nc"
 
 
 """ DEVS """
 ds = xr.open_dataset(fname)
 df = invf.Analysis(ds)
 
-df.cascading_window_trend(plot=True, window_size=15)
+df.cascading_window_trend("raw", "North_Land", plot=True, window_size=15)
+
+df.cascading_window_trend("time", "Tropical_Land", plot=False, include_pearson=True)[1]

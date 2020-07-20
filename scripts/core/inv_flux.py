@@ -339,6 +339,10 @@ class Analysis:
 
             time series to convert.
 
+        type:
+
+            type of CO2 values to use (refer to filenames in data/CO2 directory).
+
         """
 
         if self.time_resolution == "M":
@@ -378,8 +382,8 @@ class Analysis:
 
         indep: string, optional
 
-            Regress uptake variable over time ("time") or CO2 ("weighted", 
-            "deseasonal for month and "raw" for ).
+            Regress uptake variable over time ("time") or CO2 ("weighted" or
+            "deseasonal" for month and "raw" for year).
             Defaults to "time".
 
         variable: string, optional
@@ -413,31 +417,37 @@ class Analysis:
                     (3600 * 24 * 365 *1e9) + 1969
                     )
 
-        x = {
-            "time": df.time.values,
-            "CO2": self._time_to_CO2(df.time.values)
-        }
+        x_time = df.time.values
+        if indep == "time":
+            x_var = to_numerical(x_time)
+            ts_xlabel = "Year"
+            cascading_yunit = "(GtC/ppm/yr)"
+            cascading_xlabel = f"First year of {window_size}-year window"
+        else:
+            x_var = self._time_to_CO2(x_time, indep)
+            ts_xlabel = "CO2 (ppm)"
+            cascading_yunit = "(GtC/ppm$^2$)"
+            cascading_xlabel = f"Start of {window_size}-year CO2 window (ppm)"
 
         if self.time_resolution == "M":
             window_size *= 12
 
-        roll_vals = []
-        r_vals = []
+        roll_vals, r_vals = [], []
+        for i in range(0, len(x_time) - window_size):
+            sub_x = x_var[i:i+window_size+1]
+            sub_vals = df[variable].sel(time = slice(x_time[i],
+                                               x_time[i+window_size])
+                                       ).values
 
-        for i in range(0, len(x[indep]) - window_size):
-            sub_time = x[indep][i:i+window_size+1]
-            sub_vals = df[variable].sel(time = slice(x[indep][i],
-            x[indep][i+window_size])).values
-
-            linreg = stats.linregress(to_numerical(sub_time), sub_vals)
+            linreg = stats.linregress(sub_x, sub_vals)
 
             roll_vals.append(linreg[0])
             r_vals.append(linreg[2])
 
-        index = (pd
-                    .to_datetime(x[indep][:-window_size].values)
-                    .strftime(self.tformat)
-                )
+        # index = (pd
+        #             .to_datetime(x_var[:-window_size])
+        #             .strftime(self.tformat)
+        #         )
 
         if self.time_resolution == "M":
             ws_plotlabel = f"{int(window_size / 12)}-year"
@@ -445,7 +455,7 @@ class Analysis:
             ws_plotlabel = f"{window_size}-year"
 
         roll_df = pd.DataFrame({f"{ws_plotlabel} trend slope": roll_vals},
-                               index=index
+                               index=x_var[:-window_size]
                               )
 
         if plot:
@@ -453,24 +463,24 @@ class Analysis:
             plt.figure(figsize=(22,16))
 
             plt.subplot(211)
-            plt.plot(x[indep], self.data[variable].values)
+            plt.plot(x_var, self.data[variable].values)
+            plt.xlabel(ts_xlabel, fontsize=20)
             plt.ylabel("C flux to the atmosphere (GtC)", fontsize=20)
 
             plt.subplot(212)
-            plt.plot(x[indep][:-window_size], roll_df.values, color='g')
-            plt.xlabel(f"First year of {ws_plotlabel} window",
-                        fontsize=20)
-            plt.ylabel("Slope of C flux trend (GtC/ppm/yr)", fontsize=20)
+            plt.plot(x_var[:-window_size], roll_df.values, color='g')
+            plt.xlabel(cascading_xlabel, fontsize=20)
+            plt.ylabel(f"Slope of C flux trend {cascading_yunit}", fontsize=20)
 
         if include_pearson:
             r_df = pd.DataFrame({"r-values of trends": r_vals},
-                        index=x[indep][:-window_size].strftime(self.tformat)
+                        index=x_var[:-window_size]#.strftime(self.tformat)
                         )
             return roll_df, r_df
         else:
             return roll_df
 
-    def psd(self, variable, fs=1, xlim=None, plot=False):
+    def psd(self, variable, fs, xlim=None, plot=False):
         """ Calculates the power spectral density (psd) of a timeseries of a
         variable using the Welch method. Also provides the timeseries plot and
         psd plot if passed. This function is designed for the monthly
@@ -498,23 +508,33 @@ class Analysis:
 
         """
 
-        if fs == 12 or fs==1: #for analysis.py: fs==12 means that annual
-        # resolution timeseries is being passeD as self. fs==1 means
-        # resolution is annual.
-            period = " (years)"
-            unit = "((GtC/yr)$^2$.yr)"
-        else:
-            period = ""
-            unit = ""
+        df = self.data
 
-        x = self.data[variable]
-        freqs, spec = signal.welch(x.values, fs=fs)
+        if self.time_resolution == "M":
+            if fs == 12:
+                period = " (years)"
+                unit = "((GtC/yr)$^2$.yr)"
+            elif fs == 1:
+                period = " (months)"
+                unit = "((GtC/yr)$^2$.month)"
+            else:
+                period = ""
+                unit = ""
+        else:
+            if fs == 1:
+                period = " (years)"
+                unit = "((GtC/yr)$^2$.yr)"
+            else:
+                period = ""
+                unit = ""
+
+        freqs, spec = signal.welch(df[variable].values, fs=fs)
 
         if plot:
             plt.figure(figsize=(12,9))
 
             plt.subplot(211)
-            plt.plot(df.time, x.values)
+            plt.plot(df.time, df[variable].values)
 
             plt.subplot(212)
             plt.semilogy(1/freqs, spec)
@@ -558,7 +578,7 @@ class Analysis:
         return x - (s-np.mean(s))
 
     def bandpass(self, variable, fc, fs=1, order=5, btype="low",
-    deseasonalise_first=False):
+    deseasonalise_first=False, plot=False):
         """ Applies a bandpass filter to a dataset (either lowpass, highpass
         or bandpass) using the scipy.signal.butter function.
 
