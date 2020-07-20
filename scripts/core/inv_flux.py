@@ -444,11 +444,6 @@ class Analysis:
             roll_vals.append(linreg[0])
             r_vals.append(linreg[2])
 
-        # index = (pd
-        #             .to_datetime(x_var[:-window_size])
-        #             .strftime(self.tformat)
-        #         )
-
         if self.time_resolution == "M":
             ws_plotlabel = f"{int(window_size / 12)}-year"
         else:
@@ -474,7 +469,7 @@ class Analysis:
 
         if include_pearson:
             r_df = pd.DataFrame({"r-values of trends": r_vals},
-                        index=x_var[:-window_size]#.strftime(self.tformat)
+                        index=x_var[:-window_size]
                         )
             return roll_df, r_df
         else:
@@ -578,7 +573,7 @@ class Analysis:
         return x - (s-np.mean(s))
 
     def bandpass(self, variable, fc, fs=1, order=5, btype="low",
-    deseasonalise_first=False, plot=False):
+    deseasonalise_first=False):
         """ Applies a bandpass filter to a dataset (either lowpass, highpass
         or bandpass) using the scipy.signal.butter function.
 
