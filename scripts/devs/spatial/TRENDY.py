@@ -21,12 +21,15 @@ model = "CLASS-CTEM"
 sim = "S1"
 fname = f"./../../../data/TRENDY/models/{model}/{sim}/{model}_{sim}_nbp.nc"
 
-fname
+
 """ FUNCTIONS """
 
 
 """ EXECUTION """
 df = TRENDYf.SpatialAgg(fname)
+
+df.data
+
 df.time_range(slice_obj=True)
 
 res = df.regional_cut((30,60), (100, 120), '1900', '1905')

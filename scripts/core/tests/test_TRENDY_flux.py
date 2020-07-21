@@ -24,6 +24,7 @@ def setup_module(module):
 
     lat = ds.latitude.values
     lon = ds.longitude.values
+
     time = ds.time.values
 
     vals = ds.nbp.values
