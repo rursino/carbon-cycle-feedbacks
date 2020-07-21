@@ -16,6 +16,8 @@ GCPf.list_of_variables()
 
 df = GCPf.Analysis("land sink")
 
+df.plot_timeseries((1968,2178))
+
 df.cascading_window_trend("CO2", plot=True, include_pearson=True, window_size=15)
 
 plt.plot(df.data.index, df.data.values)

@@ -18,7 +18,6 @@ def list_of_variables():
 
     return pd.read_csv(GCPfname, index_col=0).columns
 
-
 class Analysis:
     """ This class takes the budget.csv in the GCP data folder and provides
     analysis and visualisations on selected data as required, including
@@ -52,6 +51,26 @@ class Analysis:
 
         self.all_data = GCP
         self.data = GCP[variable]
+
+    def plot_timeseries(self, time=None):
+        """ Plot a variable against time.
+
+        Parameters
+        ==========
+
+        time: list-like
+
+            select the time range for plot.
+
+        """
+
+        if time == None:
+            time = (self.data.index[0], self.data.index[-1])
+
+        df = self.data.loc[time[0]:time[1]]
+
+        plt.figure(figsize=(20,10))
+        return plt.plot(df)
 
     def _time_to_CO2(self, time):
         """ Converts any time series array to corresponding atmospheric CO2
