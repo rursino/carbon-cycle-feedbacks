@@ -326,7 +326,7 @@ class Analysis:
             self.time_resolution = "M"
             self.tformat = "%Y-%m"
 
-    def _time_to_CO2(self, time, type):
+    def _time_to_CO2(self, time):
         """ Converts any time series array to corresponding atmospheric CO2
         values.
         This function should only be used within the 'cascading_window_trend'
@@ -339,10 +339,6 @@ class Analysis:
 
             time series to convert.
 
-        type:
-
-            type of CO2 values to use (refer to filenames in data/CO2 directory).
-
         """
 
         if self.time_resolution == "M":
@@ -352,7 +348,7 @@ class Analysis:
             timeres = "year"
             index_col = "Year"
 
-        CO2fname = f"./../../../data/CO2/co2_{timeres}_{type}.csv"
+        CO2fname = f"./../../../data/CO2/co2_{timeres}.csv"
         CO2 = pd.read_csv(CO2fname, index_col=index_col)['CO2']
 
         index = {
@@ -382,8 +378,7 @@ class Analysis:
 
         indep: string, optional
 
-            Regress uptake variable over time ("time") or CO2 ("weighted" or
-            "deseasonal" for month and "raw" for year).
+            Regress uptake variable over "time" or "CO2".
             Defaults to "time".
 
         variable: string, optional
@@ -424,7 +419,7 @@ class Analysis:
             cascading_yunit = "(GtC/ppm/yr)"
             cascading_xlabel = f"First year of {window_size}-year window"
         else:
-            x_var = self._time_to_CO2(x_time, indep)
+            x_var = self._time_to_CO2(x_time)
             ts_xlabel = "CO2 (ppm)"
             cascading_yunit = "(GtC/ppm$^2$)"
             cascading_xlabel = f"Start of {window_size}-year CO2 window (ppm)"

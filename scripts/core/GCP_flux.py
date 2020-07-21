@@ -69,7 +69,7 @@ class Analysis:
         """
 
         CO2fname = os.path.join(os.path.dirname(__file__),
-                                "./../../data/CO2/co2_year_raw.csv")
+                                "./../../data/CO2/co2_year.csv")
         CO2 = pd.read_csv(CO2fname, index_col="Year")['CO2']
 
         time = list(self.data.index)
@@ -120,8 +120,6 @@ class Analysis:
             cascading_yunit = "(GtC/ppm$^2$)"
             cascading_xlabel = f"Start of {window_size}-year CO2 window (ppm)"
 
-        return x_var, df.values, df.index
-
         roll_vals, r_vals = [], []
         for i in range(0, len(df.index) - window_size):
             sub_df = df[i:i+window_size+1]
@@ -143,7 +141,7 @@ class Analysis:
         if plot:
             plt.figure(figsize=(22,16))
             plt.subplot(211)
-            plt.plot(df)
+            plt.plot(x_var, df.values)
             plt.xlabel(ts_xlabel, fontsize=20)
             plt.ylabel("C flux to the atmosphere (GtC)", fontsize=20)
 

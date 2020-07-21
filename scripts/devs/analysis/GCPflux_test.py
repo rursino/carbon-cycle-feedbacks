@@ -16,11 +16,9 @@ GCPf.list_of_variables()
 
 df = GCPf.Analysis("land sink")
 
-df.cascading_window_trend("CO2", plot=True, include_pearson=True)
+df.cascading_window_trend("CO2", plot=True, include_pearson=True, window_size=15)
 
 plt.plot(df.data.index, df.data.values)
 plt.plot(df.data.index, df.bandpass(1/10))
-
-
 
 df.autocorrelation_plot()

@@ -25,6 +25,6 @@ fname = "./../../../output/inversions/spatial/output_all/JENA_s76/year.nc"
 ds = xr.open_dataset(fname)
 df = invf.Analysis(ds)
 
-df.cascading_window_trend("raw", "North_Land", plot=True, window_size=15)
+df.cascading_window_trend("time", "North_Land", plot=True, window_size=15)
 
-df.cascading_window_trend("time", "Tropical_Land", plot=False, include_pearson=True)[1]
+df.cascading_window_trend("CO2", "North_Land", plot=True, window_size=15)
