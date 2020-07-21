@@ -18,12 +18,15 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 """ INPUTS """
-fname = "./../../../output/inversions/spatial/output_all/JENA_s76/year.nc"
+fname = "./../../../output/inversions/spatial/output_all/JENA_s76/month.nc"
 
 
 """ DEVS """
 ds = xr.open_dataset(fname)
 df = invf.Analysis(ds)
+
+plt.plot(df.data.South_Land.values)
+plt.plot(df.deseasonalise("South_Land"))
 
 df.cascading_window_trend("time", "North_Land", plot=True, window_size=15)
 

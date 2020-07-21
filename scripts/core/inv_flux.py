@@ -326,6 +326,29 @@ class Analysis:
             self.time_resolution = "M"
             self.tformat = "%Y-%m"
 
+    def plot_timeseries(self, variable, time=None):
+        """ Plot a variable against time.
+
+        Parameters
+        ==========
+
+        variable:
+
+            variable to plot against.
+
+        time:
+
+            select the time range for plot.
+        """
+
+        if time == None:
+            time = slice(self.data.time.values[0], self.data.time.values[-1])
+
+        df = self.data[variable].sel(time=time)
+
+        plt.figure(figsize=(20,10))
+        return plt.plot(df.time.values, df.values)
+
     def _time_to_CO2(self, time):
         """ Converts any time series array to corresponding atmospheric CO2
         values.

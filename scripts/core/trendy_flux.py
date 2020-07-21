@@ -347,13 +347,89 @@ class Analysis:
 
         self.data = data
 
-        time_list = [datetime.strptime(time.strftime('%Y-%m'), '%Y-%m') for time in data.time.values]
-        self.time = pd.to_datetime(time_list)
+        _time = pd.to_datetime(data.time.values)
 
+        # Extract time resolution
+        timediff = _time[1] - _time[0]
 
+        if timediff > pd.Timedelta('33 days'):
+            self.time_resolution = "Y"
+            self.tformat = "%Y"
+            CO2_timeres = "year"
+            CO2_index_col = "Year"
 
-    def cascading_window_trend(self, variable, window_size=25, plot=False,
-    include_pearson=False):
+        else:
+            self.time_resolution = "M"
+            self.tformat = "%Y-%m"
+            CO2_timeres = "month"
+            CO2_index_col = ["Year", "Month"]
+
+        CO2fname = f"./../../../data/CO2/co2_{CO2_timeres}.csv"
+        self.CO2 = pd.read_csv(CO2fname, index_col=CO2_index_col)['CO2']
+
+        if self.time_resolution == "M":
+            slice_time = slice("{}-{}".format(*self.CO2.index[0]),
+                               "{}-{}".format(*self.CO2.index[-1]))
+        else:
+            slice_time = slice("{}".format(self.CO2.index[0]),
+                               "{}".format(self.CO2.index[-1]))
+        self.CO2_time = self.data.time.sel(time=slice_time).values
+
+    def plot_timeseries(self, variable, time=None):
+        """ Plot a variable against time.
+
+        Parameters
+        ==========
+
+        variable:
+
+            variable to plot against.
+
+        time:
+
+            select the time range for plot.
+        """
+
+        if time == None:
+            time = slice(self.data.time.values[0], self.data.time.values[-1])
+
+        df = self.data[variable].sel(time=time)
+
+        plt.figure(figsize=(20,10))
+        return plt.plot(df.time.values, df.values)
+
+    def _time_to_CO2(self, time):
+        """ Converts any time series array to corresponding atmospheric CO2
+        values.
+        This function should only be used within the 'cascading_window_trend'
+        method.
+
+        Parameters
+        ==========
+
+        time: slice, optional
+
+            time series to convert.
+
+        """
+
+        index = {
+            "year": pd.to_datetime(time).year,
+            "month": pd.to_datetime(time).month
+        }
+
+        if self.time_resolution == "M":
+            index_to_pass = index["year"], index["month"]
+        else:
+            index_to_pass = index["year"]
+
+        try:
+            return self.CO2.loc[index_to_pass].values
+        except AttributeError:
+            return self.CO2.loc[index_to_pass]
+
+    def cascading_window_trend(self, indep="time", variable="Earth_Land",
+                            window_size=25, plot=False, include_pearson=False):
         """ Calculates the slope of the trend of an uptake variable for each
         time window and for a given window size. The function also plots the
         slopes as a timeseries and, if prompted, the r-value of each slope as
@@ -362,13 +438,20 @@ class Analysis:
         Parameters
         ==========
 
-        variable: string
+        indep: string, optional
+
+            Regress uptake variable over "time" or "CO2".
+            Defaults to "time".
+
+        variable: string, optional
 
             carbon uptake variable to regress.
+            Defaults to "Earth_Land".
 
-        window_size: integer
+        window_size: integer, optional
 
-            size of time window of trends.
+            size of time window of trends (in years).
+            Defaults to 25.
 
         plot: bool, optional
 
@@ -384,46 +467,72 @@ class Analysis:
 
         """
 
-        def to_numeric(date):
-            return date.year + (date.month-1 + date.day/31)/12
+        df = self.data
 
-        roll_vals = []
-        r_vals = []
+        def to_numerical(data):
+            return (pd.to_numeric(data) /
+                    (3600 * 24 * 365 *1e9) + 1969
+                    )
 
-        for i in range(0, len(self.time) - window_size):
-            sub_time = self.time[i:i+window_size+1]
-            sub_vals = self.data[variable].sel(time = slice(self.data.time[i],
-            self.data.time[i+window_size])).values
+        x_time = self.CO2_time
+        if indep == "time":
+            x_var = to_numerical(x_time)
+            ts_xlabel = "Year"
+            cascading_yunit = "(GtC/ppm/yr)"
+            cascading_xlabel = f"First year of {window_size}-year window"
+        else:
+            x_var = self._time_to_CO2(x_time)
+            ts_xlabel = "CO2 (ppm)"
+            cascading_yunit = "(GtC/ppm$^2$)"
+            cascading_xlabel = f"Start of {window_size}-year CO2 window (ppm)"
 
-            linreg = stats.linregress(to_numeric(sub_time), sub_vals)
+        if self.time_resolution == "M":
+            window_size *= 12
+
+        roll_vals, r_vals = [], []
+        for i in range(0, len(x_time) - window_size):
+            sub_x = x_var[i:i+window_size+1]
+            sub_vals = df[variable].sel(time = slice(x_time[i],
+                                               x_time[i+window_size])
+                                       ).values
+
+            linreg = stats.linregress(sub_x, sub_vals)
 
             roll_vals.append(linreg[0])
             r_vals.append(linreg[2])
 
+        if self.time_resolution == "M":
+            ws_plotlabel = f"{int(window_size / 12)}-year"
+        else:
+            ws_plotlabel = f"{window_size}-year"
 
-        roll_df = pd.DataFrame({f"{window_size}-year trend slope": roll_vals},
-        index=to_numeric(self.time[:-window_size]))
+        roll_df = pd.DataFrame({f"{ws_plotlabel} trend slope": roll_vals},
+                               index=x_var[:-window_size]
+                              )
 
         if plot:
 
             plt.figure(figsize=(22,16))
 
             plt.subplot(211)
-            plt.plot(self.time, self.data[variable].values)
+            plt.plot(x_var, df.sel(time=self.CO2_time)[variable].values)
+            plt.xlabel(ts_xlabel, fontsize=20)
             plt.ylabel("C flux to the atmosphere (GtC)", fontsize=20)
 
             plt.subplot(212)
-            plt.plot(roll_df, color='g')
-            plt.ylabel("Slope of C flux trend (GtC/ppm/yr)", fontsize=20)
+            plt.plot(x_var[:-window_size], roll_df.values, color='g')
+            plt.xlabel(cascading_xlabel, fontsize=20)
+            plt.ylabel(f"Slope of C flux trend {cascading_yunit}", fontsize=20)
 
         if include_pearson:
             r_df = pd.DataFrame({"r-values of trends": r_vals},
-            index=to_numeric(self.time[:-window_size]))
+                        index=x_var[:-window_size]
+                        )
             return roll_df, r_df
         else:
             return roll_df
 
-    def psd(self, variable, fs=1, xlim=None, plot=False):
+    def psd(self, variable, fs, xlim=None, plot=False):
         """ Calculates the power spectral density (psd) of a timeseries of a
         variable using the Welch method. Also provides the timeseries plot and
         psd plot if passed. This function is designed for the monthly
@@ -451,23 +560,33 @@ class Analysis:
 
         """
 
-        if fs == 12 or fs==1: #for analysis.py: fs==12 means that annual
-        # resolution timeseries is being passeD as self. fs==1 means
-        # resolution is annual.
-            period = " (years)"
-            unit = "((GtC/yr)$^2$.yr)"
-        else:
-            period = ""
-            unit = ""
+        df = self.data
 
-        x = self.data[variable]
-        freqs, spec = signal.welch(x.values, fs=fs)
+        if self.time_resolution == "M":
+            if fs == 12:
+                period = " (years)"
+                unit = "((GtC/yr)$^2$.yr)"
+            elif fs == 1:
+                period = " (months)"
+                unit = "((GtC/yr)$^2$.month)"
+            else:
+                period = ""
+                unit = ""
+        else:
+            if fs == 1:
+                period = " (years)"
+                unit = "((GtC/yr)$^2$.yr)"
+            else:
+                period = ""
+                unit = ""
+
+        freqs, spec = signal.welch(df[variable].values, fs=fs)
 
         if plot:
             plt.figure(figsize=(12,9))
 
             plt.subplot(211)
-            plt.plot(self.time, x.values)
+            plt.plot(df.time, df[variable].values)
 
             plt.subplot(212)
             plt.semilogy(1/freqs, spec)
@@ -498,15 +617,27 @@ class Analysis:
 
         mean_list = []
         for i in range(12):
-            indices = range(i, len(x)+i, 12)
-            sub = x[indices]
+            end_index = len(x)
+            while True:
+                indices = range(i, end_index + i, 12)
+                try:
+                    sub = x[indices]
+                except IndexError:
+                    end_index -= 12
+                else:
+                    break
             mean_list.append(np.mean(sub))
 
+        i = 0
         s = []
-        for i in range(int(len(x)/12)):
+        repeat = len(x) // len(mean_list)
+        for i in range(repeat):
             for j in mean_list:
                 s.append(j)
-        s = np.array(s)
+        last_indices = 0
+        while len(s) < len(x):
+            s.append(mean_list[last_indices])
+            last_indices += 1
 
         return x - (s-np.mean(s))
 
@@ -552,15 +683,27 @@ class Analysis:
         if deseasonalise_first:
             mean_list = []
             for i in range(12):
-                indices = range(i, len(x)+i, 12)
-                sub = x[indices]
+                end_index = len(x)
+                while True:
+                    indices = range(i, end_index + i, 12)
+                    try:
+                        sub = x[indices]
+                    except IndexError:
+                        end_index -= 12
+                    else:
+                        break
                 mean_list.append(np.mean(sub))
 
+            i = 0
             s = []
-            for i in range(int(len(x)/12)):
+            repeat = len(x) // len(mean_list)
+            for i in range(repeat):
                 for j in mean_list:
                     s.append(j)
-            s = np.array(s)
+            last_indices = 0
+            while len(s) < len(x):
+                s.append(mean_list[last_indices])
+                last_indices += 1
 
             x = x - (s-np.mean(s))
 
