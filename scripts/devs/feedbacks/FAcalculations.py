@@ -8,21 +8,30 @@ import numpy as np
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
 from datetime import datetime
+import pandas as pd
+from datetime import datetime
 
 import sys
 sys.path.append("./../../core")
 import FeedbackAnalysis as FA
 
 from importlib import reload
-reload(FA)
+reload(FA);
+
 
 df = FA.FeedbackAnalysis(uptake=('inversions', 'CAMS'), temp='CRUTEM',
-                        time='year', CO2='raw', sink="Earth_Land",
-                        time_range = None)
+                        time='month', sink="Earth_Land",
+                        time_range = slice('1990-01', '1994-12'))
 
+
+df.data
+
+df.model.params
+df.confidence_intervals('const', alpha)
 df.model.summary()
 df.confidence_intervals('CO2', 0.05)
-df.feedback_output(OUTPUT_DIR + 'feedbacks/test.txt')
+
+df.feedback_output()
 
 
 # FOR OUTPUT: MORE INFO

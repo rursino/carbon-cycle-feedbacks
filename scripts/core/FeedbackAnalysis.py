@@ -16,8 +16,8 @@ import os
 """ FUNCTIONS """
 class FeedbackAnalysis:
 
-    def __init__(self, uptake, temp, CO2="weighted", time='year',
-    sink="Earth_Land", time_range=None):
+    def __init__(self, uptake, temp, time='year', sink="Earth_Land",
+                 time_range=None):
         """ Initialise a class for feedback analysis using three timeseries
         data: one each for uptake, CO2 and temperature.
 
@@ -28,10 +28,6 @@ class FeedbackAnalysis:
 
             Information to pass a particular dataset.
             Should be passed as follows: (type, model)
-
-        CO2: str
-
-            Information to pass a particular csv file.
 
         TEMP: str
 
@@ -56,43 +52,35 @@ class FeedbackAnalysis:
 
         """
 
-        DIR = './../../'
+        DIR = os.path.join(os.path.dirname(__file__), './../../')
         OUTPUT_DIR = DIR + 'output/'
         self.OUTPUT_DIR = OUTPUT_DIR
 
         type, model = uptake
         Ufname = OUTPUT_DIR + f'{type}/spatial/output_all/{model}/{time}.nc'
-        Cfname = DIR + f"data/CO2/co2_{time}_{CO2}.csv"
+        Cfname = DIR + f"data/CO2/co2_{time}.csv"
         Tfname = OUTPUT_DIR + f'TEMP/spatial/output_all/{temp}/{time}.nc'
 
+        index_col = ["Year", "Month"] if time == "month" else ["Year"]
+        C = pd.read_csv(Cfname, index_col=index_col)
         U = xr.open_dataset(Ufname)
-        C = pd.read_csv(Cfname)
         T = xr.open_dataset(Tfname)
 
         tformat = "%Y-%m" if time == "month" else "%Y"
-        U_time = (pd
-                    .to_datetime([datetime.strptime(
-                    time.strftime(tformat), tformat) for time in U.time.values]
-                    )
-                    .strftime(tformat)
-                 )
+        U_time = pd.to_datetime(U.time.values).strftime(tformat)
         T_time = pd.to_datetime(T.time.values).strftime(tformat)
 
         if time == "month":
-            CO2timezip = zip(C["Year"].values, C["Month"].values)
-
-            CO2time = []
-            for time in CO2timezip:
-                year = str(time[0])
-                month = f"0{time[1]}" if time[1] < 10 else str(time[1])
-                CO2time.append(year+'-'+month)
-
-            C_time = pd.to_datetime(CO2time).strftime("%Y-%m")
+            C_time = (pd
+                        .to_datetime(["{}-{}".format(*time) for
+                                                     time in C.index])
+                        .strftime("%Y-%m")
+                     )
             C.index = C_time
 
         else:
             C_time = (pd
-                        .to_datetime([str(year) for year in C["Year"].values])
+                        .to_datetime([str(time) for time in C.index])
                         .strftime("%Y")
                      )
 
@@ -109,7 +97,7 @@ class FeedbackAnalysis:
             start, stop = time_range.start, time_range.stop
             time_range = (pd
                     .date_range(
-                        *(pd.to_datetime([start, stop]) + pd.offsets.YearEnd()
+                        *(pd.to_datetime([start, stop])
                         ),
                         freq='Y')
                     .strftime("%Y")
@@ -123,8 +111,7 @@ class FeedbackAnalysis:
                                     "CO2": self.CO2.values,
                                     "Uptake": self.uptake.values,
                                     "Temp.": self.temp.values
-                                 },
-                          index = time_range
+                                 }
                          )
 
         self.data = df
@@ -139,6 +126,9 @@ class FeedbackAnalysis:
         # Perform OLS regression on the three variables for analysis.
         X = self.data[["CO2", "Temp."]]
         Y = self.data["Uptake"]
+
+        X = sm.add_constant(X)
+
         self.model = sm.OLS(Y, X).fit()
         self.model_summary = self.model.summary()
 
@@ -171,6 +161,7 @@ class FeedbackAnalysis:
 
         confint_CO2 = self.confidence_intervals('CO2', alpha)
         confint_temp = self.confidence_intervals('Temp.', alpha)
+        confint_const = self.confidence_intervals('const', alpha)
 
         line_break = '=' * 25 + '\n\n'
         writeLines = [
@@ -185,25 +176,27 @@ class FeedbackAnalysis:
         f'Sink: {self.sink} \n',
         line_break,
         'Results\n' + '-' * 25 + '\n\n',
-        f"Parameter\t\t\t{alpha*100:.2f}%\t{(1-alpha)*100:.2f}%\n",
+        f"Parameter\t\t{alpha*100:.2f}%\t{(1-alpha)*100:.2f}%\n",
         '-' * 40 + '\n',
-        f"BETA\t{self.params['CO2']:.3f}\t\t{confint_CO2[0]:.3f}\t{confint_CO2[1]:.3f}\n",
-        f"GAMMA\t{self.params['Temp.']:.3f}\t\t{confint_temp[0]:.3f}\t{confint_temp[1]:.3f}",
+        f"Const    {self.params['const']:.3f}\t\t{confint_const[0]:.3f}\t{confint_const[1]:.3f}\n",
+        f"BETA     {self.params['CO2']:.3f}\t\t{confint_CO2[0]:.3f}\t{confint_CO2[1]:.3f}\n",
+        f"GAMMA    {self.params['Temp.']:.3f}\t\t{confint_temp[0]:.3f}\t{confint_temp[1]:.3f}",
         "\n\n",
         f'r: {np.sqrt(self.r_squared):.3f}, ',
         f'r^2: {self.r_squared:.3f}\n\n',
-        f"\t\t\tBETA\tGAMMA\n",
+        f"\tConstant\tBETA\tGAMMA\n",
         '-' * 30 + '\n',
-        f"t-value:\t{self.tvalues['CO2']:.3f}\t{self.tvalues['Temp.']:.3f}\n",
-        f"p-value:\t{self.pvalues['CO2']:.3f}\t{self.pvalues['Temp.']:.3f}\n\n",
+        f"t-value:\t{self.tvalues['const']:.3f}\t{self.tvalues['CO2']:.3f}\t{self.tvalues['Temp.']:.3f}\n",
+        f"p-value:\t{self.pvalues['const']:.3f}\t{self.pvalues['CO2']:.3f}\t{self.pvalues['Temp.']:.3f}\n\n",
         f"MSE Total: {self.mse_total:.3f}\n\n",
         f"No. of observations: {self.nobs:.0f}\n",
         line_break
         ]
 
         OUTPUT_DIR = self.OUTPUT_DIR + 'feedbacks/'
-        destination = f'{self.uptake_model}/{self.TEMP_model}/{self.start}-{self.stop}.txt'
-        fname = OUTPUT_DIR + destination
+        destination = f'{self.uptake_model}/{self.TEMP_model}/'
+        fname = (OUTPUT_DIR + destination +
+                 f'{self.sink}__{self.start}_{self.stop}.txt')
 
         try:
             with open(fname, 'w') as f:
