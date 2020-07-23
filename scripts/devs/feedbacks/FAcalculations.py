@@ -19,10 +19,18 @@ from importlib import reload
 reload(FA);
 
 
-df = FA.FeedbackAnalysis(uptake=('inversions', 'CAMS'), temp='CRUTEM',
+df = FA.FeedbackAnalysis(uptake=('TRENDY', 'JSBACH_S1_nbp'), temp='CRUTEM',
                         time='month', sink="Earth_Land",
-                        time_range = slice('1990-01', '1994-12'))
+                        time_range = slice("1960-01", "1970-12"))
 
+
+len(df.uptake), len(df.temp), len(df.CO2)
+
+
+
+
+df.data
+df.model.summary()
 
 df.data
 
