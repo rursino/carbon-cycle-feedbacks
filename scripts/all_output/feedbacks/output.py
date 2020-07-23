@@ -23,11 +23,11 @@ inversions = list(product(['inversions'],
                  )
 
 TRENDYs_product = list(product(['TRENDY'],
-                               ['CABLE-POP', 'JSBACH'
-                                ],
+                               ['CABLE-POP', 'JSBACH',
+                                'CLASS-CTEM', 'OCN', 'LPJ-GUESS'],
                                ['S1', 'S3'],
                                ['nbp']
-                              ) #'CLASS-CTEM' 'OCN' 'LPJ-GUESS'
+                              )
                       )
 TRENDYs = [(i[0], (f'{i[1]}_{i[2]}_{i[3]}')) for i in TRENDYs_product]
 
@@ -43,11 +43,15 @@ tempsink_TRENDYs = list(product(['CRUTEM'],
 
 time = ['year', 'month']
 
-# inputs = (list(product(inversions, tempsink_invs, time)) +
-#          list(product(TRENDYs, tempsink_TRENDYs, time))
-#          )
-inputs = list(product(TRENDYs, tempsink_TRENDYs, time))
+inputs = (list(product(inversions, tempsink_invs, time)) +
+         list(product(TRENDYs, tempsink_TRENDYs, time))
+         )
 
+for input in inputs:
+    if ('LPJ-GUESS' in input[0][1]) and ('month' in input[2]):
+        inputs.remove(input)
+
+inputs[160]
 
 """ FUNCTIONS """
 def build_time_ranges(time_start, time_stop):

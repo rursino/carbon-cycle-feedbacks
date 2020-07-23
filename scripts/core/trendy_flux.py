@@ -296,7 +296,14 @@ class SpatialAgg:
             values[var] = region_df.values
 
         slice_time_range = self.time_range(start_time, end_time, slice_obj=True)
-        ds_time = df.sel(time=slice_time_range).time.values
+
+        ds_time = []
+        try:
+            for time in df.sel(time=slice_time_range).time.values:
+                time_value = datetime.strptime(time.strftime('%Y-%m'), '%Y-%m')
+                ds_time.append(time_value)
+        except AttributeError:
+            ds_time = df.sel(time=slice_time_range).time.values
 
         ds = xr.Dataset(
             {key: (('time'), value) for (key, value) in values.items()},
@@ -304,26 +311,6 @@ class SpatialAgg:
         )
 
         return ds
-
-    def cftime_to_datetime(self, format='%Y-%m'):
-        """Takes a xr.Dataset with cftime values and converts them into
-        datetimes.
-
-        Parameters
-        ==========
-
-        self: xr.Dataset.
-
-        format: format of datetime.
-
-        """
-
-        time_list = []
-        for time in self.data.time.values:
-            time_value = datetime.strptime(time.strftime('%Y-%m'), '%Y-%m')
-            time_list.append(time_value)
-
-        return self.data.assign_coords(time=time_list)
 
 
 class Analysis:
