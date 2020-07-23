@@ -19,11 +19,11 @@ from importlib import reload
 reload(FA);
 
 
-df = FA.FeedbackAnalysis(uptake=('TRENDY', 'JSBACH_S1_nbp'), temp='CRUTEM',
+df = FA.FeedbackAnalysis(uptake=('TRENDY', 'CABLE-POP_S1_nbp'), temp='CRUTEM',
                         time='month', sink="Earth_Land",
-                        time_range = slice("1960-01", "1970-12"))
+                        time_range = slice("2008-01", "2017-12"))
 
-
+df.U
 len(df.uptake), len(df.temp), len(df.CO2)
 
 
