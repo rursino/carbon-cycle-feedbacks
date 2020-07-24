@@ -51,8 +51,6 @@ for input in inputs:
     if ('LPJ-GUESS' in input[0][1]) and ('month' in input[2]):
         inputs.remove(input)
 
-inputs[160]
-
 """ FUNCTIONS """
 def build_time_ranges(time_start, time_stop):
     # Handle years before 1959, where CO2 data starts, because years before

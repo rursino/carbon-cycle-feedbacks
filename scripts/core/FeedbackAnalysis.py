@@ -1,3 +1,4 @@
+
 """ This class facilitates the calculation of beta and gamma through a range of
 spatial output datasets. It also includes further analysis and visualisations.
 """
@@ -113,7 +114,7 @@ class FeedbackAnalysis:
                                     "Temp.": self.temp.values
                                  }
                          )
-        
+
         self.data = df
 
         # Metadata
@@ -182,7 +183,7 @@ class FeedbackAnalysis:
         f"BETA     {self.params['CO2']:.3f}\t\t{confint_CO2[0]:.3f}\t{confint_CO2[1]:.3f}\n",
         f"GAMMA    {self.params['Temp.']:.3f}\t\t{confint_temp[0]:.3f}\t{confint_temp[1]:.3f}",
         "\n\n",
-        f'r: {np.sqrt(self.r_squared):.3f}, ',
+        f'r: {np.sqrt(self.r_squared):.3f}  ',
         f'r^2: {self.r_squared:.3f}\n\n',
         f"\tConstant\tBETA\tGAMMA\n",
         '-' * 30 + '\n',
@@ -194,15 +195,15 @@ class FeedbackAnalysis:
         ]
 
         OUTPUT_DIR = self.OUTPUT_DIR + 'feedbacks/'
-        destination = f'{self.uptake_model}/{self.TEMP_model}/'
+        destination = f'{self.uptake_model}/{self.TEMP_model}/{self.sink}/'
         fname = (OUTPUT_DIR + destination +
-                 f'{self.sink}__{self.start}_{self.stop}.txt')
+                 f'{self.start}_{self.stop}.txt')
 
         try:
             with open(fname, 'w') as f:
                 f.writelines(writeLines)
         except FileNotFoundError:
-            os.makedirs(OUTPUT_DIR + f'{self.uptake_model}/{self.TEMP_model}/')
+            os.makedirs(OUTPUT_DIR + destination)
             with open(fname, 'w') as f:
                 f.writelines(writeLines)
 
