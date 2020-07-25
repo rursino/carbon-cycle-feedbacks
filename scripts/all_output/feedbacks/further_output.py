@@ -3,22 +3,40 @@ to the FeedbackOutput class.
 """
 
 """ IMPORTS """
+import os
+import pandas as pd
+from itertools import *
 from collections import namedtuple
 
 
 """ INPUTS """
-model = 'CAMS'
-temp = 'CRUTEM'
-time_range = '1979_1989'
-region = 'Earth'
-sink = 'Land' if temp == 'CRUTEM' else 'Ocean'
+DIR = './../../../output/feedbacks/output_all/'
 
-DIR = './../../../output/feedbacks/output_all'
-destination = DIR + f'{model}/{temp}/{region}_{sink}/
-fnames = os.listdir(destination)
+inversions = ['CAMS', 'Rayner', 'CTRACKER', 'JAMSTEC', 'JENA_s76', 'JENA_s85']
+TRENDYs_product = list(product(['CABLE-POP', 'JSBACH',
+                                'CLASS-CTEM', 'OCN', 'LPJ-GUESS'],
+                               ['S1', 'S3'],
+                               ['nbp']
+                              )
+                      )
+TRENDYs = [f'{i[0]}_{i[1]}_{i[2]}' for i in TRENDYs_product]
+
+regions = ["Earth", "South", "North", "Tropical"]
+
+tempsink_invs = list((input[0][0], input[1]+input[0][1]) for
+                input in product(zip(['CRUTEM', 'HadSST'], ['_Land', '_Ocean']),
+                                 regions))
+tempsink_TRENDYs = list(product(['CRUTEM'],
+                                (region + '_Land' for region in regions)
+                               )
+                       )
+
+inputs = (list(product(inversions, tempsink_invs)) +
+         list(product(TRENDYs, tempsink_TRENDYs))
+         )
+
 
 """ FUNCTIONS """
-
 def extract_param_vals(readLines, index):
     param = readLines[index].split()
     param_name = param[0]
@@ -97,8 +115,54 @@ def params_dataframe(fnames, time_resolution):
         params_dict['gamma_right'].append(gamma.confint_right)
 
     tformat = "%Y-%m" if timeres == "month" else "%Y"
-    pd.DataFrame(params_dict).set_index(params_dict['index'])
+    return pd.DataFrame(params_dict).set_index('index')
+
+def stats_dataframe(fnames, time_resolution):
+    stats_dict = {
+        "index": [],
+        "r": [],
+        "T_const": [],
+        "T_beta": [],
+        "T_gamma": [],
+        "P_const": [],
+        "P_beta": [],
+        "P_gamma": [],
+        "MSE": [],
+        "nobs": [],
+    }
+
+    for fname in fnames:
+        # Read text file and extract lines.
+        with open(destination + fname, 'r') as f:
+            readLines = f.readlines()
+
+        timeres = readLines[8].split()[-1]
+        if time_resolution != timeres:
+            continue
+
+        index = readLines[9].split()[2]
+        r, T, P, MSE, nobs = extract_model_vals(readLines)
+
+        stats_dict['index'].append(index)
+        stats_dict['r'].append(r)
+        stats_dict['T_const'].append(T.const)
+        stats_dict['T_beta'].append(T.beta)
+        stats_dict['T_gamma'].append(T.gamma)
+        stats_dict['P_const'].append(P.const)
+        stats_dict['P_beta'].append(P.beta)
+        stats_dict['P_gamma'].append(P.gamma)
+        stats_dict['MSE'].append(MSE)
+        stats_dict['nobs'].append(nobs)
+
+    tformat = "%Y-%m" if timeres == "month" else "%Y"
+    return pd.DataFrame(stats_dict).set_index('index')
 
 
 """ EXECUTION """
-params_dataframe(fnames, 'month')
+### FINISH THIS & LEARN TO REMOVE ALL EXISTING OUTPUT FILES BEFORE EXECUTION
+for input in tqdm(inputs):
+    destination = DIR + f'{input[0]}/{input[1][0]}/{input[1][1]}/'
+    fnames = os.listdir(destination)
+
+    params_dataframe(fnames, 'year')
+    stats_dataframe(fnames, 'year')
