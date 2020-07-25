@@ -159,11 +159,7 @@ def stats_dataframe(fnames, time_resolution):
 
 
 """ EXECUTION """
-<<<<<<< HEAD
 ### FINISH THIS & LEARN TO REMOVE ALL EXISTING OUTPUT FILES BEFORE EXECUTION
-=======
-### FINISH THIS
->>>>>>> 6fe95c3479c48f7b58075710f8eb96c2b9468ac6
 for input in tqdm(inputs):
     destination = DIR + f'{input[0]}/{input[1][0]}/{input[1][1]}/'
     fnames = os.listdir(destination)
