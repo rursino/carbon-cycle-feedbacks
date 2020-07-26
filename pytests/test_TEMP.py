@@ -4,7 +4,7 @@
 
 """ IMPORTS """
 import sys
-sys.path.append("./../")
+sys.path.append("./../scripts/core")
 import TEMP
 
 import numpy as np
@@ -18,7 +18,7 @@ def setup_module(module):
     global original_ds, test_ds, month_output, year_output
     global basic_test_result, lat, lon, land_vals, ocean_vals
 
-    fname = "./../../../data/temp/crudata/HadSST.3.1.1.0.median.nc"
+    fname = "./../data/temp/crudata/HadSST.3.1.1.0.median.nc"
     ds = xr.open_dataset(fname)
 
     lat = ds.latitude.values
@@ -42,7 +42,7 @@ def setup_module(module):
     basic_test_result = test_ds.latitudinal_splits()
 
     #Output dataframe
-    output_dir = './../../../output/TEMP/spatial/output_all/HadSST/'
+    output_dir = './../output/TEMP/spatial/output_all/HadSST/'
     month_output = xr.open_dataset(output_dir + 'month.nc')
     year_output = xr.open_dataset(output_dir + 'year.nc')
 

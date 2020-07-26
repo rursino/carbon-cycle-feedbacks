@@ -5,7 +5,7 @@ python:
 before-install:
     -
 script:
-    - cd scripts/core/tests && py.test
+    - py.test
 
 notifications:
     email:
