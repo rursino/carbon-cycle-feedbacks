@@ -7,6 +7,7 @@ import os
 import pandas as pd
 from itertools import *
 from collections import namedtuple
+from tqdm import tqdm
 
 
 """ INPUTS """
@@ -159,10 +160,30 @@ def stats_dataframe(fnames, time_resolution):
 
 
 """ EXECUTION """
-### FINISH THIS & LEARN TO REMOVE ALL EXISTING OUTPUT FILES BEFORE EXECUTION
+inputs
+len(inputs)
+
 for input in tqdm(inputs):
     destination = DIR + f'{input[0]}/{input[1][0]}/{input[1][1]}/'
-    fnames = os.listdir(destination)
 
-    params_dataframe(fnames, 'year')
-    stats_dataframe(fnames, 'year')
+    # Extract all file paths and remove directories from list if included.
+    fnames = os.listdir(destination)
+    if 'csv_output' in fnames:
+        fnames.remove('csv_output')
+
+    # Create dataframes to be saved.
+    dataframes = (
+        ('params_year', params_dataframe(fnames, 'year')),
+        ('params_month', params_dataframe(fnames, 'month')),
+        ('stats_year', stats_dataframe(fnames, 'year')),
+        ('stats_month', stats_dataframe(fnames, 'month'))
+    )
+
+    # Save dataframes as csvs.
+    try:
+        for df_name, df in dataframes:
+            df.to_csv(destination + 'csv_output/' + df_name + '.csv')
+    except OSError:
+        os.mkdir(destination + 'csv_output/')
+        for df_name, df in dataframes:
+            df.to_csv(destination + 'csv_output/' + df_name + '.csv')
