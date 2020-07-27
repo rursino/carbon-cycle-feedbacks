@@ -4,7 +4,7 @@
 
 """ IMPORTS """
 import os
-CURRENT_DIR = os.path.dirname(__file__)
+CURRENT_DIR = ''#os.path.dirname(__file__)
 
 import sys
 sys.path.append(CURRENT_DIR + "./../scripts/core")
@@ -59,10 +59,9 @@ def setup_module(module):
     month_output = xr.open_dataset(output_dir + 'month.nc')
     year_output = xr.open_dataset(output_dir + 'year.nc')
 
-
 """ TESTS """
 def test_check_instance():
-    assert isinstance(basic_test_result, bool)
+    assert isinstance(basic_test_result, xr.Dataset)
 
 def test_regions_add_to_global():
 
