@@ -1,0 +1,19 @@
+language: python
+python:
+    - "3.7.6"
+
+# Command to install dependencies
+install:
+    - pip install -r requirements.txt
+
+# Command to run tests
+script:
+    - py.test
+
+# Command to send email notifications if the tests fail.
+notifications:
+    email:
+        recipients:
+            - rursino@student.unimelb.edu.au
+            on_success: never
+            on_failure: always

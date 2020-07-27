@@ -7,7 +7,7 @@ notebooks/TRENDY/.ipynb_checkpoints/
 MSc_Timeline.xlsx
 
 #PYCACHE
-pytests/__pycache__
+tests/__pycache__
 scripts/core/__pycache__
 scripts/all_output/feedbacks/__pycache__
 scripts/devs/*/__pycache__
