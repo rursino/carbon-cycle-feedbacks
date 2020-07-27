@@ -14,6 +14,10 @@ from datetime import datetime
 import os
 
 
+""" INPUTS """
+CURRENT_PATH = os.path.dirname(__file__)
+
+
 """ FUNCTIONS """
 class FeedbackAnalysis:
 
@@ -53,7 +57,7 @@ class FeedbackAnalysis:
 
         """
 
-        DIR = os.path.join(os.path.dirname(__file__), './../../')
+        DIR = os.path.join(CURRENT_PATH, './../../')
         OUTPUT_DIR = DIR + 'output/'
         self.OUTPUT_DIR = OUTPUT_DIR
 
@@ -209,5 +213,16 @@ class FeedbackAnalysis:
 
 
 class FeedbackOutput:
-    def __init__():
-        pass
+
+    def __init__(self, fname):
+        """ Initialise a FeedbackOutput instance by reading a csv file from
+        csv feedback outputs.
+        """
+
+        self.data = pd.read_csv(fname, index_col = 0)
+
+    def plot(self):
+        """ Plot.
+        """
+
+        plt.plot(self.data)
