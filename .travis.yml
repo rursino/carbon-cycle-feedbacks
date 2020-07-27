@@ -15,5 +15,5 @@ notifications:
     email:
         recipients:
             - rursino@student.unimelb.edu.au
-            on_success: never
-            on_failure: always
+            - on_success: never
+            - on_failure: always
