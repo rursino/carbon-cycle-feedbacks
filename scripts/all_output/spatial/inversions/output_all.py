@@ -19,11 +19,16 @@ import logging
 
 """ FUNCTIONS """
 def main(input_file, output_folder):
+    """ Main function: to be used when script is not run from bash shell.
+    """
+
+    # Set up for logger to log success of results.
     logger = logging.getLogger(__name__)
     logging.basicConfig(filename = 'result.log', level = logging.INFO,
                     format='%(asctime)s: %(levelname)s:%(name)s: %(message)s',
                     datefmt='%Y-%m-%d %H:%M')
 
+    # Open dataset and run latitudinal_splits function.
     ds = xr.open_dataset(input_file)
     df = (inv_flux
             .SpatialAgg(data = ds)

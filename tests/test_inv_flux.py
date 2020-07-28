@@ -30,11 +30,14 @@ def setup_module(module):
     lon = ds.longitude.values
     time = ds.time.values
 
+    # Set up xr.Dataset with same shape as ds but only has values 1.
     land_vals = ds.Terrestrial_flux.values
     ocean_vals = ds.Ocean_flux.values
     land_vals[np.where(land_vals != 0)] = 1 * 365/30
     ocean_vals[np.where(ocean_vals != 0)] = 1 * 365/30
 
+    # Some grid points may have overlap of land and ocean when summed later,
+    # so will produce values of 2. Set the overlap points to 0.
     overlaps = list(zip(*np.where(land_vals + ocean_vals == 2)))
     for index in overlaps:
         ocean_vals[index] = 0
@@ -52,24 +55,30 @@ def setup_module(module):
     original_ds = invf.SpatialAgg(ds)
     test_ds = invf.SpatialAgg(testData)
 
+    # Basic test result array to avoid calling latitudinal_splits multiple times.
     basic_test_result = test_ds.latitudinal_splits()
 
-    #Output dataframe
+    # Output dataframe.
     output_dir = CURRENT_DIR + './../output/inversions/spatial/output_all/CAMS/'
     month_output = xr.open_dataset(output_dir + 'month.nc')
     year_output = xr.open_dataset(output_dir + 'year.nc')
 
-testData
-basic_test_result
-
 
 """ TESTS """
 def test_check_instance():
+    """ Check that basic_test_result is a xr.Dataset.
+    """
     assert isinstance(basic_test_result, xr.Dataset)
 
 def test_regions_add_to_global():
+    """ Test that south, tropical and north regional fluxes add to the global
+    fluxes.
+    """
 
     def differences(dataset):
+        """ Returns the difference between sum of regional components and
+        global values.
+        """
 
         land_components = (dataset.South_Land.values +
                            dataset.Tropical_Land.values +
@@ -91,12 +100,19 @@ def test_regions_add_to_global():
     assert np.all(differences(month_output) < 1)
 
 def test_earth_area_grid_equals_surface_area():
+    """ Test that the earth_area_grid function returns the same value as the
+    entire surface area of the globe.
+    """
+
     earth_surface_area = 4 * np.pi * (test_ds.earth_radius ** 2)
     expected_result = test_ds.earth_area_grid(lat,lon).sum()
 
     assert abs(earth_surface_area - expected_result) < 1
 
 def test_spatial_sum():
+    """ Check that sum of fluxes in test_ds equals the entire area of earth (or
+    of all grids created from earth_area_grid func).
+    """
 
     def differences(dataset):
         one_month_result = dataset.sel(time = "1993-01")
@@ -113,11 +129,16 @@ def test_spatial_sum():
     assert differences(basic_test_result) < 1
     assert differences(test_ds.latitudinal_splits(23)) < 1
 
-def output_equals_result():
+def test_output_equals_result():
+    """ Check that output dataset equals basic_test_result array created in setup.
+    """
 
     assert month_output == basic_test_result
 
-def months_add_to_years():
+def test_months_add_to_years():
+    """ Check that all months add up to corresponding year. Check this for many
+    years and various variables.
+    """
 
     def sums(year, variable):
         month_time = slice(f"{year}-01", f"{year}-12")

@@ -11,6 +11,8 @@ from tqdm import tqdm
 
 
 """ INPUTS """
+# Establish a list of tuples containing all combination of inputs.
+
 DIR = './../../../output/feedbacks/output_all/'
 
 inversions = ['CAMS', 'Rayner', 'CTRACKER', 'JAMSTEC', 'JENA_s76', 'JENA_s85']
@@ -39,6 +41,10 @@ inputs = (list(product(inversions, tempsink_invs)) +
 
 """ FUNCTIONS """
 def extract_param_vals(readLines, index):
+    """ Extract information about the paramater values including the upper and
+    lower limits of confidence intervals.
+    """
+
     param = readLines[index].split()
     param_name = param[0]
     median = float(param[1])
@@ -53,6 +59,9 @@ def extract_param_vals(readLines, index):
     return Param(median, left, right)
 
 def extract_model_vals(readLines):
+    """ Extract other statistical information in the readLines list.
+    """
+
     # Extract r-value.
     r = float(readLines[22].split()[1])
 
@@ -75,6 +84,10 @@ def extract_model_vals(readLines):
     return r, t, p, MSE, nobs
 
 def params_dataframe(fnames, time_resolution):
+    """ Insert information about the parameters and confidence intervals, and
+    with all time ranges into one dataframe.
+    """
+
     params_dict = {
         "index": [],
         "const_left": [],
@@ -119,6 +132,10 @@ def params_dataframe(fnames, time_resolution):
     return pd.DataFrame(params_dict).set_index('index')
 
 def stats_dataframe(fnames, time_resolution):
+    """ Insert all of the other statistical information with all time ranges
+    into one dataframe.
+    """
+
     stats_dict = {
         "index": [],
         "r": [],
@@ -160,9 +177,6 @@ def stats_dataframe(fnames, time_resolution):
 
 
 """ EXECUTION """
-inputs
-len(inputs)
-
 for input in tqdm(inputs):
     destination = DIR + f'{input[0]}/{input[1][0]}/{input[1][1]}/'
 

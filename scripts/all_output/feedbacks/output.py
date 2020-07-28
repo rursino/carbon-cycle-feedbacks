@@ -10,11 +10,10 @@ import sys
 sys.path.append("./../../core/")
 import FeedbackAnalysis as FA
 
-# from importlib import reload
-# reload(FA)
-
 
 """ INPUTS """
+# Establish a list of tuples containing all combination of inputs.
+
 timerange_inputs = json.load(open("timerange_inputs.json", "r"))
 
 inversions = list(product(['inversions'],
@@ -51,10 +50,13 @@ for input in inputs:
     if ('LPJ-GUESS' in input[0][1]) and ('month' in input[2]):
         inputs.remove(input)
 
+
 """ FUNCTIONS """
 def build_time_ranges(time_start, time_stop):
-    # Handle years before 1959, where CO2 data starts, because years before
-    # 1959 don't contain available data for analysis.
+    """ Handle years before 1959, where CO2 data starts, because years before
+    1959 don't contain available data for analysis.
+    """
+
     time_start = max(1959, time_start)
 
     time_ranges = []

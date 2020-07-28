@@ -34,6 +34,9 @@ output_folder = OUTPUT_DIR + f"inversions/analysis/year/{model_name}/"
 
 
 """ FUNCTIONS """
+# The following functions provide results and plots for each function in the 
+# Analysis class and saves them as files in the output main directory.
+
 def cascading_window_trend(variable):
 
     roll_df, r_df = df.cascading_window_trend(variable, window_size, True, True)

@@ -45,6 +45,9 @@ def get_subnames(subname_type):
     return subnames
 
 def generate_filename(name):
+    """ Generate a filename from a set of inputs, passed as 'name'.
+    """
+
     model, simulation, variable = name
     return f"{model}/{simulation}/{model}_{simulation}_{variable}.nc"
 

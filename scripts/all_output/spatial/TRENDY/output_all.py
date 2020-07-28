@@ -20,6 +20,10 @@ import pickle
 
 """ FUNCTIONS """
 def main(input_file, output_folder, ui=False):
+    """ Main function: To be run when script is not run from bash shell.
+    """
+
+    # Out to bash if user interface (ui) is requested by user.
     if ui:
         print("="*30)
         print("TRENDY")
@@ -27,6 +31,7 @@ def main(input_file, output_folder, ui=False):
         print(f"Working with: {input_file}")
         print('-'*30)
 
+    # Open dataset and run latitudinal_splits function.
     data = TRENDYf.SpatialAgg(data = input_file)
     df = data.latitudinal_splits()
 
