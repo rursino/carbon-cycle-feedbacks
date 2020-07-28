@@ -59,6 +59,10 @@ def setup_module(module):
     month_output = xr.open_dataset(output_dir + 'month.nc')
     year_output = xr.open_dataset(output_dir + 'year.nc')
 
+testData
+basic_test_result
+
+
 """ TESTS """
 def test_check_instance():
     assert isinstance(basic_test_result, xr.Dataset)
