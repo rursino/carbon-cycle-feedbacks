@@ -214,10 +214,18 @@ class FeedbackAnalysis:
 
 class FeedbackOutput:
 
-    def __init__(self, fname):
+    def __init__(self, model_type, sink, df_type):
         """ Initialise a FeedbackOutput instance by reading a csv file from
         csv feedback outputs.
         """
+
+        model = {
+            'inversions': ['CAMS', 'JENA_s76', 'JENA_s85',
+                           'JAMSTEC', 'Rayner', 'CTRACKER']
+        }
+
+        DIR = CURRENT_PATH + './../../../output/feedbacks/'
+        fname = DIR + f'output_all/{model}/{temp}/{sink}/csv_output/{df_fname}.csv'
 
         self.data = pd.read_csv(fname, index_col = 0)
 
