@@ -5,6 +5,7 @@
 import numpy as np
 import xarray as xr
 import sys
+import os
 import pandas as pd
 import pickle
 import matplotlib.pyplot as plt
@@ -13,6 +14,10 @@ from scipy import stats, signal
 import GCP_flux as GCPf
 from itertools import *
 
+
+""" INPUTS """
+CURRENT_PATH = os.path.dirname(__file__)
+MAIN_DIR = CURRENT_PATH + "./../../"
 
 """ CLASSES """
 class SpatialAgg:
@@ -654,7 +659,7 @@ class Analysis:
         return signal.filtfilt(b, a, x)
 
 
-class ModelEvaluation:
+class ModelEvaluation(Analysis):
     """ This class takes an instance of the model uptake datasets and provides
     evaluations against the Global Carbon Project (GCP) uptake timeseries.
     Must be annual resolution to match GCP.
@@ -669,28 +674,25 @@ class ModelEvaluation:
     """
 
     def __init__(self, data):
-        """Take the xr.Dataset with cftime values and converts them into
-        datetimes.
+        """Initialise a ModelEvaluation instance with a xr.Dataset.
         """
 
         self.data = data
 
-        time_list = [datetime.strptime(time.strftime('%Y-%m'), '%Y-%m') for time in data.time.values]
-        self.time = pd.to_datetime(time_list)
+        _time = pd.to_datetime(data.time.values)
 
-
-        start_year = self.time[0].year
-        end_year = self.time[-1].year
+        start_year = _time.year[0]
+        end_year = _time.year[-1]
 
         GCP = (pd
-               .read_csv("./../../data/GCP/budget.csv",
+               .read_csv(MAIN_DIR + "data/GCP/budget.csv",
                          index_col=0,
                          usecols=[0,4,5,6]
                         )
                .loc[start_year:end_year]
               )
 
-        GCP['CO2'] = pd.read_csv("./../../data/CO2/co2_global.csv",
+        GCP['CO2'] = pd.read_csv(MAIN_DIR + "data/CO2/co2_year.csv",
         index_col=0, header=0)[2:]
         GCP['land sink'] = GCP['land sink']
         GCP['ocean sink'] = GCP['ocean sink']
@@ -699,52 +701,12 @@ class ModelEvaluation:
                            },
                    inplace=True)
 
+        GCP.index = _time
         self.GCP = GCP
 
-    def plot_vs_GCP(self, sink, x="time"):
-        """Plots variable chosen from model uptake timeseries and GCP uptake
-        timeseries, either against time or CO2 concentration.
+        self.time_resolution = 'year'
 
-        Parameters:
-        ===========
-        sink: string
-
-            either land or ocean.
-
-        x: string, optional
-
-            x axis; either time or CO2.
-            Defaults to 'time'.
-
-        """
-
-        df = self.data
-        GCP = self.GCP
-
-        if "land" in sink:
-            model_sink = "Earth_Land"
-        elif "ocean" in sink:
-            model_sink = "Earth_Ocean"
-
-        plt.figure(figsize=(20,10))
-        plt.ylabel("C flux to the atmosphere (GtC/yr)", fontsize=24)
-
-        if x == "time":
-            plt.plot(GCP.index, GCP[sink])
-            plt.plot(GCP.index, df[model_sink].values) # FIX: Time needs to be integer on axes.
-            plt.xlabel("Time", fontsize=22)
-
-        elif x == "CO2":
-            plt.plot(GCP.CO2.values, GCP[sink].values)
-            plt.plot(GCP.CO2.values, df[model_sink].values)
-            plt.xlabel("CO2 (ppm)", fontsize=22)
-
-        else:
-            raise ValueError("x must be 'time' or 'CO2'.")
-
-        plt.legend(["GCP", "Model"], fontsize=20)
-
-    def regress_timeseries_to_GCP(self, sink, plot=False):
+    def regress_timeseries_to_GCP(self, sink, plot=None):
         """Calculates linear regression of model uptake to GCP uptake and
         shows a plot of the timeseries and scatter plot if requested.
 
@@ -757,8 +719,12 @@ class ModelEvaluation:
 
         plot: bool, optional
 
-            Plots timeseries and scatter plot of GCP and model uptake if True.
-            Defaults to False.
+            Plots timeseries and/or scatter plot of GCP and model uptake.
+            None = No plots.
+            timeseries = timeseries only.
+            scatter = scatter plot only.
+            both = both plots.
+            Defaults to None.
 
         """
 
@@ -772,22 +738,45 @@ class ModelEvaluation:
 
         linreg = stats.linregress(GCP[sink].values, df[model_sink].values)
 
-        if plot:
-            plt.figure(figsize=(14,9))
+        def timeseries_plot():
             plt.subplot(211).plot(GCP.index, GCP[sink])
             plt.subplot(211).plot(GCP.index, df[model_sink].values)
             plt.legend(["GCP", "Model"], fontsize=16)
             plt.xlabel("Year", fontsize=16)
             plt.ylabel("C flux to the atmosphere (GtC/yr)", fontsize=16)
 
-            plt.subplot(212).scatter(GCP[sink], df[model_sink].values)
+        def scatter_plot():
+            x = GCP[sink].values
+            y = df[model_sink].values
+            yy = linreg.slope * GCP[sink].values + linreg.intercept
+            plt.subplot(212).scatter(x, y)
+            plt.subplot(212).plot(x, yy, color='r')
             plt.xlabel("GCP (GtC/yr)", fontsize=16)
             plt.ylabel("Model (GtC/yr)", fontsize=16)
 
+            xloc = 0.05 * (x.max() - x.min()) + x.min()
+            yloc = 0.85 * (y.max() - y.min()) + y.min()
+            text = (
+                f'slope = {linreg.slope:.2f}\n'
+                f'r = {linreg.rvalue:.2f}'
+            )
+            plt.text(xloc, yloc, text, fontsize=16)
+
+        if plot:
+            plt.figure(figsize=(20,12))
+
+            if plot == "timeseries":
+                timeseries_plot()
+            elif plot == "scatter":
+                scatter_plot()
+            elif plot == "both":
+                timeseries_plot()
+                scatter_plot()
+
         return linreg
 
-    def regress_cascading_window_trend_to_GCP(self, sink, window_size,
-                                              plot=False):
+    def regress_cascading_window_trend_to_GCP(self, window_size, sink,
+                                              indep="time", plot=None):
         """Calculates linear regression of model cascading window gradient to
         GCP cascading window gradient and shows a plot of the cascading
         gradients and scatter plot if requested.
@@ -795,24 +784,29 @@ class ModelEvaluation:
         Parameters:
         ===========
 
+        window_size: int
+
+            size of window in years.
+
         sink: string
 
             either land or ocean.
 
+        indep: string, optional
+
+            Regress uptake variable over "time" or "CO2".
+            Defaults to "time".
+
         plot: bool, optional
 
-            Plots cascading window gradients and scatter plot of GCP and
-            model uptake if True.
-            Defaults to False.
+            Plots cascading window gradients and scatter plot of GCP.
+            None = No plots.
+            timeseries = timeseries only.
+            scatter = scatter plot only.
+            both = both plots.
+            Defaults to None.
 
         """
-
-
-        def to_numerical(data):
-            return (pd.to_numeric(data) /
-                    (3600 * 24 * 365 *1e9) + 1969
-                    )
-
 
         if "land" in sink:
             model_sink = "Earth_Land"
@@ -822,31 +816,69 @@ class ModelEvaluation:
             GCP_sink = "ocean sink"
 
         df = self.data
-        time_range = self.GCP.index[:-window_size]
 
         model_roll = (
-        Analysis
-            .cascading_window_trend(self, model_sink, window_size).values
+        self
+            .cascading_window_trend(indep=indep, variable = model_sink,
+                                    window_size = window_size).values
             .squeeze()
         )
 
         GCP_roll_df = (
         GCPf
             .Analysis(GCP_sink)
-            .cascading_window_trend(window_size=window_size)
+            .cascading_window_trend(indep, window_size=window_size)
         )
-        GCP_roll = GCP_roll_df.loc[time_range].values.squeeze()
 
+        if indep == "CO2":
+            index = self._time_to_CO2(self.GCP.index[:-window_size])
+            GCP_roll = GCP_roll_df.loc[index].values.squeeze()
+            xlabel = "CO2 (ppm)"
+            cascading_yunit = "(GtC/ppm/yr)"
+        elif indep == "time":
+            index = self.GCP.index[:-window_size]
+            GCP_roll = GCP_roll_df.loc[index.year].values.squeeze()
+            xlabel = "Year"
+            cascading_yunit = "(GtC/ppm$^2$)"
 
-        # Plot
+        linreg = stats.linregress(GCP_roll, model_roll)
+
+        def timeseries_plot():
+            plt.subplot(211).plot(index, GCP_roll)
+            plt.subplot(211).plot(index, model_roll)
+            plt.legend(["GCP", "model"], fontsize=16)
+            plt.xlabel(xlabel, fontsize=16)
+            plt.ylabel(f"Slope of C flux trend {cascading_yunit}", fontsize=16)
+
+        def scatter_plot():
+            x = GCP_roll
+            y = model_roll
+            yy = GCP_roll * linreg.slope + linreg.intercept
+            plt.subplot(212).scatter(x, y)
+            plt.subplot(212).plot(x, yy, color='r')
+            plt.xlabel(f"GCP {cascading_yunit}", fontsize=16)
+            plt.ylabel(f"Model {cascading_yunit}", fontsize=16)
+
+            xloc = 0.05 * (x.max() - x.min()) + x.min()
+            yloc = 0.85 * (y.max() - y.min()) + y.min()
+            text = (
+                f'slope = {linreg.slope:.2f}\n'
+                f'r = {linreg.rvalue:.2f}'
+            )
+            plt.text(xloc, yloc, text, fontsize=16)
+
         if plot:
-            plt.figure(figsize=(14,9))
-            plt.subplot(211).plot(time_range, GCP_roll)
-            plt.subplot(211).plot(time_range, model_roll)
-            plt.legend(["GCP", "model"])
-            plt.subplot(212).scatter(GCP_roll, model_roll)
+            plt.figure(figsize=(20,12))
 
-        return stats.linregress(GCP_roll, model_roll)
+            if plot == "timeseries":
+                timeseries_plot()
+            elif plot == "scatter":
+                scatter_plot()
+            elif plot == "both":
+                timeseries_plot()
+                scatter_plot()
+
+        return linreg
 
     def compare_trend_to_GCP(self, sink, print_results=False):
         """Calculates long-term trend of model uptake (over the whole time
@@ -870,8 +902,8 @@ class ModelEvaluation:
         df = self.data
         GCP = self.GCP
 
-        GCP_stats = stats.linregress(GCP.index, GCP[sink].values)
-        model_stats = stats.linregress(GCP.index, df[model_sink].values)
+        GCP_stats = stats.linregress(GCP.index.year, GCP[sink].values)
+        model_stats = stats.linregress(GCP.index.year, df[model_sink].values)
 
         plt.bar(["GCP", "Model"], [GCP_stats[0], model_stats[0]])
         plt.ylabel("Trend (GtC/yr)", fontsize=14)
