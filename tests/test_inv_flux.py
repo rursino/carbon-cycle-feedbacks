@@ -4,7 +4,7 @@
 
 """ IMPORTS """
 import os
-CURRENT_DIR = ''#os.path.dirname(__file__)
+CURRENT_DIR = os.path.dirname(__file__)
 
 import sys
 sys.path.append(CURRENT_DIR + "./../scripts/core")
