@@ -19,6 +19,7 @@ from itertools import *
 CURRENT_PATH = os.path.dirname(__file__)
 MAIN_DIR = CURRENT_PATH + "./../../"
 
+
 """ CLASSES """
 class SpatialAgg:
     """This class takes an instance of the netCDF datasets from the

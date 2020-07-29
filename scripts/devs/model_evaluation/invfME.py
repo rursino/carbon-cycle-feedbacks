@@ -28,6 +28,9 @@ fname = (MAIN_DIR +
 ds = xr.open_dataset(fname)
 df = invf.ModelEvaluation(ds)
 
+
+df._time_to_CO2(df.data.time.values)
+
 df.regress_timeseries_to_GCP("land", plot="both")
 
 df.regress_cascading_window_trend_to_GCP(25, "land", plot="both", indep="time")

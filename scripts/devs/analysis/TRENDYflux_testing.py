@@ -13,7 +13,7 @@ import TRENDY_flux as TRENDYf
 from importlib import reload
 reload(TRENDYf)
 
-fname = f"./../../../output/TRENDY/spatial/output_all/CABLE-POP_S1_nbp/month.nc"
+fname = f"./../../../output/TRENDY/spatial/output_all/CABLE-POP_S1_nbp/year.nc"
 
 ds = xr.open_dataset(fname)
 
@@ -21,7 +21,7 @@ df = TRENDYf.Analysis(ds)
 
 df.plot_timeseries("South_Land", slice("1770", "1792"))
 
-df.cascading_window_trend(plot=True, window_size=20, include_pearson=True)
+df.cascading_window_trend(plot=True, window_size=20, include_pearson=True)[0]
 df.psd("South_Land", fs=12, plot=True)
 
 
