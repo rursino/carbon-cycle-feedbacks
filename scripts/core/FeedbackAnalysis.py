@@ -236,7 +236,9 @@ class FeedbackOutput:
         self.params_data = {}
         self.stats_data = {}
         for model in models[model_type]:
-            FNAME_DIR = DIR + f'output_all/{model}_nbp/{temp}/{sink}/csv_output/'
+            model_name = model if model_type == 'inversions' else model + 'nbp'
+            FNAME_DIR = DIR + f'output_all/{model}/{temp}/{sink}/csv_output/'
+
             params_fname = FNAME_DIR + f'params_{timeres}.csv'
             stats_fname = FNAME_DIR + f'stats_{timeres}.csv'
 
@@ -248,6 +250,24 @@ class FeedbackOutput:
         self.sink = sink
         self.timeres = timeres
 
+
+    def merge_params(self, parameter):
+        """ Merge all parameter median values all models in the specified model
+        type.
+        NOTE: Only works for TRENDY datasets since time range is consistent.
+        """
+
+        median = [
+                self.params_data[model_name][f'{parameter}_median'].values for
+                model_name in self.params_data
+            ]
+
+        dataframe = pd.DataFrame(median).T
+        dataframe.set_index(self.params_data[list(self.params_data)[0]].index,
+                            inplace=True)
+        dataframe.columns = self.models[self.models_type]
+
+        return dataframe
 
     def individual_plot(self, model, parameter):
         """ Create a bar plot of the chosen model and parameter. The standard
@@ -282,6 +302,7 @@ class FeedbackOutput:
         calculated by taking the average of all models. The standard deviation
         is also calculated by taking the standard deviation of the set of values
         from all models.
+        NOTE: Only works for TRENDY datasets since time range is consistent.
 
         Parameters
         ==========
@@ -291,17 +312,9 @@ class FeedbackOutput:
             one of "const", "beta", "gamma"
         """
 
-        median = []
-        index = self.params_data[list(self.params_data)[0]].index
-
-        for model_name in self.params_data:
-            model = self.params_data[model_name]
-            median.append(model[f'{parameter}_median'].values)
-
-        dataframe = pd.DataFrame(median).T
-        dataframe.set_index(index, inplace=True)
-        dataframe.columns = self.models[self.models_type]
+        dataframe = self.merge_params(parameter)
 
         merge_mean = dataframe.mean(axis=1)
         merge_std = dataframe.std(axis=1)
-        plt.bar(index, merge_mean, yerr=merge_std)
+
+        plt.bar(dataframe.index, merge_mean, yerr=merge_std)
