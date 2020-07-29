@@ -10,6 +10,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
+from scipy import stats
 from datetime import datetime
 import os
 
@@ -214,23 +215,93 @@ class FeedbackAnalysis:
 
 class FeedbackOutput:
 
-    def __init__(self, model_type, sink, df_type):
+    def __init__(self, model_type, sink, timeres):
         """ Initialise a FeedbackOutput instance by reading a csv file from
         csv feedback outputs.
         """
 
-        model = {
-            'inversions': ['CAMS', 'JENA_s76', 'JENA_s85',
-                           'JAMSTEC', 'Rayner', 'CTRACKER']
-        }
+        models = {
+                'inversions': ['CAMS', 'JENA_s76', 'JENA_s85',
+                               'JAMSTEC', 'Rayner', 'CTRACKER'],
+                'TRENDY_S1': ['CABLE-POP_S1', 'CLASS-CTEM_S1', 'JSBACH_S1',
+                              'LPJ-GUESS_S1', 'OCN_S1'],
+                'TRENDY_S3': ['CABLE-POP_S3', 'CLASS-CTEM_S3', 'JSBACH_S3',
+                              'LPJ-GUESS_S3', 'OCN_S3']
+            }
 
-        DIR = CURRENT_PATH + './../../../output/feedbacks/'
-        fname = DIR + f'output_all/{model}/{temp}/{sink}/csv_output/{df_fname}.csv'
+        temp = 'CRUTEM' if sink.split('_')[-1] == "Land" else "HadSST"
 
-        self.data = pd.read_csv(fname, index_col = 0)
+        DIR = CURRENT_PATH + './../../output/feedbacks/'
 
-    def plot(self):
-        """ Plot.
+        self.params_data = {}
+        self.stats_data = {}
+        for model in models[model_type]:
+            FNAME_DIR = DIR + f'output_all/{model}_nbp/{temp}/{sink}/csv_output/'
+            params_fname = FNAME_DIR + f'params_{timeres}.csv'
+            stats_fname = FNAME_DIR + f'stats_{timeres}.csv'
+
+            self.params_data[model] = pd.read_csv(params_fname, index_col = 0)
+            self.stats_data[model] = pd.read_csv(stats_fname, index_col = 0)
+
+        self.models = models
+        self.models_type = model_type
+        self.sink = sink
+        self.timeres = timeres
+
+
+    def individual_plot(self, model, parameter):
+        """ Create a bar plot of the chosen model and parameter. The standard
+        deviation is calculated using the upper and lower limits of the
+        confidence intervals of the parameter.
+
+        Parameters
+        ==========
+
+        model: string
+
+            chosen model from the self.model_type.
+
+        parameter: string
+
+            one of "const", "beta", "gamma"
         """
 
-        plt.plot(self.data)
+        dataframe = self.params_data[model]
+
+        median = dataframe[f'{parameter}_median']
+        lower = dataframe[f'{parameter}_left']
+        upper = dataframe[f'{parameter}_right']
+
+        z = stats.norm.ppf(0.95)
+        std = (abs((upper - median) / z) + abs((lower - median) / z)) / 2
+
+        plt.bar(dataframe.index, dataframe[f'{parameter}_median'], yerr=std)
+
+    def merge_plot(self, parameter):
+        """ Create a bar plot of the chosen parameter. The values are
+        calculated by taking the average of all models. The standard deviation
+        is also calculated by taking the standard deviation of the set of values
+        from all models.
+
+        Parameters
+        ==========
+
+        parameter: string
+
+            one of "const", "beta", "gamma"
+        """
+
+        median = []
+        index = self.params_data[list(self.params_data)[0]].index
+
+        for model_name in self.params_data:
+            model = self.params_data[model_name]
+            median.append(model[f'{parameter}_median'].values)
+
+        dataframe = pd.DataFrame(median).T
+        dataframe.set_index(index, inplace=True)
+        dataframe.columns = self.models[self.models_type]
+
+        merge_mean = dataframe.mean(axis=1)
+        merge_std = dataframe.std(axis=1)
+        plt.bar(index, merge_mean, yerr=merge_std)
