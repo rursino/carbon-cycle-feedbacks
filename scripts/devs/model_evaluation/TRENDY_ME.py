@@ -28,12 +28,11 @@ ds = xr.open_dataset(fname)
 df = TRENDYf.ModelEvaluation(ds)
 
 
-
 df.regress_timeseries_to_GCP(plot="both")
 
-df.regress_cascading_window_trend_to_GCP(25, plot="both", indep="time")
-df.regress_cascading_window_trend_to_GCP(10, plot="both", indep="CO2")
+df.regress_cascading_window_trend_to_GCP(25, plot=None, indep="time")
 
+df.regress_cascading_window_trend_to_GCP(25, plot=None, indep="CO2")
 
 df.compare_trend_to_GCP(True)
 

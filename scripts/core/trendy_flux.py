@@ -392,7 +392,7 @@ class Analysis:
         if self.time_resolution == "Y":
             CO2_timeres = "year"
             CO2_index_col = "Year"
-        else:
+        elif self.time_resolution == "M":
             CO2_timeres = "month"
             CO2_index_col = ["Year", "Month"]
 
@@ -406,7 +406,7 @@ class Analysis:
 
         if self.time_resolution == "M":
             index_to_pass = index["year"], index["month"]
-        else:
+        elif self.time_resolution == "Y":
             index_to_pass = index["year"]
 
         try:
@@ -755,7 +755,7 @@ class ModelEvaluation(Analysis):
         GCP.index = _time
         self.GCP = GCP
 
-        self.time_resolution = 'year'
+        self.time_resolution = 'Y'
 
     def regress_timeseries_to_GCP(self, plot=None):
         """Calculates linear regression of model uptake to GCP uptake and
