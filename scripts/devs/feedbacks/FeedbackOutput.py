@@ -16,15 +16,13 @@ reload(FeedbackAnalysis)
 
 
 """ INPUTS """
-DIR = './../../../output/feedbacks/'
-
-model_type = 'inversions'
+model_type = 'TRENDY_S1'
 sink = 'Earth_Land'
 timeres = 'month'
 
 df = FeedbackAnalysis.FeedbackOutput(model_type, sink, timeres)
 
-df.individual_plot('JENA_s76', 'gamma')
+df.individual_plot('JSBACH_S1_nbp', 'beta')
 
 df.merge_plot('const')
 df.merge_plot('beta')
@@ -32,4 +30,4 @@ df.merge_plot('gamma')
 
 df.merge_params('const')
 
-df.stats_data['OCN_S3']
+df.stats_data

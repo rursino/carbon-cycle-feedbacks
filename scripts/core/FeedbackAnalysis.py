@@ -221,12 +221,12 @@ class FeedbackOutput:
         """
 
         models = {
-                'inversions': ['CAMS', 'JENA_s76', 'JENA_s85',
-                               'JAMSTEC', 'Rayner', 'CTRACKER'],
-                'TRENDY_S1': ['CABLE-POP_S1', 'CLASS-CTEM_S1', 'JSBACH_S1',
-                              'LPJ-GUESS_S1', 'OCN_S1'],
-                'TRENDY_S3': ['CABLE-POP_S3', 'CLASS-CTEM_S3', 'JSBACH_S3',
-                              'LPJ-GUESS_S3', 'OCN_S3']
+            'inversions': ['CAMS', 'JENA_s76', 'JENA_s85',
+                           'JAMSTEC', 'Rayner', 'CTRACKER'],
+            'TRENDY_S1': ['CABLE-POP_S1_nbp', 'CLASS-CTEM_S1_nbp',
+                          'JSBACH_S1_nbp', 'LPJ-GUESS_S1_nbp', 'OCN_S1_nbp'],
+            'TRENDY_S3': ['CABLE-POP_S3_nbp', 'CLASS-CTEM_S3_nbp',
+                          'JSBACH_S3_nbp', 'LPJ-GUESS_S3_nbp', 'OCN_S3_nbp']
             }
 
         temp = 'CRUTEM' if sink.split('_')[-1] == "Land" else "HadSST"
