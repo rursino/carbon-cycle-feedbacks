@@ -269,7 +269,7 @@ class FeedbackOutput:
 
         return dataframe
 
-    def individual_plot(self, model, parameter):
+    def individual_plot(self, model, parameter, plot=False):
         """ Create a bar plot of the chosen model and parameter. The standard
         deviation is calculated using the upper and lower limits of the
         confidence intervals of the parameter.
@@ -284,6 +284,11 @@ class FeedbackOutput:
         parameter: string
 
             one of "const", "beta", "gamma"
+
+        plot: bool, optional
+
+            Show bar plot of parameter values if True.
+            Defaults to False.
         """
 
         dataframe = self.params_data[model]
@@ -295,9 +300,17 @@ class FeedbackOutput:
         z = stats.norm.ppf(0.95)
         std = (abs((upper - median) / z) + abs((lower - median) / z)) / 2
 
-        plt.bar(dataframe.index, dataframe[f'{parameter}_median'], yerr=std)
+        if plot:
+            plt.figure(figsize=(12,8))
+            plt.bar(dataframe.index, median, yerr=std)
+            plt.xlabel("First year of multi-year window", fontsize = 16)
+            plt.ylabel(f"{parameter.title()} (90% CI)", fontsize = 16)
+            plt.title(f"{parameter.title()}: {model}", fontsize = 28)
 
-    def merge_plot(self, parameter):
+
+        return {f'{parameter}': median, 'std': std}
+
+    def merge_plot(self, parameter, plot=False):
         """ Create a bar plot of the chosen parameter. The values are
         calculated by taking the average of all models. The standard deviation
         is also calculated by taking the standard deviation of the set of values
@@ -310,6 +323,11 @@ class FeedbackOutput:
         parameter: string
 
             one of "const", "beta", "gamma"
+
+        plot: bool, optional
+
+            Show bar plot of parameter values if True.
+            Defaults to False.
         """
 
         dataframe = self.merge_params(parameter)
@@ -317,4 +335,11 @@ class FeedbackOutput:
         merge_mean = dataframe.mean(axis=1)
         merge_std = dataframe.std(axis=1)
 
-        plt.bar(dataframe.index, merge_mean, yerr=merge_std)
+        if plot:
+            plt.figure(figsize=(12,8))
+            plt.bar(dataframe.index, merge_mean, yerr=merge_std)
+            plt.xlabel("First year of multi-year window", fontsize = 16)
+            plt.ylabel(f"{parameter.title()} (90% CI)", fontsize = 16)
+            plt.title(f"{parameter.title()}: Multi-model mean", fontsize = 28)
+        
+        return {f'{parameter}': merge_mean, 'std': merge_std}
