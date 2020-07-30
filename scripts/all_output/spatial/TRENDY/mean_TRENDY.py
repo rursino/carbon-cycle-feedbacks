@@ -12,13 +12,15 @@ from itertools import *
 from tqdm import tqdm
 import os
 
+import matplotlib.pyplot as plt
+
 
 """ INPUTS """
 PATH_DIR = './../../../../output/TRENDY/spatial/output_all/'
 OUTPUT_DIR = './../../../../output/TRENDY/spatial/mean_all/'
 
 sims = ['S1', 'S3']
-timeres = ['month', 'year', 'decade', 'whole']
+timeres = ['month', 'year']
 
 
 """ FUNCTIONS """
@@ -35,7 +37,8 @@ def open_dataframes(sim, timeres):
     if timeres == 'month':
         fnames.remove(PATH_DIR + f'LPJ-GUESS_{sim}_nbp/month.nc')
 
-    return [xr.open_dataset(fname) for fname in fnames]
+    return [xr.open_dataset(fname).sel(time=slice("1701", "2017")) for
+            fname in fnames]
 
 def generate_mean_dataset(dataframes):
     """ Generates a dataset that takes the mean of all models for each
@@ -46,13 +49,18 @@ def generate_mean_dataset(dataframes):
 
     values = {}
     for variable in variables:
-        vals = 0
+        vals = []
         for ds in dataframes:
-            vals += ds.sel(time=slice("1701", "2018"))[variable].values
+            vals.append(ds[variable].values)
 
-        values[variable] = vals / len(dataframes)
+        stack = np.stack(vals)
+        mean = np.mean(stack, axis=0)
+        std = np.std(stack, axis=0)
 
-    time = dataframes[0].sel(time=slice("1701", "2018")).time.values
+        values[variable] = mean
+        values[variable + '_STD'] = std
+
+    time = dataframes[0].time.values
 
     ds = xr.Dataset(
         {key: (('time'), value) for (key, value) in values.items()},
@@ -66,7 +74,7 @@ def generate_mean_dataset(dataframes):
 # Generate mean dataset for each simulation and timeresolution and save as
 # netCDF files in spatial/mean_all directory.
 for sim, time in tqdm(product(sims, timeres)):
-    dataframes = open_dataframes(sims[0], timeres[0])
+    dataframes = open_dataframes(sim, time)
     ds = generate_mean_dataset(dataframes)
 
     try:

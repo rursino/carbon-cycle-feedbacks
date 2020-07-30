@@ -13,7 +13,7 @@ DIR = './../../../output/TRENDY/spatial/mean_all/'
 
 """ EXECUTION """
 df1 = xr.open_dataset(DIR + 'S1/decade.nc')
-df2 = xr.open_dataset(DIR + 'S3/decade.nc')=
+df2 = xr.open_dataset(DIR + 'S3/decade.nc')
 
 x = df1.time.values
 y1 = df1.Earth_Land.values
