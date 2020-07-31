@@ -396,7 +396,8 @@ class Analysis:
             return CO2.loc[index_to_pass]
 
     def cascading_window_trend(self, indep="time", variable="Earth_Land",
-                            window_size=25, plot=False, include_pearson=False):
+                            window_size=25, plot=False, include_pearson=False,
+                            include_linreg=False):
         """ Calculates the slope of the trend of an uptake variable for each
         time window and for a given window size. The function also plots the
         slopes as a timeseries and, if prompted, the r-value of each slope as
@@ -432,6 +433,11 @@ class Analysis:
 
             Defaults to False.
 
+        include_linreg: bool, optional
+
+            Option to include a linear regression of the cascading window plot.
+            Defaults to False.
+
         """
 
         df = self.data
@@ -445,12 +451,14 @@ class Analysis:
         if indep == "time":
             x_var = to_numerical(x_time)
             ts_xlabel = "Year"
-            cascading_yunit = "(GtC/ppm/yr)"
+            cascading_yunit = "(GtC/yr$^2$)"
+            cas_linreg_yunit = "(GtC/yr$^3$)"
             cascading_xlabel = f"First year of {window_size}-year window"
         else:
             x_var = self._time_to_CO2(x_time)
             ts_xlabel = "CO2 (ppm)"
-            cascading_yunit = "(GtC/ppm$^2$)"
+            cascading_yunit = "(GtC/yr/ppm)"
+            cas_linreg_yunit = "(GtC/yr/ppm$^2$)"
             cascading_xlabel = f"Start of {window_size}-year CO2 window (ppm)"
 
         if self.time_resolution == "M":
@@ -490,6 +498,20 @@ class Analysis:
             plt.plot(x_var[:-window_size], roll_df.values, color='g')
             plt.xlabel(cascading_xlabel, fontsize=20)
             plt.ylabel(f"Slope of C flux trend {cascading_yunit}", fontsize=20)
+
+
+            if include_linreg:
+                x = x_var[:-window_size]
+                y = roll_df.values.squeeze()
+                slope, intercept, rvalue, pvalue, _ = stats.linregress(x, y)
+                plt.plot(x, slope * x + intercept, color='r')
+
+                xloc = x.min() + 0.05 * (x.max() - x.min())
+                yloc = y.min() + 0.05 * (y.max() - y.min())
+                text = (f'slope: {slope:.3f} {cas_linreg_yunit}\n'
+                        f'r = {rvalue:.3f}\n'
+                        f'p = {pvalue:.3f}')
+                plt.text(xloc, yloc, text, fontsize=16)
 
         if include_pearson:
             r_df = pd.DataFrame({"r-values of trends": r_vals},

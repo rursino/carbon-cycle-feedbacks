@@ -18,7 +18,8 @@ df = GCPf.Analysis("land sink")
 
 df.plot_timeseries((1968,2178))
 
-df.cascading_window_trend("CO2", plot=True, include_pearson=True, window_size=15)
+df.cascading_window_trend("time", plot=True, include_pearson=True, window_size=15,
+                            include_linreg=True)
 
 plt.plot(df.data.index, df.data.values)
 plt.plot(df.data.index, df.bandpass(1/10))
