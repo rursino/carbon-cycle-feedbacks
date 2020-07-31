@@ -51,7 +51,8 @@ class SpatialAgg:
             _data = xr.open_dataset(data)
 
         self.var = 'nbp'
-        self.data = _data[self.var]
+        self.data = -_data[self.var] # -ve sign is to direct fluxes positive
+                                     # to the atmosphere instead of into the land.
 
         self.earth_radius = 6.371e6 # Radius of Earth
 

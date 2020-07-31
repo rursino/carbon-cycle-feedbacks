@@ -30,6 +30,7 @@ df = TRENDYf.SpatialAgg(fname)
 
 df.data
 
+
 df.time_range(slice_obj=True)
 
 res = df.regional_cut((30,60), (100, 120), '1900', '1905')
