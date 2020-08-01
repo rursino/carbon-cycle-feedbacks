@@ -77,7 +77,15 @@ for model in models:
 
     lats = df.latitude.values
     lons = df.longitude.values
-    TRENDY_latlons[model] = lats, lons
+    TRENDY_latlons[model] = ((lats[0], lats[-1], lats[1] - lats[0]),
+                             (lons[0], lons[-1], lons[1] - lons[0]))
+    # TRENDY_latlons[model] = lats, lons
+
+TRENDY_latlons['LPJ-GUESS'] # Good
+TRENDY_latlons['OCN'] # Good
+TRENDY_latlons['CLASS-CTEM'] # Regrid
+TRENDY_latlons['CABLE-POP'] # Shift latitude vals 4deg South
+TRENDY_latlons['JSBACH'] # Regrid
 
 # lat-lons for inversions.
 inv_fname = ('./../../../data/inversions/'
@@ -92,4 +100,4 @@ inv_latlons
 
 
 # Calculate surface area of TRENDY lat-lon grids.
-earth_area_grid(*TRENDY_latlons['JSBACH']).sum() - earth_radius**2 * np.pi * 4
+earth_area_grid(*TRENDY_latlons['CABLE-POP']).sum() - earth_radius**2 * np.pi * 4

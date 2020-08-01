@@ -68,6 +68,8 @@ class SpatialAgg:
             model_info = models_info.loc[data.split('/')[-1]]
             self.time_resolution = model_info['time_resolution']
 
+            self.model = data.split('/')[-3]
+
     """The following three functions obtain the area of specific grid boxes of
     the Earth in different formats. It is used within the SpatialAgg class.
     """
@@ -122,6 +124,24 @@ class SpatialAgg:
             )
 
         return result
+
+    def _regrid_dataset(self):
+        """ Function to regrid a dataset to suit the lat-lon grid set up
+        explained in the _fix_dataset function.
+        """
+
+        raise NotImplementedError()
+
+    def _fix_dataset(self):
+        """ A required task for each model to pass so that its dataset is
+        gridded correctly  so that the sum of areas for each grid equals the
+        surface area of the Earth.
+        """
+
+        if (self.model == 'CLASS-CTEM') or (self.model == 'JSBACH'):
+            self._regrid_dataset()
+        elif self.model == 'CABLE-POP':
+            self.data.latitude -= 4 # Fix this.
 
     def time_range(self, start_time=None, end_time=None, slice_obj=False):
         """ Returns a list or slice object of a range of time points, as is
