@@ -1,2 +1,2 @@
 clean:
-	rm -rf .pytest_cache tests/__pycache__ tests/.pytest_cache
+	rm -rf tests/__pycache__ tests/.pytest_cache
