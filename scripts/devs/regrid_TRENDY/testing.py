@@ -84,7 +84,8 @@ for model in models:
 TRENDY_latlons['LPJ-GUESS'] # Good
 TRENDY_latlons['OCN'] # Good
 TRENDY_latlons['CLASS-CTEM'] # Regrid
-TRENDY_latlons['CABLE-POP'] # Shift latitude vals 4deg South
+TRENDY_latlons['CABLE-POP'] # Shift latitude vals 4deg South (Regrid may be a
+                            # shortcut solution)
 TRENDY_latlons['JSBACH'] # Regrid
 
 # lat-lons for inversions.
