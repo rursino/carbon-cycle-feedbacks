@@ -21,7 +21,7 @@ def setup_module(module):
     global original_ds, test_ds, month_output, year_output
     global basic_test_result, lat, lon, land_vals, ocean_vals
 
-    fname = CURRENT_DIR + "./../data/TRENDY/models/OCN/S1/OCN_S1_nbp.nc"
+    fname = CURRENT_DIR + "./../data/TRENDY/models/JSBACH/S1/JSBACH_S1_nbp.nc"
 
     ds = xr.open_dataset(fname)
 
@@ -32,8 +32,8 @@ def setup_module(module):
     # Set up xr.Dataset with same shape as ds but only has values 0 if lat-lon
     # position is over ocean and 1 if over land.
     vals = ds.nbp.values
-    vals[np.where(np.isnan(vals))] = 0
-    vals[np.where(vals != 0)] = 1 * 30*24*3600
+    vals[True] = 1
+    vals
     testData = xr.Dataset(
                 {
                 'nbp': (('time', 'latitude', 'longitude'),
@@ -51,7 +51,7 @@ def setup_module(module):
     basic_test_result = test_ds.latitudinal_splits()
 
     # Output dataframe.
-    output_dir = CURRENT_DIR + './../output/TRENDY/spatial/output_all/OCN_S1_nbp/'
+    output_dir = CURRENT_DIR + './../output/TRENDY/spatial/output_all/JSBACH_S1_nbp/'
     month_output = xr.open_dataset(output_dir + 'month.nc')
     year_output = xr.open_dataset(output_dir + 'year.nc')
 
@@ -85,6 +85,16 @@ def test_regions_add_to_global():
     assert np.all(differences(original_ds.latitudinal_splits(23)) < 1)
     assert np.all(differences(month_output) < 1)
 
+def test_earth_area_grid_equals_surface_area():
+    """ Test that the earth_area_grid function returns the same value as the
+    entire surface area of the globe.
+    """
+
+    earth_surface_area = 4 * np.pi * (test_ds.earth_radius ** 2)
+    expected_result = test_ds.earth_area_grid(lat,lon).sum()
+
+    assert abs(earth_surface_area - expected_result) < 1
+
 def test_spatial_sum():
     """ Check that sum of fluxes in test_ds equals the entire area of earth (or
     of all grids created from earth_area_grid func).
@@ -92,9 +102,8 @@ def test_spatial_sum():
 
     def differences(dataset):
         one_month_result = dataset.sel(time = "1780-04")
-        # earth_surface_area = test_ds.earth_area_grid(lat,lon).sum()
 
-        total_flux = one_month_result.Earth_Land.values.sum() * 1e-15
+        total_flux = one_month_result.Earth_Land.values.sum()
         expected_result = test_ds.earth_area_grid(lat,lon).sum() * 2e-15
 
         return abs(total_flux - expected_result)

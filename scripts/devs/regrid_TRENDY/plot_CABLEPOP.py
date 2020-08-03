@@ -8,14 +8,18 @@ import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import numpy as np
 
+import sys
+sys.path.append('./../../core')
+import TRENDY_flux as TRENDYf
+
 
 """ INPUTS """
 fname = './../../../data/TRENDY/models/CABLE-POP/S3/CABLE-POP_S3_nbp.nc'
 earth_radius = 6.371e6
 
 """ FUNCTIONS """
-def single_time_plot(time):
-    nbp = df.nbp.sel(time=time).values[0]
+def single_time_plot(df, time):
+    nbp = df.sel(time=time).values[0]
 
     fig = plt.figure(figsize=(15,10))
     ax = fig.add_subplot(1,1,1,projection=ccrs.PlateCarree())
@@ -71,16 +75,18 @@ def earth_area_grid(lats, lons):
 
     return result
 
+def check_earth_area_grid_equals_surface_area(df):
+    vals = df.sel(time="2000-01").values[0]
+    return (np.ones(vals.shape) * earth_area_grid(df.latitude, df.longitude).sum() - earth_radius**2 * np.pi * 4
+
 """ EXECUTION """
 df = xr.open_dataset(fname)
+single_time_plot(-df.nbp, "2000-01")
+check_earth_area_grid_equals_surface_area(df.nbp)
 
-df.latitude
-df.longitude
 
-single_time_plot("2000-01")
+# BELOW TESTING FOR SAME DATASET BUT UNDER TRENDYF.SPATIALAGG INITIALISATION
+Tdf = TRENDYf.SpatialAgg(fname)
+single_time_plot(Tdf.data, "2000-01")
 
-vals = df.nbp.sel(time="2000-01").values[0]
-vals[vals > 0] = 1
-vals[np.isnan(vals)] = 0
-vals
-(vals * earth_area_grid(df.latitude, df.longitude)).sum() - earth_radius**2 * np.pi * 4
+check_earth_area_grid_equals_surface_area(Tdf.data)
