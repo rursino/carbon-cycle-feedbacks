@@ -54,6 +54,14 @@ class SpatialAgg:
         self.data = -_data[self.var] # -ve sign is to direct fluxes positive
                                      # to the atmosphere instead of into the land.
 
+        # Regrid DataArray to lat-lon grid which has a summed area equivalent
+        # to the surface area of the Earth (OCN coordinates already has this).
+        # Interpolation is used to produce values at correct lats and lons.
+        correct_longitude = np.arange(-179.5, 180.5, 1)
+        correct_latitude = np.arange(-89.5, 90.5, 1)
+        self.data = self.data.interp(coords={'longitude': correct_longitude,
+                                             'latitude': correct_latitude})
+
         self.earth_radius = 6.371e6 # Radius of Earth
 
         # Metadata
@@ -124,24 +132,6 @@ class SpatialAgg:
             )
 
         return result
-
-    def _regrid_dataset(self):
-        """ Function to regrid a dataset to suit the lat-lon grid set up
-        explained in the _fix_dataset function.
-        """
-
-        raise NotImplementedError()
-
-    def _fix_dataset(self):
-        """ A required task for each model to pass so that its dataset is
-        gridded correctly  so that the sum of areas for each grid equals the
-        surface area of the Earth.
-        """
-
-        if (self.model == 'CLASS-CTEM') or (self.model == 'JSBACH'):
-            self._regrid_dataset()
-        elif self.model == 'CABLE-POP':
-            self.data.latitude -= 4 # Fix this.
 
     def time_range(self, start_time=None, end_time=None, slice_obj=False):
         """ Returns a list or slice object of a range of time points, as is
