@@ -155,11 +155,12 @@ def test_months_add_to_years():
 
     args = [
                 ("1990", "Earth_Land"),
-                ("1800", "Earth_Land"),
-                ("1945", "South_Land"),
+                ("2000", "Earth_Land"),
+                ("1995", "South_Land"),
                 ("2006", "North_Land"),
-                ("1976", "Tropical_Land"),
+                ("1986", "Tropical_Land"),
 
            ]
+
     for arg in args:
         assert np.subtract(*sums(*arg)) == 0

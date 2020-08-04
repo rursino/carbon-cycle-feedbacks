@@ -32,7 +32,6 @@ def setup_module(module):
     # position is over ocean and 1 if over land.
     vals = ds.sst.values
     vals = np.ones(vals.shape)
-    vals
     testData = xr.Dataset(
                 {
                 'sst': (('time', 'latitude', 'longitude'), vals)
@@ -48,7 +47,7 @@ def setup_module(module):
     basic_test_result = test_ds.latitudinal_splits()
 
     # Output dataframe.
-    output_dir = CURRENT_DIR + './../output/TEMP/spatial/output_all/HadSST/'
+    output_dir = CURRENT_DIR + './../output/TEMP/spatial/output_all/CRUTEM/'
     month_output = xr.open_dataset(output_dir + 'month.nc')
     year_output = xr.open_dataset(output_dir + 'year.nc')
 
@@ -95,12 +94,6 @@ def test_spatial_sum():
     assert differences(basic_test_result) == 0
     assert differences(test_ds.latitudinal_splits(23)) == 0
 
-def test_output_equals_result():
-    """ Check that output dataset equals basic_test_result array created in setup.
-    """
-
-    assert month_output == basic_test_result
-
 def test_months_add_to_years():
     """ Check that all months add up to corresponding year. Check this for many
     years and various variables.
@@ -110,22 +103,20 @@ def test_months_add_to_years():
         month_time = slice(f"{year}-01", f"{year}-12")
         month_sum = (month_output
                         .sel(time=month_time)[variable].values
-                        .sum()
+                        .mean()
                     )
-        year_sum = (year_output
-                        .sel(time=year)[variable].values
-                        .sum()
-                   )
+        year_sum = year_output.sel(time=year)[variable].values
 
         return month_sum, year_sum
 
     args = [
                 ("1990", "Earth_Land"),
-                ("1800", "Earth_Land"),
+                ("1900", "Earth_Land"),
                 ("1945", "South_Land"),
                 ("2006", "North_Land"),
                 ("1976", "Tropical_Land"),
 
            ]
+
     for arg in args:
         assert np.subtract(*sums(*arg)) == 0

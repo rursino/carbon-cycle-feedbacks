@@ -4,7 +4,7 @@
 
 """ IMPORTS """
 import os
-CURRENT_DIR = ''#os.path.dirname(__file__)
+CURRENT_DIR = os.path.dirname(__file__)
 
 import sys
 sys.path.append(CURRENT_DIR + "./../scripts/core")
@@ -110,12 +110,6 @@ def test_spatial_sum():
 
     assert differences(basic_test_result) < 1
     assert differences(test_ds.latitudinal_splits(23)) < 1
-
-def test_output_equals_result():
-    """ Check that output dataset equals basic_test_result array created in setup.
-    """
-
-    assert month_output - basic_test_result*1e-9
 
 def test_months_add_to_years():
     """ Check that all months add up to corresponding year. Check this for many
