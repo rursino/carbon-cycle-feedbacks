@@ -46,5 +46,4 @@ interpdf.sum()
 # Test this fuctionality as implemented when a TRENDYf.SpatialAgg class is
 # initialised.
 Tdf = TRENDYf.SpatialAgg(CLASSfname)
-Tdf.data
-df_CLASS
+Tdf.regional_cut(lats=(-30, 30), lons=(0,40))

@@ -54,14 +54,6 @@ class SpatialAgg:
         self.data = -_data[self.var] # -ve sign is to direct fluxes positive
                                      # to the atmosphere instead of into the land.
 
-        # Regrid DataArray to lat-lon grid which has a summed area equivalent
-        # to the surface area of the Earth (OCN coordinates already has this).
-        # Interpolation is used to produce values at correct lats and lons.
-        correct_longitude = np.arange(-179.5, 180.5, 1)
-        correct_latitude = np.arange(-89.5, 90.5, 1)
-        self.data = self.data.interp(coords={'longitude': correct_longitude,
-                                             'latitude': correct_latitude})
-
         self.earth_radius = 6.371e6 # Radius of Earth
 
         # Metadata
@@ -132,6 +124,23 @@ class SpatialAgg:
             )
 
         return result
+
+    def _regrid_dataarray(self):
+        """ Regrid the DataArray from initialisation of the SpatialAgg instance
+        to a latitude-longitude grid which ensures that, when the surface area
+        of each grid is cumulated, the total is equal to the entire surface
+        area of the Earth
+        """
+        # Regrid DataArray to lat-lon grid which has a summed area equivalent
+        # to the surface area of the Earth (OCN coordinates already has this).
+        # Interpolation is used to produce values at correct lats and lons.
+
+        correct_longitude = np.arange(-179.5, 180.5, 1)
+        correct_latitude = np.arange(-89.5, 90.5, 1)
+
+        return self.data.interp(coords={'longitude': correct_longitude,
+                                        'latitude': correct_latitude}
+                               )
 
     def time_range(self, start_time=None, end_time=None, slice_obj=False):
         """ Returns a list or slice object of a range of time points, as is
@@ -229,13 +238,17 @@ class SpatialAgg:
 
         df = self.data
 
+        # Re-grid DataArray if model is not OCN.
+        if self.model != 'OCN':
+            df = self._regrid_dataarray()
+
         arg_time_range = self.time_range(start_time, end_time)
         slice_time_range = self.time_range(start_time, end_time,
                                            slice_obj=True)
 
         df = df.sel(latitude=slice(*lats), longitude=slice(*lons),
                     time=slice_time_range)
-        df = df * (self.earth_area_grid(df.latitude, df.longitude) * 1e-12)
+        df = df * self.earth_area_grid(df.latitude, df.longitude) * 1e-12
         df = df.sum(axis=(1,2))
         df = df * np.ones(len(df.time)) * 30*24*3600
 
