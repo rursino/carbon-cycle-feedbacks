@@ -10,5 +10,6 @@ MSc_Timeline.xlsx
 tests/__pycache__
 scripts/core/__pycache__
 scripts/all_output/feedbacks/__pycache__
+scripts/all_output/*/*/__pycache__
 scripts/devs/*/__pycache__
 pytests/.pytest_cache

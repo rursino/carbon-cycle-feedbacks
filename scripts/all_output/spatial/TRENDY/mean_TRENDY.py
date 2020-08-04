@@ -16,8 +16,10 @@ import matplotlib.pyplot as plt
 
 
 """ INPUTS """
-PATH_DIR = './../../../../output/TRENDY/spatial/output_all/'
-OUTPUT_DIR = './../../../../output/TRENDY/spatial/mean_all/'
+CURRENT_DIR = os.path.dirname(__file__)
+
+PATH_DIR = CURRENT_DIR + './../../../../output/TRENDY/spatial/output_all/'
+OUTPUT_DIR = CURRENT_DIR + './../../../../output/TRENDY/spatial/mean_all/'
 
 sims = ['S1', 'S3']
 timeres = ['month', 'year']

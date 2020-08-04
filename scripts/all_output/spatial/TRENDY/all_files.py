@@ -3,15 +3,19 @@ this script for each input file.
 """
 
 """ IMPORTS """
+import os
 from itertools import *
 import output_all
 import logging
+from tqdm import tqdm
+
 
 """ SETUP """
-output_dir = "./../../../../output/TRENDY/spatial/output_all/"
+CURRENT_DIR = os.path.dirname(__file__)
+output_dir = CURRENT_DIR + "./../../../../output/TRENDY/spatial/output_all/"
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename = 'result.log', level = logging.INFO,
+logging.basicConfig(filename = CURRENT_DIR + './result.log', level = logging.INFO,
                     format='%(asctime)s: %(levelname)s:%(name)s: %(message)s',
                     datefmt='%Y-%m-%d %H:%M')
 
@@ -55,7 +59,8 @@ def generate_filename(name):
 """ EXECUTION """
 if __name__ == "__main__":
 
-    with open('./../../../../data/TRENDY/models/info.txt', 'r') as info:
+    info_fname = CURRENT_DIR + './../../../../data/TRENDY/models/info.txt'
+    with open(info_fname, 'r') as info:
         infoContent = info.read().splitlines()
 
     variables = get_subnames('variables')
@@ -64,8 +69,9 @@ if __name__ == "__main__":
 
     product_subnames = product(models, simulations, variables)
 
-    for name in product_subnames:
-        input_file = './../../../../data/TRENDY/models/' + generate_filename(name)
+    for name in tqdm(product_subnames):
+        input_file = (CURRENT_DIR + './../../../../data/TRENDY/models/' +
+                      generate_filename(name))
         output_folder = output_dir + "{}_{}_{}/".format(*name)
         try:
             output_all.main(input_file, output_folder)

@@ -1,19 +1,23 @@
-# Variables
-# include config.mk
-SPATIAL_DIR=./scripts/all_output/spatial
-ANALYSIS_DIR=./scripts/all_output/analysis
-
 # Clean cache files.
 .PHONY : clean
 clean :
 	rm -rf tests/__pycache__ tests/.pytest_cache
 
-# Output
 .PHONY : spatial
 spatial :
-	bash $(SPATIAL_DIR)/*/output_all.sh
-	# bash $(SPATIAL_DIR)/TRENDY/all_files.py
+	bash scripts/all_output/spatial/inversions/output_all.sh
+	bash scripts/all_output/spatial/TEMP/output_all.sh
+	python scripts/all_output/spatial/TRENDY/all_files.py
+	python scripts/all_output/spatial/TRENDY/mean_TRENDY.py
 
 .PHONY : analysis
-analysis :
-	bash $(ANALYSIS_DIR)/inversions/analysis.sh
+analysis : spatial
+	# bash ./scripts/all_output/analysis/*/analysis.sh
+
+.PHONY : model_evaluation
+model_evaluation : spatial
+	# bash ./scripts/all_output/analysis/*/analysis.sh
+
+feedbacks : spatial
+	# python ./scripts/all_output/feedbacks/output.py
+	# python ./scripts/all_output/feedbacks/further_output.py
