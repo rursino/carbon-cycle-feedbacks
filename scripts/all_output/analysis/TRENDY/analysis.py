@@ -1,4 +1,4 @@
-""" Outputs plots of all the analysis features for each of the six models.
+""" Outputs plots of all the analysis features for each of the TRENDY models.
 
 Run this script from the bash shell. """
 
@@ -8,7 +8,7 @@ import sys
 sys.path.append("./../../../core/")
 
 import os
-import inv_flux
+import TRENDY_flux
 import pickle
 import matplotlib.pyplot as plt
 import xarray as xr
@@ -29,7 +29,7 @@ btype = "low"
 deseasonalise_first = True # Tune to false if deseasonalisation
                            # not wanted in bandpass func.
 
-output_folder = ('./../../../../output/inversions/analysis/'
+output_folder = ('./../../../../output/TRENDY/analysis/'
                  f'{timeres}/{model_name}/')
 
 
@@ -91,7 +91,7 @@ def bandpass(variable):
 if __name__ == "__main__":
 
     ds = xr.open_dataset(input_file)
-    df = inv_flux.Analysis(ds)
+    df = TRENDY_flux.Analysis(ds)
 
     if timeres == "year":
         fs = 1
@@ -99,8 +99,7 @@ if __name__ == "__main__":
         fs = 12
 
     # Plots
-    variables = ["Earth_Land", "South_Land", "North_Land", "Tropical_Land",
-                "Earth_Ocean", "South_Ocean", "North_Ocean", "Tropical_Ocean"]
+    variables = ["Earth_Land", "South_Land", "North_Land", "Tropical_Land"]
 
     for variable in tqdm(variables):
         plt.close()

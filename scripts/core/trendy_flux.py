@@ -420,7 +420,7 @@ class Analysis:
             CO2_timeres = "month"
             CO2_index_col = ["Year", "Month"]
 
-        CO2fname = f"./../../../data/CO2/co2_{CO2_timeres}.csv"
+        CO2fname = MAIN_DIR + f"data/CO2/co2_{CO2_timeres}.csv"
         CO2 = pd.read_csv(CO2fname, index_col=CO2_index_col)['CO2']
 
         index = {
@@ -492,10 +492,10 @@ class Analysis:
 
         if self.time_resolution == "M":
             slice_time = slice("{}-{}".format(1959, 1),
-                               "{}-{}".format(2018, 12))
+                               "{}-{}".format(2017, 12))
         else:
             slice_time = slice("{}".format(1959),
-                               "{}".format(2018))
+                               "{}".format(2017))
 
         x_time = df.time.sel(time=slice_time).values
         if indep == "time":
@@ -509,7 +509,7 @@ class Analysis:
             ts_xlabel = "CO2 (ppm)"
             cascading_yunit = "(GtC/yr/ppm)"
             cas_linreg_yunit = "(GtC/yr/ppm$^2$)"
-            cascading_xlabel = f"Start of {window_size}-year CO2 window (ppm)"
+            cascading_xlabel = f"Start of {window_size}-year CO2 window (ppm)"\
 
         if self.time_resolution == "M":
             window_size *= 12
@@ -773,7 +773,7 @@ class ModelEvaluation(Analysis):
         """Initialise a ModelEvaluation instance with a xr.Dataset.
         """
 
-        self.data = data.sel(time=slice('1959', '2018'))
+        self.data = data.sel(time=slice('1959', '2017'))
 
         _time = pd.to_datetime(self.data.time.values)
 

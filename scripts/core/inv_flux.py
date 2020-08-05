@@ -377,7 +377,7 @@ class Analysis:
             timeres = "year"
             index_col = "Year"
 
-        CO2fname = f"./../../../data/CO2/co2_{timeres}.csv"
+        CO2fname = MAIN_DIR + f"data/CO2/co2_{timeres}.csv"
         CO2 = pd.read_csv(CO2fname, index_col=index_col)['CO2']
 
         index = {
@@ -798,7 +798,7 @@ class ModelEvaluation(Analysis):
 
         return linreg
 
-    def regress_cascading_window_trend_to_GCP(self, window_size, sink,
+    def regress_cascading_window_trend_to_GCP(self, sink, window_size,
                                               indep="time", plot=None):
         """Calculates linear regression of model cascading window gradient to
         GCP cascading window gradient and shows a plot of the cascading

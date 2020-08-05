@@ -9,6 +9,10 @@ from datetime import datetime
 from scipy import stats, signal
 
 
+CURRENT_PATH = os.path.dirname(__file__)
+MAIN_DIR = CURRENT_PATH + "./../../"
+
+
 def list_of_variables():
     """ Returns a list of all available variables in the GCP dataframe.
     """
@@ -87,8 +91,7 @@ class Analysis:
 
         """
 
-        CO2fname = os.path.join(os.path.dirname(__file__),
-                                "./../../data/CO2/co2_year.csv")
+        CO2fname = os.path.join(MAIN_DIR, "data/CO2/co2_year.csv")
         CO2 = pd.read_csv(CO2fname, index_col="Year")['CO2']
 
         time = list(self.data.index)
