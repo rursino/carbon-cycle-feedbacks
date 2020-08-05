@@ -35,27 +35,27 @@ PERIOD=10
 
 cd $(dirname $0)
 
-# python -W ignore analysis.py $CABLEPOP_S1_year $WINDOW_SIZE $PERIOD
-# python -W ignore analysis.py $CLASSCTEM_S1_year $WINDOW_SIZE $PERIOD
-# python -W ignore analysis.py $JSBACH_S1_year $WINDOW_SIZE $PERIOD
-# python -W ignore analysis.py $OCN_S1_year $WINDOW_SIZE $PERIOD
-# python -W ignore analysis.py $LPJGUESS_S1_year $WINDOW_SIZE $PERIOD
-#
-# python -W ignore analysis.py $CABLEPOP_S1_month $WINDOW_SIZE $PERIOD
-# python -W ignore analysis.py $CLASSCTEM_S1_month $WINDOW_SIZE $PERIOD
-# python -W ignore analysis.py $JSBACH_S1_month $WINDOW_SIZE $PERIOD
-# python -W ignore analysis.py $OCN_S1_month $WINDOW_SIZE $PERIOD
-#
-# python -W ignore analysis.py $CABLEPOP_S3_year $WINDOW_SIZE $PERIOD
-# python -W ignore analysis.py $CLASSCTEM_S3_year $WINDOW_SIZE $PERIOD
-# python -W ignore analysis.py $JSBACH_S3_year $WINDOW_SIZE $PERIOD
-# python -W ignore analysis.py $OCN_S3_year $WINDOW_SIZE $PERIOD
-# python -W ignore analysis.py $LPJGUESS_S3_year $WINDOW_SIZE $PERIOD
-#
-# python -W ignore analysis.py $CABLEPOP_S3_month $WINDOW_SIZE $PERIOD
-# python -W ignore analysis.py $CLASSCTEM_S3_month $WINDOW_SIZE $PERIOD
-# python -W ignore analysis.py $JSBACH_S3_month $WINDOW_SIZE $PERIOD
-# python -W ignore analysis.py $OCN_S3_month $WINDOW_SIZE $PERIOD
+python -W ignore analysis.py $CABLEPOP_S1_year $WINDOW_SIZE $PERIOD
+python -W ignore analysis.py $CLASSCTEM_S1_year $WINDOW_SIZE $PERIOD
+python -W ignore analysis.py $JSBACH_S1_year $WINDOW_SIZE $PERIOD
+python -W ignore analysis.py $OCN_S1_year $WINDOW_SIZE $PERIOD
+python -W ignore analysis.py $LPJGUESS_S1_year $WINDOW_SIZE $PERIOD
+
+python -W ignore analysis.py $CABLEPOP_S1_month $WINDOW_SIZE $PERIOD
+python -W ignore analysis.py $CLASSCTEM_S1_month $WINDOW_SIZE $PERIOD
+python -W ignore analysis.py $JSBACH_S1_month $WINDOW_SIZE $PERIOD
+python -W ignore analysis.py $OCN_S1_month $WINDOW_SIZE $PERIOD
+
+python -W ignore analysis.py $CABLEPOP_S3_year $WINDOW_SIZE $PERIOD
+python -W ignore analysis.py $CLASSCTEM_S3_year $WINDOW_SIZE $PERIOD
+python -W ignore analysis.py $JSBACH_S3_year $WINDOW_SIZE $PERIOD
+python -W ignore analysis.py $OCN_S3_year $WINDOW_SIZE $PERIOD
+python -W ignore analysis.py $LPJGUESS_S3_year $WINDOW_SIZE $PERIOD
+
+python -W ignore analysis.py $CABLEPOP_S3_month $WINDOW_SIZE $PERIOD
+python -W ignore analysis.py $CLASSCTEM_S3_month $WINDOW_SIZE $PERIOD
+python -W ignore analysis.py $JSBACH_S3_month $WINDOW_SIZE $PERIOD
+python -W ignore analysis.py $OCN_S3_month $WINDOW_SIZE $PERIOD
 
 python -W ignore analysis.py $mean_S1_year $WINDOW_SIZE $PERIOD
 python -W ignore analysis.py $mean_S1_month $WINDOW_SIZE $PERIOD
