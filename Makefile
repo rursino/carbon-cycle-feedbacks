@@ -12,12 +12,14 @@ spatial :
 
 .PHONY : analysis
 analysis : spatial
-	# bash ./scripts/all_output/analysis/*/analysis.sh
+	bash ./scripts/all_output/analysis/*/analysis.sh
 
 .PHONY : model_evaluation
 model_evaluation : spatial
-	# bash ./scripts/all_output/analysis/*/analysis.sh
+	bash ./scripts/all_output/analysis/*/analysis.sh
 
-feedbacks : spatial
-	# python ./scripts/all_output/feedbacks/output.py
-	# python ./scripts/all_output/feedbacks/further_output.py
+feedbacks :
+	cd ./scripts/all_output/feedbacks/
+	python output.py
+	python further_output.py
+	cd ../../../

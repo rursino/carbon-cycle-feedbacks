@@ -13,7 +13,7 @@ from tqdm import tqdm
 """ INPUTS """
 # Establish a list of tuples containing all combination of inputs.
 
-DIR = './../../../output/feedbacks/output_all/'
+DIR = './../../../output/feedbacks/'
 
 inversions = ['CAMS', 'Rayner', 'CTRACKER', 'JAMSTEC', 'JENA_s76', 'JENA_s85']
 TRENDYs_product = list(product(['CABLE-POP', 'JSBACH',

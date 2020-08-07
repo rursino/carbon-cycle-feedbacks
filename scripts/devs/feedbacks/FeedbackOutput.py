@@ -6,6 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
+from matplotlib.dates import date2num
 
 import sys
 sys.path.append('./../../core')
@@ -16,23 +17,15 @@ reload(FeedbackAnalysis)
 
 
 """ INPUTS """
-model_type = 'TRENDY_S3'
-sink = 'Earth_Land'
-timeres = 'month'
+model_type = 'TRENDY'
+sink = 'South_Land'
+timeres = 'year'
 
+
+""" EXECUTION """
 df = FeedbackAnalysis.FeedbackOutput(model_type, sink, timeres)
 
-df.individual_plot('JSBACH_S3_nbp', 'beta', True)
-
-df.merge_plot('const', False)
-df.merge_plot('beta', True);
-df.merge_plot('gamma', True);
-
-df.merge_params('const')
-
-
-# Pickle to P.Rayner for review.
-import pickle
-pickle.dump(df.merge_plot('const', False), open('merge_constant.pik', 'wb'))
-pickle.dump(df.merge_plot('beta', False), open('merge_beta.pik', 'wb'))
-pickle.dump(df.merge_plot('gamma', False), open('merge_gamma.pik', 'wb'))
+df.individual_plot('JSBACH_S1_nbp', 'beta', True);
+df.merge_plot('S1', 'beta', True);
+df.merge_params('S3', 'gamma')
+df.difference_simulations('const', False)

@@ -223,10 +223,10 @@ class FeedbackOutput:
         models = {
             'inversions': ['CAMS', 'JENA_s76', 'JENA_s85',
                            'JAMSTEC', 'Rayner', 'CTRACKER'],
-            'TRENDY_S1': ['CABLE-POP_S1_nbp', 'CLASS-CTEM_S1_nbp',
-                          'JSBACH_S1_nbp', 'LPJ-GUESS_S1_nbp', 'OCN_S1_nbp'],
-            'TRENDY_S3': ['CABLE-POP_S3_nbp', 'CLASS-CTEM_S3_nbp',
-                          'JSBACH_S3_nbp', 'LPJ-GUESS_S3_nbp', 'OCN_S3_nbp']
+            'TRENDY': ['CABLE-POP_S1_nbp', 'CLASS-CTEM_S1_nbp',
+                       'JSBACH_S1_nbp', 'LPJ-GUESS_S1_nbp', 'OCN_S1_nbp',
+                       'CABLE-POP_S3_nbp', 'CLASS-CTEM_S3_nbp',
+                       'JSBACH_S3_nbp', 'LPJ-GUESS_S3_nbp', 'OCN_S3_nbp']
             }
 
         temp = 'CRUTEM' if sink.split('_')[-1] == "Land" else "HadSST"
@@ -236,8 +236,7 @@ class FeedbackOutput:
         self.params_data = {}
         self.stats_data = {}
         for model in models[model_type]:
-            model_name = model if model_type == 'inversions' else model + 'nbp'
-            FNAME_DIR = DIR + f'output_all/{model}/{temp}/{sink}/csv_output/'
+            FNAME_DIR = DIR + f'{model}/{temp}/{sink}/csv_output/'
 
             params_fname = FNAME_DIR + f'params_{timeres}.csv'
             stats_fname = FNAME_DIR + f'stats_{timeres}.csv'
@@ -250,8 +249,7 @@ class FeedbackOutput:
         self.sink = sink
         self.timeres = timeres
 
-
-    def merge_params(self, parameter):
+    def merge_params(self, simulation, parameter):
         """ Merge all parameter median values all models in the specified model
         type.
         NOTE: Only works for TRENDY datasets since time range is consistent.
@@ -259,13 +257,15 @@ class FeedbackOutput:
 
         median = [
                 self.params_data[model_name][f'{parameter}_median'].values for
-                model_name in self.params_data
+                model_name in self.params_data if simulation in model_name
             ]
 
         dataframe = pd.DataFrame(median).T
         dataframe.set_index(self.params_data[list(self.params_data)[0]].index,
                             inplace=True)
-        dataframe.columns = self.models[self.models_type]
+        dataframe.columns = [mname for
+                             mname in self.models[self.models_type]
+                             if simulation in mname]
 
         return dataframe
 
@@ -304,13 +304,13 @@ class FeedbackOutput:
             plt.figure(figsize=(12,8))
             plt.bar(dataframe.index, median, yerr=std)
             plt.xlabel("First year of multi-year window", fontsize = 16)
-            plt.ylabel(f"{parameter.title()} (90% CI)", fontsize = 16)
+            plt.ylabel(f"{parameter.title()}", fontsize = 16)
             plt.title(f"{parameter.title()}: {model}", fontsize = 28)
 
 
         return {f'{parameter}': median, 'std': std}
 
-    def merge_plot(self, parameter, plot=False):
+    def merge_plot(self, simulation, parameter, plot=False):
         """ Create a bar plot of the chosen parameter. The values are
         calculated by taking the average of all models. The standard deviation
         is also calculated by taking the standard deviation of the set of values
@@ -330,7 +330,7 @@ class FeedbackOutput:
             Defaults to False.
         """
 
-        dataframe = self.merge_params(parameter)
+        dataframe = self.merge_params(simulation, parameter)
 
         merge_mean = dataframe.mean(axis=1)
         merge_std = dataframe.std(axis=1)
@@ -339,7 +339,58 @@ class FeedbackOutput:
             plt.figure(figsize=(12,8))
             plt.bar(dataframe.index, merge_mean, yerr=merge_std)
             plt.xlabel("First year of multi-year window", fontsize = 16)
-            plt.ylabel(f"{parameter.title()} (90% CI)", fontsize = 16)
+            plt.ylabel(f"{parameter.title()}", fontsize = 16)
             plt.title(f"{parameter.title()}: Multi-model mean", fontsize = 28)
-        
+
         return {f'{parameter}': merge_mean, 'std': merge_std}
+
+    def difference_simulations(self, parameter, compare=False):
+        """
+        """
+
+        S1 = self.merge_params('S1', parameter)
+        S3 = self.merge_params('S3', parameter)
+        diff_S3S1 = np.subtract(self.merge_params('S3', 'gamma'),
+                                self.merge_params('S1', 'gamma'))
+
+        index = np.arange(len(S1.index))
+
+        fig = plt.figure(figsize=(12,8))
+        ax = fig.add_subplot(111)
+        if compare:
+            bar_width = 0.4
+            ax.bar(x = index,
+                   height = S1.mean(axis=1),
+                   yerr = S1.std(axis=1),
+                   width = bar_width
+                   )
+            ax.bar(x = index + bar_width,
+                   height = S3.mean(axis=1),
+                   yerr = S3.std(axis=1),
+                   width = bar_width
+                   )
+
+            ax.legend(['S1', 'S3'], fontsize=14)
+        else:
+            bar_width = 0.7
+            ax.bar(x = index,
+                   height = diff_S3S1.mean(axis=1),
+                   yerr = diff_S3S1.std(axis=1),
+                   width = bar_width
+                   )
+
+        ax.set_xticks(range(len(S3.index)))
+        ax.set_xticklabels(S3.index)
+
+        plt_labels = {
+            'beta': (r'$\beta$ (GtC/ppm)',
+                     r'$\beta$: Multi-model mean'),
+            'gamma': (r'$\gamma$ (GtC/' + u'\N{DEGREE SIGN}' + 'C)',
+                      r'$\gamma$: Multi-model mean'),
+            'const': ('Constant (GtC)',
+                         'Constant: Multi-model mean')
+        }
+
+        ax.set_xlabel("First year of multi-year window", fontsize = 16)
+        ax.set_ylabel(plt_labels[parameter][0], fontsize = 16)
+        ax.set_title(plt_labels[parameter][1], fontsize = 28)

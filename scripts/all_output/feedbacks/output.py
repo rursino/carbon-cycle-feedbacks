@@ -81,6 +81,7 @@ for input in tqdm(inputs):
     time_start = int(time_start)
     time_stop = int(time_stop)
     time_ranges = build_time_ranges(time_start, time_stop)
+    # [str(max(1959, time_start)), '2017']
 
     for time_range in time_ranges:
         if time == "month":
