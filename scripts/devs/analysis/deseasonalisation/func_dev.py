@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import xarray as xr
+import pandas as pd
+from statsmodels import api as sm
 
 def deseasonalise_old(x):
 
@@ -34,15 +36,32 @@ def deseasonalise_new(x):
 
     return x / mean_SI
 
-def seasonal_dummy(x, s=12):
+
+month = xr.open_dataset('./../../../../output/inversions/spatial/output_all/JENA_s76/month.nc').Earth_Land
+year = xr.open_dataset('./../../../../output/inversions/spatial/output_all/JENA_s76/year.nc').Earth_Land
+
+df = pd.DataFrame({'Cu': month.values}, index=month.time.values)
+df['month'] = df.index.month
+df['t'] = range(1, len(df)+1)
+df
+dummy = pd.get_dummies(df, columns=['month'])
+
+Y = dummy.Cu
+X = dummy.iloc[:, 1:]
+
+model = sm.OLS(Y, X).fit()
+model.params
+
+Yreg = np.matmul(dummy.iloc[:, 1:], model.params)
+
+plt.plot(dummy.t * model.params['t'])
+
+plt.plot(Y[:36])
+plt.plot(Yreg[:36])
 
 
-
-month = xr.open_dataset('./../../../output/inversions/spatial/output_all/JENA_s76/month.nc').Earth_Land.values
-year = xr.open_dataset('./../../../output/inversions/spatial/output_all/JENA_s76/year.nc').Earth_Land.values
-
-ss = deseasonalise_new(month)
-
-plt.plot(month)
-plt.plot(range(len(ss)), ss*12)
-plt.plot(range(0, len(ss), 12), year)
+model.summary()
+len(dummy)
+years = int(len(dummy) / 12)
+df['seasonal_params'] = np.tile(model.params, years).__len__()
+df
