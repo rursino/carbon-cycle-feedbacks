@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import statsmodels.api as sm
+import matplotlib.pyplot as plt
 
 """ INPUTS """
 GCP_FILE = './../../../data/GCP/budget.csv'
@@ -60,8 +61,6 @@ af.mean()
 af.std()
 
 """ AIRBORNE FRACTION - FEEDBACK """
-params_df.loc['gamma'][0]
-
 np.dot(params_df.loc['gamma'], (tempLand, tempOcean))
 
 regBeta = params_df.loc['beta'].sum() * co2
@@ -95,3 +94,10 @@ CO2 concentrations (or emissions) and temperature, could bring down the
 uncertainty associated with airborne fraction, which is very large in this
 analysis and in the general literature.
 """
+
+paramsT = params_df.sum(axis=1)
+
+phi = 0.015
+rho = 1.77
+af_fb = 1 / (1 + paramsT.beta + paramsT.gamma * phi / rho)
+af_fb
