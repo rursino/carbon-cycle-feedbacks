@@ -39,7 +39,8 @@ df = pd.DataFrame(data =
     index= GCP.index)
 
 def regression_model(df, var):
-    X = sm.add_constant(df[['CO2', 'temp']])
+    X = df[['CO2', 'temp']]
+    X = sm.add_constant(X)
     Y = df[var]
     model = sm.OLS(Y, X).fit()
 
@@ -97,7 +98,20 @@ analysis and in the general literature.
 
 paramsT = params_df.sum(axis=1)
 
-phi = 0.015
-rho = 1.77
-af_fb = 1 / (1 + paramsT.beta + paramsT.gamma * phi / rho)
-af_fb
+land_params_df = params_df.loc[:,'land']
+ocean_params_df = params_df.loc[:,'ocean']
+
+ocean_params_df
+
+def af_feedbacks(params, phi=0.015, rho=2.06):
+    u = 1 + params.beta + params.gamma * phi / rho
+    return 1 / u
+
+total = af_feedbacks(paramsT)
+land_only = af_feedbacks(land_params_df)
+ocean_only = af_feedbacks(ocean_params_df)
+
+total
+land_only, ocean_only
+
+1 / (land_only + ocean_only)
