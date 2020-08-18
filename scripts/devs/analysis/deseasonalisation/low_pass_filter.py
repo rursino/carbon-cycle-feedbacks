@@ -43,23 +43,32 @@ indexm = pd.read_csv(fco2m).Decimal
 filt_co2m = cutoff(co2m, "low", 1/(667/365), 12)
 
 plt.plot(indexy, co2y)
-# plt.plot(indexm, co2m)
+plt.plot(indexm, co2m)
 plt.plot(indexm, filt_co2m)
 
 psd_co2m = signal.welch(co2m, fs=12)
 psd_filtco2m = signal.welch(filt_co2m, fs=12)
-plt.loglog(*psd_co2m)
-plt.loglog(*psd_filtco2m)
-
+plt.semilogy(*psd_co2m)
+plt.semilogy(*psd_filtco2m)
+plt.xlim([365/667, 2])
 
 filt_uptakem = cutoff(uptakem, "low", 1/(667/365), 12)
 
 plt.plot(range(0, 468, 12), uptakey/12)
-plt.plot(uptakem)
-
-plt.plot(filt_uptakem)
+# plt.plot(uptakem)
+plt.plot(filt_uptakem[12:-12])
 
 psd_uptakem = signal.welch(uptakem, fs=12)
 psd_filtuptakem = signal.welch(filt_uptakem, fs=12)
-plt.loglog(*psd_uptakem)
-plt.loglog(*psd_filtuptakem)
+plt.semilogy(*psd_uptakem)
+plt.semilogy(*psd_filtuptakem)
+
+
+""" USE THIS METHOD:
+Thoning (1989) uses a 0.55 cycle yr-1 (667-day period) as the cut-off for a
+low-pass filter, which removes the annual cycle associated with seasonal peaks
+and troughs of carbon uptake (and atmospheric concentrations).
+This method removes the annual cycle effectively and the filtered timeseries
+fits the annually resolved timeseries very well (and the filtered timeseries has
+12 times more resolution).
+"""
