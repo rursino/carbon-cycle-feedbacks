@@ -31,9 +31,10 @@ def deseasonalise_new(x):
 
     return signal.filtfilt(b, a, x)
 
+INV_INPUT = './../../../../output/inversions/spatial/output_all/JENA_s76/'
 
-month = xr.open_dataset('./../../../../output/inversions/spatial/output_all/JENA_s76/month.nc').Earth_Land
-year = xr.open_dataset('./../../../../output/inversions/spatial/output_all/JENA_s76/year.nc').Earth_Land
+month = xr.open_dataset(INV_INPUT + 'month.nc').Earth_Land
+year = xr.open_dataset(INV_INPUT + 'year.nc').Earth_Land
 
 x = month.values
 xd = deseasonalise_new(x)

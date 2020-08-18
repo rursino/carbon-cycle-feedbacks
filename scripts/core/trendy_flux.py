@@ -639,8 +639,8 @@ class Analysis:
         f"Spectral Variance {unit}": spec}, index=freqs)
 
     def deseasonalise(self, variable):
-        """ Deseasonalise a timeseries of a variable by applying and using a
-        seasonal index.
+        """ Deseasonalise a timeseries of a variable by applying a low-pass
+        filter with a 667-day cut-off period (as in Thoning (1989)).
 
         Parameters:
         ==========
@@ -653,34 +653,15 @@ class Analysis:
 
         x = self.data[variable].values
 
-        mean_list = []
-        for i in range(12):
-            end_index = len(x)
-            while True:
-                indices = range(i, end_index + i, 12)
-                try:
-                    sub = x[indices]
-                except IndexError:
-                    end_index -= 12
-                else:
-                    break
-            mean_list.append(np.mean(sub))
+        fs = 12
+        fc = 365/667
 
-        i = 0
-        s = []
-        repeat = len(x) // len(mean_list)
-        for i in range(repeat):
-            for j in mean_list:
-                s.append(j)
-        last_indices = 0
-        while len(s) < len(x):
-            s.append(mean_list[last_indices])
-            last_indices += 1
+        w = fc / (fs / 2) # Normalize the frequency.
+        b, a = signal.butter(5, w, 'low')
 
-        return x - (s-np.mean(s))
+        return signal.filtfilt(b, a, x)
 
-    def bandpass(self, variable, fc, fs=1, order=5, btype="low",
-    deseasonalise_first=False):
+    def bandpass(self, variable, fc, fs=1, order=5, btype="low"):
         """ Applies a bandpass filter to a dataset (either lowpass, highpass
         or bandpass) using the scipy.signal.butter function.
 
@@ -709,41 +690,9 @@ class Analysis:
             options are low, high and band.
             Defaults to low.
 
-        deseasonalise_first: bool, optional
-
-            Option to deseasonalise timeseries before applying bandpass filter.
-            Defaults to False.
-
         """
 
         x = self.data[variable].values
-
-        if deseasonalise_first:
-            mean_list = []
-            for i in range(12):
-                end_index = len(x)
-                while True:
-                    indices = range(i, end_index + i, 12)
-                    try:
-                        sub = x[indices]
-                    except IndexError:
-                        end_index -= 12
-                    else:
-                        break
-                mean_list.append(np.mean(sub))
-
-            i = 0
-            s = []
-            repeat = len(x) // len(mean_list)
-            for i in range(repeat):
-                for j in mean_list:
-                    s.append(j)
-            last_indices = 0
-            while len(s) < len(x):
-                s.append(mean_list[last_indices])
-                last_indices += 1
-
-            x = x - (s-np.mean(s))
 
         if btype == "band":
             assert type(fc) == list, "fc must be a list of two values."
