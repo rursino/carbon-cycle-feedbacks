@@ -15,46 +15,43 @@ TEMP_OUTPUT_DIR = './../../../output/TEMP/spatial/output_all/'
 CO2_FILE = './../../../data/CO2/co2_year.csv'
 
 GCP = pd.read_csv(GCP_FILE, index_col='Year')
-LAND_TEMP = xr.open_dataset(TEMP_OUTPUT_DIR + 'CRUTEM/year.nc')
-OCEAN_TEMP = xr.open_dataset(TEMP_OUTPUT_DIR + 'HadSST/year.nc')
+TEMP_DF = xr.open_dataset(TEMP_OUTPUT_DIR + 'HadCRUT/year.nc')
 CO2_YEAR = pd.read_csv(CO2_FILE, index_col='Year')
 
-""" FEEDBACK CALCULATIONS """
 atm = GCP['atmospheric growth']
 land, ocean = GCP['land sink'], GCP['ocean sink']
 fossil, LUC = GCP['fossil fuel and industry'], GCP['land-use change emissions']
 
-tempLand = LAND_TEMP.sel(time=slice('1959', '2018')).Earth_Land
-tempOcean = OCEAN_TEMP.sel(time=slice('1959', '2018')).Earth_Ocean
-
+temp = TEMP_DF.sel(time=slice('1959', '2018')).Earth
 co2 = CO2_YEAR[2:].CO2
 
-df = pd.DataFrame(data =
-    {
-        "land": land,
-        "ocean": ocean,
-        "CO2": co2,
-        "temp": tempLand
-    },
-    index= GCP.index)
 
-def regression_model(df, var):
-    X = df[['CO2', 'temp']]
-    X = sm.add_constant(X)
-    Y = df[var]
+""" FUNCTIONS """
+def regression_model(index, var, co2, temp):
+
+    df = pd.DataFrame(data =
+        {
+            "var": var,
+            "CO2": co2,
+            "temp": temp
+        },
+        index= index)
+
+    X = sm.add_constant(df[['CO2', 'temp']])
+    Y = df['var']
     model = sm.OLS(Y, X).fit()
 
     return model
 
-params_df = pd.DataFrame(
-    {
-        'land': regression_model(df, 'land').params.values,
-        'ocean': regression_model(df, 'ocean').params.values
-    },
-    index = ['const', 'beta', 'gamma']
-)
+def params_df(index, land, ocean, co2, temp):
 
-params_df
+    return pd.DataFrame(
+        {
+            'land': regression_model(index, land, co2, temp).params.values,
+            'ocean': regression_model(index, ocean, co2, temp).params.values
+        },
+        index = ['const', 'beta', 'gamma']
+    )
 
 """ AIRBORNE FRACTION - DIRECT """
 af = 1 - ( (-land + -ocean) / (fossil + LUC) )
@@ -62,12 +59,17 @@ af.mean()
 af.std()
 
 """ AIRBORNE FRACTION - FEEDBACK """
-np.dot(params_df.loc['gamma'], (tempLand, tempOcean))
+pdf = params_df(GCP.index, land, ocean, co2, temp)
+pdf
 
-regBeta = params_df.loc['beta'].sum() * co2
-regGamma = np.dot(params_df.loc['gamma'], (tempLand, tempOcean))
-regConst = params_df.loc['const'].sum()
-af_feedback = 1 - ( (-regBeta + -regGamma + -regConst) / (fossil + LUC) )
+beta = pdf.loc['beta']
+gamma = pdf.loc['gamma']
+u_gamma = gamma * 0.015 / 2.06
+
+regBeta = beta.sum() * co2
+regGamma = u_gamma.sum() * temp
+
+af_feedback = 1 - ( (-regBeta + -regGamma) / (fossil + LUC) )
 af_feedback.mean()
 af_feedback.std()
 
@@ -96,22 +98,18 @@ uncertainty associated with airborne fraction, which is very large in this
 analysis and in the general literature.
 """
 
-paramsT = params_df.sum(axis=1)
+paramsT = params_df(GCP.index, land, ocean, co2, temp).sum(axis=1)
 
-land_params_df = params_df.loc[:,'land']
-ocean_params_df = params_df.loc[:,'ocean']
-
-ocean_params_df
 
 def af_feedbacks(params, phi=0.015, rho=2.06):
-    u = 1 + params.beta + params.gamma * phi / rho
+    u = 1 + params.beta * 60 + params.gamma * 60 * phi / rho
     return 1 / u
 
 total = af_feedbacks(paramsT)
-land_only = af_feedbacks(land_params_df)
-ocean_only = af_feedbacks(ocean_params_df)
 
 total
-land_only, ocean_only
 
-1 / (land_only + ocean_only)
+atm / (fossil + LUC)[1:]
+
+
+(atm[1:] / np.diff(co2)).mean()
