@@ -27,7 +27,7 @@ feedbacks :
 .PHONY : word_count
 NOTES=
 word_count :
-	wc ./latex/thesis/sections/*.tex ./latex/notes/airborne_fraction.tex \
+	wc ./latex/thesis/sections/*.tex \
 	./latex/notes/CO2_and_temp.tex \
 	./latex/notes/variable_names.tex \
 	./latex/notes/carbon_budget.tex
