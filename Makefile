@@ -23,3 +23,11 @@ feedbacks :
 	python output.py
 	python further_output.py
 	cd ../../../
+
+.PHONY : word_count
+NOTES=
+word_count :
+	wc ./latex/thesis/sections/*.tex ./latex/notes/airborne_fraction.tex \
+	./latex/notes/CO2_and_temp.tex \
+	./latex/notes/variable_names.tex \
+	./latex/notes/carbon_budget.tex
