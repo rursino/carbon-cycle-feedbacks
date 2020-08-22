@@ -3,4 +3,3 @@ cftime
 matplotlib
 datetime
 scipy
-itertools
