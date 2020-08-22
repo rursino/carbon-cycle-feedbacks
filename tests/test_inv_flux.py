@@ -3,12 +3,12 @@
 
 
 """ IMPORTS """
-import os
-CURRENT_DIR = os.path.dirname(__file__)
-
-import sys
-sys.path.append(CURRENT_DIR + "./../scripts/core")
-import inv_flux as invf
+# import os
+# CURRENT_DIR = os.path.dirname(__file__)
+#
+# import sys
+# sys.path.append(CURRENT_DIR + "./../scripts/core")
+from scripts.core import inv_flux as invf
 
 import numpy as np
 import xarray as xr
