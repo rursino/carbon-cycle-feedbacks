@@ -5,3 +5,5 @@ setup(name='masters-project',
       author_email='rursino@student.unimelb.edu.au',
       packages=find_packages(),
      )
+
+find_packages()
