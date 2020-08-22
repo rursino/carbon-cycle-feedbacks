@@ -3,12 +3,10 @@ python:
     - "3.7.6"
 
 # Command to install dependencies
-install:
-    - pip3 install -r requirements.txt
+install: pip install -r requirements.txt
 
 # Command to run tests
-script:
-    - py.test
+script: py.test
 
 # Command to send email notifications if the tests fail.
 notifications:

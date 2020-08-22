@@ -98,11 +98,14 @@ uncertainty associated with airborne fraction, which is very large in this
 analysis and in the general literature.
 """
 
-paramsT = params_df(GCP.index, land, ocean, co2, temp).sum(axis=1)
+co2 - co2.iloc[0]
+CO2_YEAR[1:].CO2.cumsum()
 
+paramsT = params_df(GCP.index, land, ocean, co2, temp).sum(axis=1)
+paramsT
 
 def af_feedbacks(params, phi=0.015, rho=2.06):
-    u = 1 + params.beta * 60 + params.gamma * 60 * phi / rho
+    u = 1 + 60 * (params.beta + params.gamma * phi / rho)
     return 1 / u
 
 total = af_feedbacks(paramsT)
