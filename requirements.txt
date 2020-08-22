@@ -1,2 +1,6 @@
 xarray
 cftime
+matplotlib
+datetime
+scipy
+itertools

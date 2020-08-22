@@ -8,7 +8,7 @@
 #
 # import sys
 # sys.path.append(CURRENT_DIR + "./../scripts/core")
-from scripts.core import TRENDY_flux as TRENDYf
+from scripts.core import trendy_flux as TRENDYf
 
 import numpy as np
 import xarray as xr
