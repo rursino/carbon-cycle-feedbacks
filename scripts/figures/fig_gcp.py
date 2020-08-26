@@ -39,30 +39,114 @@ def gcp_landocean(save=False):
     if save:
         plt.savefig(FIGURE_DIRECTORY + "gcp_landocean.png")
 
-def gcp_simple_regression(save=False):
+def gcp_simple_regression(save=False, stat_values=False):
     sns.set_style("darkgrid")
 
     zip_list = zip(['211', '212'], ['land', 'ocean'], [land, ocean])
 
-    plt.figure(figsize=(15,8))
+    stat_vals = {}
+    fig = plt.figure(figsize=(16,8))
+    axl = fig.add_subplot(111, frame_on=False)
+    axl.tick_params(labelcolor="none", bottom=False, left=False)
+
     for subplot, var, sink in zip_list:
-        plt.subplot(subplot)
+        ax = fig.add_subplot(subplot)
 
-        slope, intercept, rvalue = stats.linregress(co2, sink)[:3]
-        plt.plot(co2, sink)
-        plt.plot(co2, co2*slope + intercept)
-
-        text = f"Slope: {slope:.2f} GtC/ppm$^2$\nr = {rvalue:.2f}"
-        xtext = co2.min() + 0.8 * (co2.max() - co2.min())
+        regstats = stats.linregress(co2, sink)
+        slope, intercept, rvalue, pvalue, _ = regstats
+        ax.plot(co2, sink)
+        ax.plot(co2, co2*slope + intercept)
+        text = f"Slope: {slope:.3f} GtC yr$^{'{-1}'}$ ppm$^{'{-1}'}$\nr = {rvalue:.3f}"
+        xtext = co2.min() + 0.75 * (co2.max() - co2.min())
         ytext = sink.min() +  0.8 * (sink.max() - sink.min())
-        plt.text(xtext, ytext, text, fontsize=15)
+        ax.text(xtext, ytext, text, fontsize=15)
 
-    plt.title("GCP Uptake (with regression)", fontsize=32)
-    plt.xlabel("CO2 concentrations (ppm)", fontsize=16)
-    plt.ylabel("Uptake flux to the atmosphere (GtC/ppm)", fontsize=16)
+        stat_vals[var] = regstats
+
+    axl.set_title("GCP Uptake (with regression)", fontsize=32, pad=20)
+    axl.set_xlabel("CO$_2$ concentrations (ppm)", fontsize=16, labelpad=10)
+    axl.set_ylabel("Uptake flux to the atmosphere (GtC yr$^{-1}$)", fontsize=16,
+                    labelpad=20)
 
     if save:
         plt.savefig(FIGURE_DIRECTORY + "gcp_simple_regression.png")
 
+    if stat_values:
+        return stat_vals
 
-gcp_simple_regression(save=False)
+def gcp_cwt(save=False, stat_values=False):
+    sns.set_style("darkgrid")
+
+    zip_list = zip(['211', '212'], ['land', 'ocean'], [land_GCPf, ocean_GCPf])
+
+    stat_vals = {}
+    fig = plt.figure(figsize=(16,8))
+    axl = fig.add_subplot(111, frame_on=False)
+    axl.tick_params(labelcolor="none", bottom=False, left=False)
+
+    for subplot, var, sink in zip_list:
+        ax = fig.add_subplot(subplot)
+
+        sink_cwt_df = sink.cascading_window_trend(indep="CO2", window_size=10)
+        x = sink_cwt_df.index
+        y = sink_cwt_df.values.squeeze()
+
+        regstats = stats.linregress(x, y)
+        slope, intercept, rvalue, pvalue, _ = regstats
+        ax.plot(x, y)
+        ax.plot(x, x*slope + intercept)
+        text = f"Slope: {(slope*1e3):.3f} MtC yr$^{'{-1}'}$ ppm$^{'{-2}'}$\nr = {rvalue:.3f}"
+        xtext = x.min() + 0.75 * (x.max() - x.min())
+        ytext = y.min() +  0.8 * (y.max() - y.min())
+        ax.text(xtext, ytext, text, fontsize=15)
+
+        stat_vals[var] = regstats
+
+    axl.set_title("Cascading Window 10-Year Trend", fontsize=32, pad=20)
+    axl.set_xlabel("CO$_2$ concentrations (ppm)", fontsize=16, labelpad=10)
+    axl.set_ylabel(r"$\alpha$   " + " (GtC yr$^{-1}$ ppm$^{-1}$)", fontsize=16,
+                    labelpad=20)
+
+    if save:
+        plt.savefig(FIGURE_DIRECTORY + "gcp_cwt.png")
+
+    if stat_values:
+        return stat_vals
+
+def gcp_powerspec(save=False):
+    sns.set_style("darkgrid")
+
+    zip_list = zip(['211', '212'], ['land', 'ocean'], [land_GCPf, ocean_GCPf])
+
+    fig = plt.figure(figsize=(16,8))
+    axl = fig.add_subplot(111, frame_on=False)
+    axl.tick_params(labelcolor="none", bottom=False, left=False)
+
+    for subplot, var, sink in zip_list:
+        ax = fig.add_subplot(subplot)
+
+        sink_psd = sink.psd()
+        x = sink_psd.iloc[:,0]
+        y = sink_psd.iloc[:,1]
+
+        ax.semilogy(x, y)
+        ax.invert_xaxis()
+
+    axl.set_title("Power Spectrum: GCP Uptake", fontsize=32, pad=20)
+    axl.set_xlabel(sink_psd.columns[0], fontsize=16, labelpad=10)
+    axl.set_ylabel(sink_psd.columns[1], fontsize=16,
+                    labelpad=20)
+
+    if save:
+        plt.savefig(FIGURE_DIRECTORY + "gcp_powerspec.png")
+
+
+""" EXECUTION """
+gcp_landocean(save=False)
+
+stat_values = gcp_simple_regression(save=False, stat_values=True)
+(stat_values['land'].slope * 60, stat_values['ocean'].slope * 60)
+
+gcp_cwt(save=True, stat_values=True)
+
+gcp_powerspec(save=True)
