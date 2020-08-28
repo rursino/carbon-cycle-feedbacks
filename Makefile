@@ -30,5 +30,5 @@ word_count :
 	wc ./latex/thesis/sections/*.tex \
 	./latex/notes/CO2_and_temp.tex \
 	./latex/notes/variable_names.tex \
-	./latex/notes/carbon_budget.tex
+	./latex/notes/carbon_budget.tex \
 	./latex/notes/airborne_feedback_derivation.tex
