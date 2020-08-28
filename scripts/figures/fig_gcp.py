@@ -1,8 +1,10 @@
 """ IMPORTS """
 import matplotlib.pyplot as plt
-import seaborn as sns
 from scipy import stats
 import pandas as pd
+
+import seaborn as sns
+sns.set_style('darkgrid')
 
 import sys
 sys.path.append('./../core/')
@@ -24,8 +26,6 @@ co2 = pd.read_csv("./../../data/CO2/co2_year.csv").CO2[2:]
 
 """ FIGURES """
 def gcp_landocean(save=False):
-    sns.set_style("darkgrid")
-
     plt.figure(figsize=(15,8))
     plt.plot(land, color='g')
     plt.plot(ocean, color='b')
@@ -40,8 +40,6 @@ def gcp_landocean(save=False):
         plt.savefig(FIGURE_DIRECTORY + "gcp_landocean.png")
 
 def gcp_simple_regression(save=False, stat_values=False):
-    sns.set_style("darkgrid")
-
     zip_list = zip(['211', '212'], ['land', 'ocean'], [land, ocean])
 
     stat_vals = {}
@@ -75,8 +73,6 @@ def gcp_simple_regression(save=False, stat_values=False):
         return stat_vals
 
 def gcp_cwt(save=False, stat_values=False):
-    sns.set_style("darkgrid")
-
     zip_list = zip(['211', '212'], ['land', 'ocean'], [land_GCPf, ocean_GCPf])
 
     stat_vals = {}
@@ -114,8 +110,6 @@ def gcp_cwt(save=False, stat_values=False):
         return stat_vals
 
 def gcp_powerspec(save=False):
-    sns.set_style("darkgrid")
-
     zip_list = zip(['211', '212'], ['land', 'ocean'], [land_GCPf, ocean_GCPf])
 
     fig = plt.figure(figsize=(16,8))
@@ -147,6 +141,6 @@ gcp_landocean(save=False)
 stat_values = gcp_simple_regression(save=False, stat_values=True)
 (stat_values['land'].slope * 60, stat_values['ocean'].slope * 60)
 
-gcp_cwt(save=True, stat_values=True)
+gcp_cwt(save=False, stat_values=True)
 
-gcp_powerspec(save=True)
+gcp_powerspec(save=False)

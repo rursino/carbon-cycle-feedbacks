@@ -98,20 +98,15 @@ uncertainty associated with airborne fraction, which is very large in this
 analysis and in the general literature.
 """
 
+plt.plot(np.arange(60), fossil + LUC)
+plt.plot(np.arange(60), np.array([(fossil + LUC).iloc[0] * (1.016)**i for i in range(60)]))
 
 paramsT = params_df(GCP.index, land, ocean, co2 * 2.12, temp).sum(axis=1)
 paramsT
 
-def af_feedbacks(params, phi=0.015, rho=1.94):
-    u = 1 + 60 * (params.beta + params.gamma * phi / rho)
+def af_feedbacks(params, a=2, phi=0.015, rho=1.94):
+    b = 1 / np.log(1 + a/100)
+    u = 1 - b * (params.beta + params.gamma * phi / rho)
     return 1 / u
 
-af_feedbacks(paramsT)
-
-
-def new_af_feedbacks(params, co2=co2, phi=0.015, rho=1.94):
-
-    alpha = params.beta + params.gamma * phi / rho
-    CO2.iloc[-2]
-
-new_af_feedbacks(paramsT)
+af_feedbacks(paramsT, 1)
