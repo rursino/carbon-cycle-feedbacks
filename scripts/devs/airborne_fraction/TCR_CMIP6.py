@@ -13,7 +13,7 @@ TCR_CMIP6.mean()
 TCR_CMIP6.std()
 
 
-rho = 3.74 / TCR_CMIP6
+rho = 3.71 / TCR_CMIP6
 
 rho.mean()
 rho.std()
