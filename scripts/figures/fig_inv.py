@@ -8,8 +8,7 @@ import seaborn as sns
 sns.set_style('darkgrid')
 
 import sys
-sys.path.append('./../core/')
-import inv_flux as invf
+from core import inv_flux as invf
 
 import os
 

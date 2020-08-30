@@ -8,9 +8,7 @@ Run this script from the bash shell.
 
 """ IMPORTS """
 import sys
-sys.path.append("./../../../core/")
-import TEMP
-
+from core import TEMP
 import os
 import xarray as xr
 import pickle

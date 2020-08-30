@@ -9,8 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import sys
-sys.path.append('./../../core')
-import TRENDY_flux as TRENDYf
+from core import TRENDY_flux as TRENDYf
 
 
 """ INPUTS """

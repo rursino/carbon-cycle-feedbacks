@@ -3,10 +3,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 import sys
-sys.path.append("./../../core/")
-
-import inv_flux as invf
-import GCP_flux as GCPf
+from core import inv_flux as invf
+from core import GCP_flux as GCPf
 
 from importlib import reload
 reload(invf)

@@ -12,8 +12,7 @@ import statsmodels.api as sm
 from datetime import datetime
 
 import sys
-sys.path.append("./../../core/")
-import inv_flux as invf
+from core import inv_flux as invf
 
 
 """ INPUTS """

@@ -15,10 +15,9 @@ import cartopy.crs as ccrs
 from scipy import stats
 
 import sys
-sys.path.append("./../../core/")
-import TRENDY_flux as TRENDYf
-import inv_flux as invf
-import TEMP
+from core import TRENDY_flux as TRENDYf
+from core import inv_flux as invf
+from core import TEMP
 
 from importlib import reload
 reload(TEMP)

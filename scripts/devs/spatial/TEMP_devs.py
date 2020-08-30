@@ -9,8 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import sys
-sys.path.append("./../../core/")
-import TEMP
+from core import TEMP
 
 from importlib import reload
 reload(TEMP);

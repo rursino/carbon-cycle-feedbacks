@@ -9,8 +9,7 @@ from scipy import stats
 from matplotlib.dates import date2num
 
 import sys
-sys.path.append('./../../core')
-import FeedbackAnalysis
+from core import FeedbackAnalysis
 
 from importlib import reload
 reload(FeedbackAnalysis)

@@ -3,10 +3,8 @@
 Run this script from the bash shell. """
 
 import sys
-sys.path.append("./../../../core/")
-
 import os
-import TRENDY_flux
+from core import TRENDY_flux
 import pickle
 import xarray as xr
 import matplotlib.pyplot as plt

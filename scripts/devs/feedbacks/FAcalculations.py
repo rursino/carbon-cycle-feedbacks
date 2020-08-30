@@ -11,8 +11,7 @@ from datetime import datetime
 import pandas as pd
 
 import sys
-sys.path.append("./../../core")
-import FeedbackAnalysis as FA
+from core import FeedbackAnalysis as FA
 
 from importlib import reload
 reload(FA);

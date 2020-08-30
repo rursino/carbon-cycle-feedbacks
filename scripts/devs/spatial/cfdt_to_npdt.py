@@ -11,8 +11,7 @@ from datetime import datetime
 import pandas as pd
 
 import sys
-sys.path.append('./../../core')
-import TRENDY_flux
+from core import TRENDY_flux
 
 from importlib import reload
 reload(TRENDY_flux)

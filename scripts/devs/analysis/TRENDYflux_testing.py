@@ -7,8 +7,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 import sys
-sys.path.append("./../../core")
-import TRENDY_flux as TRENDYf
+from core import TRENDY_flux as TRENDYf
 
 from importlib import reload
 reload(TRENDYf)

@@ -8,8 +8,7 @@ Run this script from the bash shell.
 
 """ IMPORTS """
 import sys
-sys.path.append("./../../../core/")
-import inv_flux
+from core import inv_flux
 
 import os
 import xarray as xr

@@ -3,12 +3,8 @@
 
 
 """ IMPORTS """
-# import os
-# CURRENT_DIR = os.path.dirname(__file__)
-#
-# import sys
-# sys.path.append(CURRENT_DIR + "./../scripts/core")
-from scripts.core import TEMP
+
+from core import TEMP
 
 import numpy as np
 import xarray as xr

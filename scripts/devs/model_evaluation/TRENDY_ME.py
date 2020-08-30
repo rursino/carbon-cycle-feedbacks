@@ -4,9 +4,8 @@
 """ IMPORTS """
 import os
 import sys
-sys.path.append('./../../core/')
-import TRENDY_flux as TRENDYf
-import GCP_flux as GCPf
+from core import TRENDY_flux as TRENDYf
+from core import GCP_flux as GCPf
 
 from importlib import reload
 reload(TRENDYf);

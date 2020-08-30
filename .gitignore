@@ -2,6 +2,8 @@ notebooks/
 data/
 latex/
 output/
+masters_project.egg-info/
+masters-proj/
 notebooks/TRENDY/.ipynb_checkpoints/
 MSc_Timeline.xlsx
 

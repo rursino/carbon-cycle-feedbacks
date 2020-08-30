@@ -3,9 +3,8 @@
 
 """ IMPORTS """
 import sys
-sys.path.append('./../../../core/')
-import TRENDY_flux as TRENDYf
-import inv_flux as invf
+from core import TRENDY_flux as TRENDYf
+from core import inv_flux as invf
 
 import xarray as xr
 import numpy as np

@@ -5,10 +5,8 @@ Run this script from the bash shell. """
 
 """ IMPORTS """
 import sys
-sys.path.append("./../../../core/")
-
 import os
-import GCP_flux
+from core import GCP_flux
 import pickle
 import matplotlib.pyplot as plt
 import xarray as xr

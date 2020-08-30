@@ -7,8 +7,7 @@ import seaborn as sns
 sns.set_style('darkgrid')
 
 import sys
-sys.path.append('./../core/')
-import GCP_flux as GCPf
+from core import GCP_flux as GCPf
 
 
 """ INPUTS """

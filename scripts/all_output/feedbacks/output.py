@@ -6,9 +6,7 @@ from itertools import *
 import json
 from tqdm import tqdm
 
-import sys
-sys.path.append("./../../core/")
-import FeedbackAnalysis as FA
+from core import FeedbackAnalysis as FA
 
 
 """ INPUTS """

@@ -6,8 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 import sys
-sys.path.append("./../../core")
-import GCP_flux as GCPf
+from core import GCP_flux as GCPf
 
 from importlib import reload
 reload(GCPf)

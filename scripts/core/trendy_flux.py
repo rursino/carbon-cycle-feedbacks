@@ -11,7 +11,7 @@ import pickle
 import matplotlib.pyplot as plt
 from datetime import datetime
 from scipy import stats, signal
-import GCP_flux as GCPf
+from core import GCP_flux as GCPf
 from itertools import *
 
 

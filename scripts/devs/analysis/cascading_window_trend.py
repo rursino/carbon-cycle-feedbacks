@@ -3,8 +3,7 @@
 
 """ IMPORTS """
 import sys
-sys.path.append("./../../core")
-import inv_flux as invf
+from core import inv_flux as invf
 
 from importlib import reload
 reload(invf)
