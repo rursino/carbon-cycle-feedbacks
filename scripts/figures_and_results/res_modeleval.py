@@ -11,6 +11,7 @@ sns.set_style('darkgrid')
 
 import sys
 from core import inv_flux as invf
+from core import trendy_flux as TRENDYf
 
 import os
 
