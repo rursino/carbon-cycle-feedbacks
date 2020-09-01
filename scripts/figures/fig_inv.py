@@ -15,6 +15,33 @@ from core import inv_flux as invf
 import os
 
 
+""" FUNCTIONS """
+def deseasonalise_instance(instance_dict):
+    d_instance_dict = deepcopy(instance_dict)
+    for model in d_instance_dict:
+        d_instance_dict[model].data = xr.Dataset(
+            {key: (('time'), instance_dict[model].deseasonalise(key)) for
+            key in ['Earth_Land', 'Earth_Ocean', 'South_Land', 'South_Ocean',
+            'North_Land', 'North_Ocean', 'Tropical_Land', 'Tropical_Ocean']},
+            coords={'time': (('time'), instance_dict[model].data.time.values)}
+        )
+
+    return d_instance_dict
+
+def bandpass_instance(instance_dict, fc):
+    bp_instance_dict = deepcopy(instance_dict)
+
+    for model in bp_instance_dict:
+        bp_instance_dict[model].data = xr.Dataset(
+            {key: (('time'), instance_dict[model].bandpass(key, fc)) for
+            key in ['Earth_Land', 'Earth_Ocean', 'South_Land', 'South_Ocean',
+            'North_Land', 'North_Ocean', 'Tropical_Land', 'Tropical_Ocean']},
+            coords={'time': (('time'), instance_dict[model].data.time.values)}
+        )
+
+    return bp_instance_dict
+
+
 """ INPUTS """
 FIGURE_DIRECTORY = "./../../latex/thesis/figures/"
 SPATIAL_DIRECTORY = "./../../output/inversions/spatial/output_all/"
@@ -26,16 +53,11 @@ for model in os.listdir(SPATIAL_DIRECTORY):
     year_invf[model] = invf.Analysis(xr.open_dataset(model_dir + 'year.nc'))
     month_invf[model] = invf.Analysis(xr.open_dataset(model_dir + 'month.nc'))
 
-dmonth_invf = deepcopy(month_invf)
-for model in dmonth_invf:
-    dmonth_invf[model].data = xr.Dataset(
-        {key: (('time'), month_invf[model].deseasonalise(key)) for
-        key in ['Earth_Land', 'Earth_Ocean', 'South_Land', 'South_Ocean',
-        'North_Land', 'North_Ocean', 'Tropical_Land', 'Tropical_Ocean']},
-        coords={'time': (('time'), month_invf[model].data.time.values)}
-    )
+dmonth_invf = deseasonalise_instance(month_invf)
+bpmonth_invf = bandpass_instance(dmonth_invf, 1/(25*12))
 
 co2 = pd.read_csv("./../../data/CO2/co2_year.csv").CO2[2:]
+
 
 """ FIGURES """
 def inv_yearplots(save=False):
@@ -137,7 +159,7 @@ def inv_year_cwt(save=False, stat_values=False):
     if stat_values:
         return stat_vals
 
-def inv_month_cwt(save=False, stat_values=False):
+def inv_month_cwt(filter, fc=None, save=False, stat_values=False):
     zip_list = zip(['211', '212'], ['Earth_Land', 'Earth_Ocean'])
 
     stat_vals = {}
@@ -145,12 +167,13 @@ def inv_month_cwt(save=False, stat_values=False):
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
 
+    filter_month_invf = filter(month_invf, fc) if filter == bandpass_instance else filter(month_invf)
     for subplot, var in zip_list:
         ax = fig.add_subplot(subplot)
 
         index, vals = [], []
-        for model in dmonth_invf:
-            df = dmonth_invf[model].cascading_window_trend(variable = var, indep="CO2", window_size=10)
+        for model in filter_month_invf:
+            df = filter_month_invf[model].cascading_window_trend(variable = var, indep="CO2", window_size=10)
             index.append(df.index)
             vals.append(df.values.squeeze())
 
@@ -203,4 +226,6 @@ inv_monthplots(save=False)
 
 inv_year_cwt(save=False, stat_values=True)
 
-inv_month_cwt(save=False, stat_values=True)
+inv_month_cwt(deseasonalise_instance, save=False, stat_values=True)
+
+inv_month_cwt(bandpass_instance, fc=1/(25*12), save=True, stat_values=True)

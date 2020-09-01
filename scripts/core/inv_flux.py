@@ -13,6 +13,7 @@ from datetime import datetime
 from scipy import stats, signal
 from core import GCP_flux as GCPf
 from itertools import *
+from collections import namedtuple
 
 
 """ INPUTS """
@@ -876,7 +877,7 @@ class ModelEvaluation(Analysis):
 
         return linreg
 
-    def compare_trend_to_GCP(self, sink, print_results=False):
+    def compare_trend_to_GCP(self, sink, plot=False):
         """Calculates long-term trend of model uptake (over the whole time
         range) and GCP uptake. Also calculates the percentage difference of
         the trends.
@@ -887,6 +888,15 @@ class ModelEvaluation(Analysis):
         sink: string
 
             either land or ocean.
+
+        Returns:
+        -----------
+
+        Named tuple with following attributes:
+
+            GCP_slope (MtC/yr)
+            model_slope (MtC/yr)
+            diff (%)
 
         """
 
@@ -901,17 +911,15 @@ class ModelEvaluation(Analysis):
         GCP_stats = stats.linregress(GCP.index.year, GCP[sink].values)
         model_stats = stats.linregress(GCP.index.year, df[model_sink].values)
 
-        plt.bar(["GCP", "Model"], [GCP_stats[0], model_stats[0]])
-        plt.ylabel("Trend (GtC/yr)", fontsize=14)
+        if plot:
+            plt.bar(["GCP", "Model"], [GCP_stats[0], model_stats[0]])
+            plt.ylabel("Trend (GtC/yr)", fontsize=14)
 
-        if print_results:
-            print(f"GCP slope: {GCP_stats[0]*1e3:.3f} MtC/yr",
-                  f"Model slope: {model_stats[0]*1e3:.3f} MtC/yr",
-                  f"Percentage difference: {((GCP_stats[0]*100/model_stats[0])-100):.2f}%", sep="\n")
+        trend_stats = namedtuple('Trend', ['GCP_slope', 'model_slope', 'diff'])
 
-        return {"GCP_slope (MtC/yr)": GCP_stats[0]*1e3,
-                "Model_slope (MtC/yr)": model_stats[0]*1e3,
-                "%_diff": (GCP_stats[0]*100/model_stats[0])-100}
+        return trend_stats(GCP_stats[0]*1e3, model_stats[0]*1e3,
+                     GCP_stats[0]*100/model_stats[0]-100
+                    )
 
     def autocorrelation_plot(self, variable):
         """Plots autocorrelation of model uptake timeseries using
