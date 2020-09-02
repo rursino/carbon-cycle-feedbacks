@@ -7,6 +7,7 @@ import xarray as xr
 import numpy as np
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
+from scipy import signal
 
 
 """ INPUTS """
@@ -17,6 +18,18 @@ uptake = {
     "S1": xr.open_dataset(SPATIAL_DIRECTORY + 'S1/year.nc'),
     "S3": xr.open_dataset(SPATIAL_DIRECTORY + 'S3/year.nc')
 }
+
+# Bandpass
+w = (1 / 1.827) / (12 / 2)
+b, a = signal.butter(5, w, 'low')
+
+vars = ['Earth_Land', 'South_Land', 'North_Land', 'Tropical_Land']
+Ubp = {}
+for sim in ["S1", "S3"]:
+    Ubp[sim] = xr.Dataset(
+        {var: (('time'), signal.filtfilt(b, a, uptake[sim][var])) for var in vars},
+        coords={'time': (('time'), uptake[sim].time.values)}
+        )
 
 co2 = pd.read_csv("./../../data/co2/co2_longterm.csv",
                   usecols=[2,3],
@@ -49,7 +62,7 @@ def cascading_window_trend(variable="Earth_Land", time=('1750','2016'), window_s
             Y.append(model.params.co2)
         alpha[f"alpha_{sim}"] = np.array(Y) * 1e3
 
-    dataframe = pd.DataFrame(alpha, index = X)
+    dataframe = pd.DataFrame(alpha, index = X).sort_index()
 
     fig = plt.figure()
     ax1 = fig.add_axes((0.1,0.3,1.6,1))
@@ -64,18 +77,20 @@ def cascading_window_trend(variable="Earth_Land", time=('1750','2016'), window_s
     ax1.set_ylabel(r"$\alpha$   " + " (MtC yr$^{-1}$ ppm$^{-1}$)", fontsize=16,
                     labelpad=20)
 
-    ax2 = fig.add_axes((0.1,0.1,1.6,0))
-    ax2.yaxis.set_visible(False) # hide the yaxis
-
-    new_tick_locations = np.array(np.linspace(0.01, 0.99, 18))
-
-    ax2.set_xticks(new_tick_locations)
-    ax2.set_xticklabels(x_co2.index[:-window_size:15])
-    ax2.set_xlabel(r"Modified x-axis: $1/(1+X)$", fontsize=14)
+    # ax2 = fig.add_axes((0.1,0.1,1.6,0))
+    # ax2.yaxis.set_visible(False) # hide the yaxis
+    #
+    # new_tick_locations = np.array(np.linspace(0.01, 0.99, 18))
+    #
+    # ax2.set_xticks(new_tick_locations)
+    # ax2.set_xticklabels(x_co2.index[:-window_size:18])
+    # ax2.set_xlabel(r"Modified x-axis: $1/(1+X)$", fontsize=14)
 
     return dataframe
 
-df = cascading_window_trend(time=('1820', '2016'), window_size=50)
+df = cascading_window_trend(time=('1900', '2016'), window_size=60)
+
+df
 
 
 plt.plot(df['alpha_S1_uptake'].values)
