@@ -44,7 +44,6 @@ def bandpass_instance(instance_dict, fc):
 FIGURE_DIRECTORY = "./../../latex/thesis/figures/"
 SPATIAL_DIRECTORY = "./../../output/TRENDY/spatial/output_all/"
 
-
 year_S1_trendy = {}
 year_S3_trendy = {}
 month_S1_trendy = {}
@@ -64,9 +63,6 @@ for model in os.listdir(SPATIAL_DIRECTORY):
             month_S3_trendy[model] = TRENDYf.Analysis(xr.open_dataset(model_dir + 'month.nc'))
         except FileNotFoundError:
             pass
-
-# dmonth_invf = deseasonalise_instance(month_invf)
-# bpmonth_invf = bandpass_instance(dmonth_invf, 1/(25*12))
 
 co2 = pd.read_csv("./../../data/CO2/co2_year.csv").CO2[2:]
 

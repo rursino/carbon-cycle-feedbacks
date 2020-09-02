@@ -219,6 +219,33 @@ def inv_month_cwt(filter, fc=None, save=False, stat_values=False):
     if stat_values:
         return stat_vals
 
+def inv_powerspec(xlim, save=False):
+    zip_list = zip(['211', '212'], ['Earth_Land', 'Earth_Ocean'])
+
+    fig = plt.figure(figsize=(16,8))
+    axl = fig.add_subplot(111, frame_on=False)
+    axl.tick_params(labelcolor="none", bottom=False, left=False)
+
+    for subplot, var in zip_list:
+        ax = fig.add_subplot(subplot)
+
+        psd = month_invf['JAMSTEC'].psd(var, fs=12)
+        x = psd.iloc[:,0]
+        y = psd.iloc[:,1]
+
+        ax.semilogy(x, y)
+        ax.invert_xaxis()
+        ax.set_xlim(xlim)
+        ax.set_xticks(np.arange(*xlim, -1.0))
+
+    axl.set_title("Power Spectrum: Inversion Uptake", fontsize=32, pad=20)
+    axl.set_xlabel(psd.columns[0], fontsize=16, labelpad=10)
+    axl.set_ylabel(psd.columns[1], fontsize=16,
+                    labelpad=20)
+
+    if save:
+        plt.savefig(FIGURE_DIRECTORY + "inv_powerspec.png")
+
 """ EXECUTION """
 inv_yearplots(save=False)
 
@@ -226,6 +253,8 @@ inv_monthplots(save=False)
 
 inv_year_cwt(save=False, stat_values=True)
 
-inv_month_cwt(deseasonalise_instance, save=False, stat_values=True)
+inv_month_cwt(deseasonalise_instance, save=True, stat_values=True)
 
-inv_month_cwt(bandpass_instance, fc=1/(25*12), save=True, stat_values=True)
+inv_month_cwt(bandpass_instance, fc=1/(25*12), save=False, stat_values=True)
+
+inv_powerspec([10,0], save=True)
