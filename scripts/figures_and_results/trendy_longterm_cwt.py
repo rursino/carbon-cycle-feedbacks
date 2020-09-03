@@ -62,7 +62,9 @@ def cascading_window_trend(variable="Earth_Land", time=('1750','2016'), window_s
             Y.append(model.params.co2)
         alpha[f"alpha_{sim}"] = np.array(Y) * 1e3
 
-    dataframe = pd.DataFrame(alpha, index = X).sort_index()
+    return pd.DataFrame(alpha, index = X).sort_index()
+
+def trendy_longterm_cwt(dataframe, save=False):
 
     fig = plt.figure()
     ax1 = fig.add_axes((0.1,0.3,1.6,1))
@@ -77,22 +79,14 @@ def cascading_window_trend(variable="Earth_Land", time=('1750','2016'), window_s
     ax1.set_ylabel(r"$\alpha$   " + " (MtC yr$^{-1}$ ppm$^{-1}$)", fontsize=16,
                     labelpad=20)
 
-    # ax2 = fig.add_axes((0.1,0.1,1.6,0))
-    # ax2.yaxis.set_visible(False) # hide the yaxis
-    #
-    # new_tick_locations = np.array(np.linspace(0.01, 0.99, 18))
-    #
-    # ax2.set_xticks(new_tick_locations)
-    # ax2.set_xticklabels(x_co2.index[:-window_size:18])
-    # ax2.set_xlabel(r"Modified x-axis: $1/(1+X)$", fontsize=14)
+df = cascading_window_trend(time=('1900', '2016'), window_size=40)
 
-    return dataframe
+trendy_longterm_cwt(df)
 
-df = cascading_window_trend(time=('1900', '2016'), window_size=60)
+def difference(Udf):
+    plt.plot(Udf['S1'].Earth_Land)
+    plt.plot(Udf['S3'].Earth_Land)
+    return (Udf['S3'].Earth_Land - Udf['S1'].Earth_Land).sum()
 
-df
-
-
-plt.plot(df['alpha_S1_uptake'].values)
-plt.plot((df['alpha_S3_uptake'].values - df['alpha_S1_uptake'].values))
-plt.legend([r'$\beta$', r'$u_{\gamma}$'])
+difference(uptake)
+difference(Ubp)
