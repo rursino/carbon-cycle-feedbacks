@@ -17,14 +17,14 @@ reload(FeedbackAnalysis)
 
 """ INPUTS """
 model_type = 'TRENDY'
-sink = 'South_Land'
-timeres = 'year'
+sink = 'Earth_Land'
+timeres = 'month'
 
 
 """ EXECUTION """
 df = FeedbackAnalysis.FeedbackOutput(model_type, sink, timeres)
 
-df.individual_plot('JSBACH_S1_nbp', 'beta', True);
-df.merge_plot('S1', 'beta', True);
+df.individual_plot('CAMS', 'beta', True);
+df.merge_plot('S1', 'gamma', True);
 df.merge_params('S3', 'gamma')
-df.difference_simulations('const', False)
+df.difference_simulations('gamma', False)
