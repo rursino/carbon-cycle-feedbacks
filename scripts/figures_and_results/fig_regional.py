@@ -1,6 +1,7 @@
 """ IMPORTS """
 import matplotlib.pyplot as plt
 from scipy import stats
+from scipy import signal
 import pandas as pd
 import numpy as np
 import xarray as xr
@@ -42,6 +43,19 @@ def bandpass_instance(instance_dict, fc):
 
     return bp_instance_dict
 
+def bandpass_filter(x, btype, fc):
+    fs = 12
+    order = 5
+
+    if btype == "band":
+        assert type(fc) == list, "fc must be a list of two values."
+        fc = np.array(fc)
+
+    w = fc / (fs / 2) # Normalize the frequency.
+    b, a = signal.butter(order, w, btype)
+
+    return signal.filtfilt(b, a, x)
+
 
 """ INPUTS """
 FIGURE_DIRECTORY = "./../../latex/thesis/figures/"
@@ -55,6 +69,7 @@ for model in os.listdir(INV_DIRECTORY):
     model_dir = INV_DIRECTORY + model + '/'
     year_invf[model] = invf.Analysis(xr.open_dataset(model_dir + 'year.nc'))
     month_invf[model] = invf.Analysis(xr.open_dataset(model_dir + 'month.nc'))
+
 
 dmonth_invf = deseasonalise_instance(month_invf)
 bpmonth_invf = bandpass_instance(dmonth_invf, 1/(25*12))
@@ -92,105 +107,41 @@ co2 = pd.read_csv("./../../data/CO2/co2_year.csv").CO2[2:]
 
 
 """ FIGURES """
-def inv_regional_year_cwt(save=False):
-    variables = ['Earth_Land', 'Earth_Ocean', 'South_Land', 'South_Ocean',
-                 'Tropical_Land', 'Tropical_Ocean', 'North_Land', 'North_Ocean']
-    zip_list = zip(['42' + str(num) for num in range(1,9)],
-                   variables,
-                   ['black', 'black', 'blue', 'blue', 'orange', 'orange',
-                    'green', 'green'])
+def inv_regional_cwt(timeres="year", save=False):
+    invf_dict = {
+        "year": year_invf,
+        "month": month_invf
+    }
 
-    stat_vals = {}
-    fig = plt.figure(figsize=(18,8))
-    axl = fig.add_subplot(111, frame_on=False)
-    axl.tick_params(labelcolor="none", bottom=False, left=False)
+    variables = [['Earth_Land', 'South_Land', 'Tropical_Land', 'North_Land'],
+                 ['Earth_Ocean', 'South_Ocean', 'Tropical_Ocean', 'North_Ocean']]
+    all_subplots = [['42' + str(num) for num in range(i,i+8,2)] for i in range(1,3)]
+    colors = ['black', 'blue', 'orange', 'green']
 
-    for subplot, var, color in zip_list:
-        ax = fig.add_subplot(subplot)
-
-        index, vals = [], []
-        for model in year_invf:
-            df = year_invf[model].cascading_window_trend(variable = var, indep="CO2", window_size=25)
-            index.append(df.index)
-            vals.append(df.values.squeeze())
-
-        dataframe = {}
-        for ind, val in zip(index, vals):
-            for i, v in zip(ind, val):
-                if i in dataframe.keys():
-                    dataframe[i].append(v)
-                else:
-                    dataframe[i] = [v]
-        for ind in dataframe:
-            row = np.array(dataframe[ind])
-            dataframe[ind] = np.pad(row, (0, 6 - len(row)), 'constant', constant_values=np.nan)
-
-        df = pd.DataFrame(dataframe).T.sort_index().iloc[3:]
-
-        # If want MtC yr-1 uptake
-        df *= 1e3
-
-        x = df.index
-        y = df.mean(axis=1)
-        std = df.std(axis=1)
-
-        ax.plot(x, y, color=color)
-        ax.fill_between(x, y - 2*std, y + 2*std, color='gray', alpha=0.2)
-        ax.axhline(ls='--', color='k', alpha=0.5, lw=1)
-
-        stat_vals[var] = stats.linregress(x, y)
-
-    axl.set_title("Cascading Window 10-Year Trend", fontsize=32, pad=20)
-    axl.set_xlabel("CO$_2$ concentrations (ppm)", fontsize=16, labelpad=10)
-    axl.set_ylabel(r"$\alpha$   " + " (MtC yr$^{-1}$ ppm$^{-1}$)", fontsize=16,
-                    labelpad=20)
-
-    if save:
-        plt.savefig(FIGURE_DIRECTORY + "inv_regional_year_cwt.png")
-
-    return stat_vals
-
-
-inv_regional_year_cwt()
-
-
-ylim_min = (np
-    .array((df['land'][['beta', 'u_gamma']].min().values,
-            df['ocean'][['beta', 'u_gamma']].min().values))
-    .min()
-)
-ylim_max = (np
-    .array((df['land'][['beta', 'u_gamma']].max().values,
-            df['ocean'][['beta', 'u_gamma']].max().values))
-    .max()
-)
-ylim = [ylim_min, ylim_max]
-
-
-
-
-def inv_regional_month_cwt(dict_df, save=False):
-    variables = [['South_Land', 'Tropical_Land', 'North_Land'],
-                 ['South_Ocean', 'Tropical_Ocean', 'North_Ocean']]
-    zip_list = zip(['211', '212'], variables)
+    zip_list = zip(all_subplots, variables)
 
     stat_vals = {}
     fig = plt.figure(figsize=(16,8))
+    ax = {}
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
 
-    for subplot, vars in zip_list:
-        ax = fig.add_subplot(subplot)
+    for subplots, vars in zip_list:
+        ymin, ymax = [], []
+        for subplot, var, color in zip(subplots, vars, colors):
+            ax[subplot] = fig.add_subplot(subplot)
 
-        for var, color in zip(vars, ['blue', 'orange', 'green']):
             index, vals = [], []
-            for model in dict_df:
-                df = dict_df[model].cascading_window_trend(variable = var, indep="CO2", window_size=25)
+            for model in invf_dict[timeres]:
+                df = invf_dict[timeres][model].cascading_window_trend(variable = var, indep="CO2", window_size=10)
                 index.append(df.index)
                 vals.append(df.values.squeeze())
 
+            pad_max_length = 12 if timeres == "month" else 6
             dataframe = {}
             for ind, val in zip(index, vals):
+                if timeres == "month":
+                    val = bandpass_filter(val, 'low', 365/667)
                 for i, v in zip(ind, val):
                     if i in dataframe.keys():
                         dataframe[i].append(v)
@@ -201,45 +152,49 @@ def inv_regional_month_cwt(dict_df, save=False):
                 dataframe[ind] = np.pad(row, (0, 12 - len(row)), 'constant', constant_values=np.nan)
 
             df = pd.DataFrame(dataframe).T.sort_index().iloc[3:]
+            df *= 1e3  # if want MtC yr-1 uptake
+
             x = df.index
             y = df.mean(axis=1)
-            # std = df.std(axis=1)
+            std = df.std(axis=1)
 
-            ax.plot(x, y, color=color)
-            # ax.fill_between(x, y - 2*std, y + 2*std, color='gray', alpha=0.2)
+            ax[subplot].plot(x, y, color=color)
+            ax[subplot].fill_between(x, y - 2*std, y + 2*std, color='gray', alpha=0.2)
+            ax[subplot].axhline(ls='--', color='k', alpha=0.5, lw=1)
 
-            regstats = stats.linregress(x, y)
-            # slope, intercept, rvalue, pvalue, _ = regstats
-            # ax.plot(x, x*slope + intercept)
-            # text = f"Slope: {(slope*1e3):.3f} MtC yr$^{'{-1}'}$ ppm$^{'{-2}'}$\nr = {rvalue:.3f}"
-            # xtext = x.min() + 0.75 * (x.max() -x.min())
-            # ytext = (y-2*std).min() +  0.8 * ((y+2*std).max() - (y-2*std).min())
-            # ax.text(xtext, ytext, text, fontsize=15)
+            stat_vals[var] = stats.linregress(x, y)
 
-            stat_vals[var] = regstats
+            ymin.append((y - 2*std).min())
+            ymax.append((y + 2*std).max())
 
-        plt.legend(vars)
-        ax.axhline(ls='--', color='k', alpha=0.5, lw=1)
+        delta = 0.25
+        for subplot in subplots:
+            ax[subplot].set_ylim([min(ymin) - delta * abs(min(ymin)),
+                                  max(ymax) + delta * abs(max(ymax))])
 
-    axl.set_title("Cascading Window 10-Year Trend", fontsize=32, pad=20)
-    axl.set_xlabel("CO$_2$ concentrations (ppm)", fontsize=16, labelpad=10)
-    axl.set_ylabel(r"$\alpha$   " + " (GtC yr$^{-1}$ ppm$^{-1}$)", fontsize=16,
-                    labelpad=20)
+    ax["421"].set_xlabel("Land", fontsize=14, labelpad=5)
+    ax["421"].xaxis.set_label_position('top')
+    ax["422"].set_xlabel("Ocean", fontsize=14, labelpad=5)
+    ax["422"].xaxis.set_label_position('top')
+    for subplot, region in zip(["421", "423", "425", "427"],
+                               ["Earth", "South", "Tropical", "North"]):
+        ax[subplot].set_ylabel(region, fontsize=14, labelpad=5)
+
+    axl.set_xlabel("First value of CO$_2$ window (ppm)", fontsize=16, labelpad=10)
+    axl.set_ylabel(r"$\alpha$  " + " (MtC yr$^{-1}$ ppm$^{-1}$)", fontsize=16,
+                    labelpad=35)
 
     if save:
-        plt.savefig(FIGURE_DIRECTORY + "inv_regional_month_cwt.png")
+        plt.savefig(FIGURE_DIRECTORY + f"inv_regional_{timeres}_cwt.png")
 
     return stat_vals
 
-    axl.set_title("Cascading Window 10-Year Trend", fontsize=32, pad=20)
-    axl.set_xlabel("CO$_2$ concentrations (ppm)", fontsize=16, labelpad=10)
-    axl.set_ylabel(r"$\alpha$   " + " (GtC yr$^{-1}$ ppm$^{-1}$)", fontsize=16,
-                    labelpad=20)
 
-    if save:
-        plt.savefig(FIGURE_DIRECTORY + "inv_month_cwt.png")
+inv_regional_cwt("month")
 
-    return stat_vals
+
+
+
 
 def trendy_regional_year_cwt(save=False):
     vars = ['South_Land', 'Tropical_Land', 'North_Land']
@@ -268,13 +223,26 @@ def trendy_regional_year_cwt(save=False):
                 index.append(df.index)
                 vals.append(df.values.squeeze())
 
-            dataframe = {}
-            for ind, val in zip(index, vals):
-                for i, v in zip(ind, val):
-                    if i in dataframe.keys():
-                        dataframe[i].append(v)
-                    else:
-                        dataframe[i] = [v]
+            if timeres == "month":
+                dataframe = {}
+                    for i, v in zip(df.index, df.values.squeeze()):
+                        filterv = bandpass_filter(v, 'low', 365/667)
+                        if i in dataframe.keys():
+                            dataframe[i].append(filterv)
+                        else:
+                            dataframe[i] = [filterv]
+                    for ind in dataframe:
+                        row = np.array(dataframe[ind])
+                        dataframe[ind] = np.pad(row, (0, 12 - len(row)), 'constant', constant_values=np.nan)
+
+            else:
+                dataframe = {}
+                for ind, val in zip(index, vals):
+                    for i, v in zip(ind, val):
+                        if i in dataframe.keys():
+                            dataframe[i].append(v)
+                        else:
+                            dataframe[i] = [v]
 
             df = pd.DataFrame(dataframe).T.sort_index()
             x = df.index
@@ -372,7 +340,7 @@ def trendy_regional_month_cwt(save=False):
 
 
 """ EXECUTION """
-inv_regional_year_cwt(save=False)
+inv_regional_cwt("month", save=False)
 
 inv_regional_month_cwt(bpmonth_invf, save=False)
 
