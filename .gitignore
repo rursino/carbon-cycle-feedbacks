@@ -6,6 +6,7 @@ masters_project.egg-info/
 masters-proj/
 notebooks/TRENDY/.ipynb_checkpoints/
 MSc_Timeline.xlsx
+MSc_Steps.txt
 
 #PYCACHE
 .pytest_cache
