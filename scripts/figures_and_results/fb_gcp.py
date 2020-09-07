@@ -9,10 +9,10 @@ sns.set_style('darkgrid')
 
 from statsmodels import api as sm
 
+from copy import deepcopy
+
 
 """ INPUTS """
-
-
 INPUT_DIRECTORY = './../../data/'
 U = pd.read_csv(INPUT_DIRECTORY + 'GCP/budget.csv',
                 index_col='Year',
@@ -106,27 +106,36 @@ def feedback_window_regression(uptake, co2, temp):
 def fb_gcp_decade(save=False):
     df = {
         'land': feedback_window_regression(Ul, C, T),
-        'ocean': feedback_window_regression(Ul, C, T)
+        'ocean': feedback_window_regression(Uo, C, T)
     }
 
-    fig = plt.figure(figsize=(14,9))
+    fig = plt.figure(figsize=(12,10))
+    ax = {}
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
 
     bar_width = 4
 
     for subplot, sink in zip(['211', '212'], ['land', 'ocean']):
-        ax = fig.add_subplot(subplot)
+        ax[subplot] = fig.add_subplot(subplot)
 
+        x = [int(year) for year in df[sink].index]
         x_beta = [int(year) - bar_width / 2 for year in df[sink].index]
         x_ugamma = [int(year) + bar_width / 2 for year in df[sink].index]
         y = df[sink]
 
-        ax.bar(x_beta, y['beta'] / 2.12, width=bar_width, color='green')
-        ax.bar(x_ugamma, y['u_gamma'], width=bar_width, color='red')
-        ax.legend([r'$\beta$', r'$u_{\gamma}$'], fontsize=12)
+        ax[subplot].bar(x_beta, y['beta'] / 2.12, width=bar_width, color='green')
+        ax[subplot].bar(x_ugamma, y['u_gamma'], width=bar_width, color='red')
+        ax[subplot].plot(x, y['beta'] / 2.12 + y['u_gamma'], color='black')
 
-    axl.set_xlabel('First year of 10-year window', fontsize=18, labelpad=15)
+        ax[subplot].legend([r'$\alpha$', r'$\beta$', r'$u_{\gamma}$'],
+                           fontsize=12)
+
+    ax["211"].set_xlabel("Land", fontsize=18, labelpad=10)
+    ax["211"].xaxis.set_label_position('top')
+    ax["212"].set_xlabel("Ocean", fontsize=18, labelpad=10)
+    ax["212"].xaxis.set_label_position('top')
+
     axl.set_ylabel('Feedback parameter ($yr^{-1}$)', fontsize=18, labelpad=15)
 
 
@@ -134,18 +143,20 @@ def fb_gcp_decade(save=False):
 latex_fb_gcp()[['beta', 'u_gamma']].sum(axis=1)
 print(latex_fb_gcp())
 
+feedback_window_regression(Ul, C, T).summary()
+feedback_window_regression(Uo, C, T)
+
+
 fb_gcp_decade()
 
 
 
-# ylim_min = (np
-#     .array((df['land'][['beta', 'u_gamma']].min().values,
-#             df['ocean'][['beta', 'u_gamma']].min().values))
-#     .min()
-# )
-# ylim_max = (np
-#     .array((df['land'][['beta', 'u_gamma']].max().values,
-#             df['ocean'][['beta', 'u_gamma']].max().values))
-#     .max()
-# )
-# ylim = [ylim_min, ylim_max]
+def resample(df):
+    df.index = T.time.values
+    return df.resample('10Y').mean().values
+
+plt.bar(range(0, 19, 3),T.resample({"time": "10Y"}).mean().values)
+# plt.bar(resample(C))
+plt.bar(range(1, 20, 3), resample(Uo))
+# plt.bar(range(2, 21, 3), resample(Ul))
+plt.legend(['T', 'Uo'])
