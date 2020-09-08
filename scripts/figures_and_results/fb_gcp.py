@@ -143,9 +143,15 @@ def fb_gcp_decade(save=False):
 latex_fb_gcp()[['beta', 'u_gamma']].sum(axis=1)
 print(latex_fb_gcp())
 
-feedback_window_regression(Ul, C, T).summary()
-feedback_window_regression(Uo, C, T)
+land_fwr = feedback_window_regression(Ul, C, T)
+ocean_fwr = feedback_window_regression(Uo, C, T)
 
+land_fwr['alpha'] = land_fwr['beta'] / 2.12 + land_fwr['u_gamma']
+ocean_fwr['alpha'] = ocean_fwr['beta'] / 2.12 + ocean_fwr['u_gamma']
+
+abs(land_fwr)
+
+abs(land_fwr / ocean_fwr).mean()
 
 fb_gcp_decade()
 

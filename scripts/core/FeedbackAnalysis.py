@@ -15,12 +15,8 @@ from datetime import datetime
 import os
 
 
-""" INPUTS """
-CURRENT_PATH = os.path.dirname(__file__)
-
-
 """ FUNCTIONS """
-class FeedbackAnalysis:
+class TRENDY:
 
     def __init__(self, uptake, temp, time='year', sink="Earth_Land",
                  time_range=None):
