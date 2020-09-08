@@ -17,8 +17,8 @@ DIR = './../../../'
 OUTPUT_DIR = DIR + 'output/'
 
 co2 = {
-    "year": pd.read_csv(DIR + f"data/CO2/co2_year.csv", index_col=index_col).CO2,
-    "month": pd.read_csv(DIR + f"data/CO2/co2_month.csv", index_col=index_col).CO2
+    "year": pd.read_csv(DIR + f"data/CO2/co2_year.csv", index_col=["Year"]).CO2,
+    "month": pd.read_csv(DIR + f"data/CO2/co2_month.csv", index_col=["Year", "Month"]).CO2
 }
 
 temp = {
@@ -46,55 +46,69 @@ sim = 'S3'
 timeres = 'month'
 
 
-""" FUNCTION """
-# def preprocess(sim, timeres, var):
-beta_dict, gamma_dict = {}, {}
-for model_name in model_names:
+""" FUNCTIONS """
+def preprocessing(sim, timeres, var):
+    input_models = {}
+    U_models = uptake[sim][timeres]
+    for model_name in U_models:
 
-    start, end = 1960, 2017
-    index_col = ["Year", "Month"] if timeres == "month" else ["Year"]
-    C = co2[timeres].loc[start:end]
-    T = temp[timeres].sel(time=slice(str(start), str(end)))
-    U = uptake[sim][timeres].sel(time=slice(str(start), str(end)))
+        start, end = 1960, 2017
+        C = co2[timeres].loc[start:end]
+        T = temp[timeres].sel(time=slice(str(start), str(end)))
+        U = U_models[model_name].sel(time=slice(str(start), str(end)))
 
-    inputs = pd.DataFrame(data = {"C": C, "U": U[var + "_Land"], "T": T[var]})
+        input_models[model_name] = pd.DataFrame(data = {
+                                                "C": C,
+                                                "U": U[var + "_Land"],
+                                                "T": T[var]
+                                                }
+                                               )
+
+    return input_models
+
+def feedback_model(input_models):
+    beta_dict, gamma_dict = {}, {}
+    stats_dict = {}
+    for model_name in input_models:
+        time_periods = (
+            (1960, 1969),
+            (1970, 1979),
+            (1980, 1989),
+            (1990, 1999),
+            (2000, 2009),
+            (2007, 2017),
+        )
+
+        beta_dict['Year'] = [start for start, end in time_periods]
+        gamma_dict['Year'] = [start for start, end in time_periods]
+
+        params = {'beta': [], 'gamma': []}
+        for start, end in time_periods:
+            # Perform OLS regression on the three variables for analysis.
+            X = input_models[model_name][["C", "T"]].loc[start:end]
+            Y = input_models[model_name]["U"].loc[start:end]
+            X = sm.add_constant(X)
+
+            model = sm.OLS(Y, X).fit()
+            params['beta'].append(model.params.loc['C'])
+            params['gamma'].append(model.params.loc['T'])
 
 
-    """ ENGINE """
-    time_periods = (
-        (1960, 1969),
-        (1970, 1979),
-        (1980, 1989),
-        (1990, 1999),
-        (2000, 2009),
-        (2007, 2017),
-    )
+        beta_dict[model_name] = params['beta']
+        gamma_dict[model_name] = params['gamma']
 
-    beta_dict['Year'] = [start for start, end in time_periods]
-    gamma_dict['Year'] = [start for start, end in time_periods]
+    betaDF = pd.DataFrame(beta_dict).set_index('Year')
+    gammaDF = pd.DataFrame(gamma_dict).set_index('Year')
 
-    params = {'beta': [], 'gamma': []}
-    for start, end in time_periods:
-        # Perform OLS regression on the three variables for analysis.
-        X = inputs[["C", "T"]].loc[start:end]
-        Y = inputs["U"].loc[start:end]
-        X = sm.add_constant(X)
+    phi, rho = 0.015, 1.93
+    betaDF /= 2.12
+    gammaDF *= phi / rho
 
-        model = sm.OLS(Y, X).fit()
-        params['beta'].append(model.params.loc['C'])
-        params['gamma'].append(model.params.loc['T'])
-
-    beta_dict[model_name] = params['beta']
-    gamma_dict[model_name] = params['gamma']
+    return betaDF, gammaDF
 
 
-""" OUTPUT """
-betaDF = pd.DataFrame(beta_dict).set_index('Year')
-gammaDF = pd.DataFrame(gamma_dict).set_index('Year')
-
-phi, rho = 0.015, 1.93
-betaDF /= 2.12
-gammaDF *= phi / rho
+""" EXECUTION """
+betaDF, gammaDF = feedback_model(preprocessing("S3", "month", "Tropical"))
 
 betaDF.mean(axis=1)
 betaDF.std(axis=1)
