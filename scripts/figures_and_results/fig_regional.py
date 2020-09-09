@@ -23,8 +23,8 @@ def deseasonalise_instance(instance_dict):
     for model in d_instance_dict:
         d_instance_dict[model].data = xr.Dataset(
             {key: (('time'), instance_dict[model].deseasonalise(key)) for
-            key in ['Earth_Land', 'South_Land', 'North_Land', 'Tropical_Land',
-                    'Earth_Ocean', 'South_Ocean', 'North_Ocean', 'Tropical_Ocean']},
+            key in ['Earth_Land', 'South_Land', 'North_Land', 'Tropical_Land']},
+                    # 'Earth_Ocean', 'South_Ocean', 'North_Ocean', 'Tropical_Ocean']},
             coords={'time': (('time'), instance_dict[model].data.time.values)}
         )
 
