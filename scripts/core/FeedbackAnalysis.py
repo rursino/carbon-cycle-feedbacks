@@ -73,7 +73,7 @@ class TRENDY:
             # Deseasonalise monthly data
             for model in uptake:
                 self.uptake[model] = xr.Dataset(
-                    {key: (('time'), self._deseasonalise(key)) for
+                    {key: (('time'), self._deseasonalise(model, key)) for
                     key in ['Earth_Land', 'South_Land', 'North_Land', 'Tropical_Land']},
                     coords={'time': (('time'), self.uptake[model].time.values)}
                 )
