@@ -65,6 +65,7 @@ gammaDF.std(axis=1)
 
 
 """ FIGURES """
+# Start here
 def fb_trendy():
     fig = plt.figure(figsize=(14,10))
     ax = {}
