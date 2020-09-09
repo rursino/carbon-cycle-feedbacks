@@ -7,32 +7,61 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set_style('darkgrid')
 
-from statsmodels import api as sm
-
-from copy import deepcopy
-
 import os
 from core import FeedbackAnalysis
 
 
 """ INPUTS """
-model_type = 'TRENDY'
-sink = 'Earth_Land'
+DIR = './../../'
+OUTPUT_DIR = DIR + 'output/'
+
+co2 = {
+    "year": pd.read_csv(DIR + f"data/CO2/co2_year.csv", index_col=["Year"]).CO2,
+    "month": pd.read_csv(DIR + f"data/CO2/co2_month.csv", index_col=["Year", "Month"]).CO2
+}
+
+temp = {
+    "year": xr.open_dataset(OUTPUT_DIR + f'TEMP/spatial/output_all/HadCRUT/year.nc'),
+    "month": xr.open_dataset(OUTPUT_DIR + f'TEMP/spatial/output_all/HadCRUT/month.nc')
+}
+
+model_names = ['LPJ-GUESS', 'OCN', 'JSBACH', 'CLASS-CTEM', 'CABLE-POP']
+uptake = {
+    "S1": {
+        "year": {model_name : xr.open_dataset(OUTPUT_DIR + f'TRENDY/spatial/output_all/{model_name}_S1_nbp/year.nc')
+        for model_name in model_names},
+        "month": {model_name : xr.open_dataset(OUTPUT_DIR + f'TRENDY/spatial/output_all/{model_name}_S1_nbp/month.nc')
+        for model_name in model_names if model_name != "LPJ-GUESS"}
+    },
+    "S3": {
+        "year": {model_name : xr.open_dataset(OUTPUT_DIR + f'TRENDY/spatial/output_all/{model_name}_S3_nbp/year.nc')
+        for model_name in model_names},
+        "month": {model_name : xr.open_dataset(OUTPUT_DIR + f'TRENDY/spatial/output_all/{model_name}_S3_nbp/month.nc')
+        for model_name in model_names if model_name != "LPJ-GUESS"}
+    }
+}
+
+
+""" SETUP """
+variable = 'Earth_Land'
 timeres = 'year'
+sim = 'S1'
 
 
 """ EXECUTION """
-df = FeedbackAnalysis.FeedbackOutput(model_type, sink, timeres)
+df = FeedbackAnalysis.TRENDY(co2[timeres], temp[timeres], uptake[sim][timeres],
+                             variable)
 
-df.individual_plot('CAMS', 'beta', True);
-df.merge_plot('S1', 'gamma', True);
-df.merge_params('S3', 'gamma')
-df.difference_simulations('gamma', False)
+beta, gamma = df.params()
 
-phi, rho = 0.015, 1.93
+gamma
 
+pd.DataFrame(regstats['OCN'], index=regstats['Year'])
 
-df.merge_params("S3", "gamma").mean(axis=1)
+betaDF.mean(axis=1)
+betaDF.std(axis=1)
+gammaDF.mean(axis=1)
+gammaDF.std(axis=1)
 
 
 """ FIGURES """
