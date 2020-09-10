@@ -29,16 +29,37 @@ def deseasonalise(x):
 """ INPUTS """
 DIR = './../../'
 OUTPUT_DIR = DIR + 'output/'
+INV_DIRECTORY = "./../../output/inversions/spatial/output_all/"
+
 
 co2 = {
     "year": pd.read_csv(DIR + f"data/CO2/co2_year.csv", index_col=["Year"]).CO2,
     "month": pd.read_csv(DIR + f"data/CO2/co2_month.csv", index_col=["Year", "Month"]).CO2
 }
 
+
 temp = {
     "year": xr.open_dataset(OUTPUT_DIR + f'TEMP/spatial/output_all/HadCRUT/year.nc'),
     "month": xr.open_dataset(OUTPUT_DIR + f'TEMP/spatial/output_all/HadCRUT/month.nc')
 }
+
+
+invf_models = os.listdir(INV_DIRECTORY)
+invf_uptake = {'year': {}, 'month': {}}
+for timeres in invf_uptake:
+    for model in invf_models:
+        model_dir = INV_DIRECTORY + model + '/'
+        invf_uptake[timeres][model] = xr.open_dataset(model_dir + f'{timeres}.nc')
+
+invf_duptake = {}
+for model in invf_uptake['month']:
+    invf_duptake[model] = xr.Dataset(
+        {key: (('time'), deseasonalise(invf_uptake['month'][model][key].values)) for
+        key in ['Earth_Land', 'South_Land', 'North_Land', 'Tropical_Land',
+        'Earth_Ocean', 'South_Ocean', 'North_Ocean', 'Tropical_Ocean']},
+        coords={'time': (('time'), invf_uptake['month'][model].time.values)}
+    )
+
 
 trendy_models = ['LPJ-GUESS', 'OCN', 'JSBACH', 'CLASS-CTEM', 'CABLE-POP']
 trendy_uptake = {

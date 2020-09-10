@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from statsmodels import api as sm
 from scipy import stats
-from scipy import signal=
+from scipy import signal
 import os
 
 
@@ -306,14 +306,13 @@ class TRENDY:
 
         fb_models = self.fb_models
 
-        stats_dict = {
-            'Year': [start for start, end in self.time_periods]
-        }
+        stats_dict = {}
 
         for model_name in fb_models:
             fb_model = fb_models[model_name]
 
             model_stats = {
+                'Year': [start for start, end in self.time_periods],
                 'r_squared': [],
                 't_values_beta': [],
                 't_values_gamma': [],
@@ -335,6 +334,6 @@ class TRENDY:
                 model_stats['mse_total'].append(model.mse_total)
                 model_stats['nobs'].append(model.nobs)
 
-            stats_dict[model_name] = model_stats
+            stats_dict[model_name] = pd.DataFrame(model_stats).set_index('Year')
 
         return stats_dict

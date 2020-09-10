@@ -4,6 +4,7 @@ import pandas as pd
 import xarray as xr
 from statsmodels import api as sm
 from scipy import signal
+from itertools import *
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -80,8 +81,7 @@ def all_regstat(timeres, variable):
                                     uptake[simulation][timeres],
                                     variable
                                     )
-        all_regstats[simulation] = {model : pd.DataFrame(df.regstats()[model],
-                                        index=df.regstats()['Year'])
+        all_regstats[simulation] = {model : pd.DataFrame(df.regstats()[model])
                    for model in uptake[simulation][timeres]
                }
 
@@ -97,16 +97,24 @@ def mean_regstat(timeres, variable):
                                     uptake[simulation][timeres],
                                     variable
                                     )
-        regstat = [pd.DataFrame(df.regstats()[model],
-                                index=df.regstats()['Year'])
-                   for model in uptake[simulation][timeres]
-                  ]
+        regstat = [df.regstats()[model] for model in uptake[simulation][timeres]]
 
-        mean_regstats[simulation] = regstat[0]
-        for i in range(1, len(regstat)):
-            mean_regstats[simulation] += regstat[i]
+        index = regstat[0].index
+        columns = regstat[0].columns
+        array = np.zeros([len(index), len(columns)])
+        for i, j in product(range(len(index)), range(len(columns))):
+            values = []
+            for model_regstat in regstat:
+                val = model_regstat.iloc[i,j]
+                if val != np.nan:
+                    values.append(val)
+            array[i][j] = np.nanmean(values)
 
-        mean_regstats[simulation] /= len(regstat)
+        mean_regstat = pd.DataFrame(array)
+        mean_regstat.index = index
+        mean_regstat.columns = columns
+
+        mean_regstats[simulation] = mean_regstat
 
     return mean_regstats
 
@@ -168,10 +176,10 @@ def fb_trendy(timeres):
 
 """ EXECUTION """
 reg_models, model_stats = feedback_regression('month', 'North_Land')
-reg_models['S3']
+reg_models['S1']
 model_stats['S3'].mean(axis=0)
 
-all_regstat("month", "Earth_Land")['S3']['JSBACH']
+all_regstat("month", "Earth_Land")['S3']['OCN']
 mean_regstat("year", "Earth_Land")['S3']
 mean_regstat("month", "Earth_Land")['S3']
 
