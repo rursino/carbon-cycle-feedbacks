@@ -1,4 +1,3 @@
-
 """ This class facilitates the calculation of beta and gamma through a range of
 spatial output datasets. It also includes further analysis and visualisations.
 """
@@ -22,7 +21,12 @@ CURRENT_PATH = os.path.dirname(__file__)
 MAIN_DIR = CURRENT_PATH + "./../../"
 
 
-""" FUNCTIONS """
+class INVF:
+    def __init__(self):
+        """
+        """
+
+
 class TRENDY:
     def __init__(self, co2, temp, uptake, variable):
         """ Initialise an instance of the TRENDY FeedbackAnalysis class.
@@ -63,21 +67,6 @@ class TRENDY:
             (2008, 2017),
         )
 
-        # Pre-processing of data
-        self.timedelta = (
-                        (self.uptake["OCN"].time[1] - self.uptake["OCN"].time[0])
-                            .values
-                            .astype('timedelta64[M]')
-                    )
-        if self.timedelta == np.timedelta64('1', 'M'):
-            # Deseasonalise monthly data
-            for model in uptake:
-                self.uptake[model] = xr.Dataset(
-                    {key: (('time'), self._deseasonalise(model, key)) for
-                    key in ['Earth_Land', 'South_Land', 'North_Land', 'Tropical_Land']},
-                    coords={'time': (('time'), self.uptake[model].time.values)}
-                )
-
         start, end = 1960, 2017
         input_models = {}
         for model_name in self.uptake:
@@ -94,21 +83,6 @@ class TRENDY:
 
         self.input_models = input_models
         self.fb_models = self._feedback_model()
-
-
-    def _deseasonalise(self, model, variable):
-        """
-        """
-
-        x = self.uptake[model][variable].values
-
-        fs = 12
-        fc = 365/667
-
-        w = fc / (fs / 2) # Normalize the frequency.
-        b, a = signal.butter(5, w, 'low')
-
-        return signal.filtfilt(b, a, x)
 
     def _feedback_model(self):
         """

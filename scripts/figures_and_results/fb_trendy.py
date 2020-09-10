@@ -12,67 +12,16 @@ sns.set_style('darkgrid')
 import os
 from core import FeedbackAnalysis
 
-
-""" INPUTS """
-DIR = './../../'
-OUTPUT_DIR = DIR + 'output/'
-
-co2 = {
-    "year": pd.read_csv(DIR + f"data/CO2/co2_year.csv", index_col=["Year"]).CO2,
-    "month": pd.read_csv(DIR + f"data/CO2/co2_month.csv", index_col=["Year", "Month"]).CO2
-}
-
-temp = {
-    "year": xr.open_dataset(OUTPUT_DIR + f'TEMP/spatial/output_all/HadCRUT/year.nc'),
-    "month": xr.open_dataset(OUTPUT_DIR + f'TEMP/spatial/output_all/HadCRUT/month.nc')
-}
-
-model_names = ['LPJ-GUESS', 'OCN', 'JSBACH', 'CLASS-CTEM', 'CABLE-POP']
-uptake = {
-    "S1": {
-        "year": {model_name : xr.open_dataset(OUTPUT_DIR + f'TRENDY/spatial/output_all/{model_name}_S1_nbp/year.nc')
-        for model_name in model_names},
-        "month": {model_name : xr.open_dataset(OUTPUT_DIR + f'TRENDY/spatial/output_all/{model_name}_S1_nbp/month.nc')
-        for model_name in model_names if model_name != "LPJ-GUESS"}
-    },
-    "S3": {
-        "year": {model_name : xr.open_dataset(OUTPUT_DIR + f'TRENDY/spatial/output_all/{model_name}_S3_nbp/year.nc')
-        for model_name in model_names},
-        "month": {model_name : xr.open_dataset(OUTPUT_DIR + f'TRENDY/spatial/output_all/{model_name}_S3_nbp/month.nc')
-        for model_name in model_names if model_name != "LPJ-GUESS"}
-    }
-}
-
-phi, rho = 0.015, 1.93
+import fb_input_data as fb_id
 
 
 """ FUNCTIONS """
-def deseasonalise(x):
-    """
-    """
-
-    fs = 12
-    fc = 365/667
-
-    w = fc / (fs / 2) # Normalize the frequency.
-    b, a = signal.butter(5, w, 'low')
-
-    return signal.filtfilt(b, a, x)
-
 def feedback_regression(timeres, variable):
+    uptake = fb_id.trendy_duptake if timeres == "month" else fb_id.trendy_uptake
     start, end = 1960, 2017
     reg_models = {}
     model_stats = {}
     for simulation in ['S1', 'S3']:
-        if timeres == "month":
-            duptake = uptake[simulation][timeres]
-            for model in duptake:
-                uptake[simulation][timeres][model] = xr.Dataset(
-                    {key: (('time'), deseasonalise(duptake[model][key].values)) for
-                    key in ['Earth_Land', 'South_Land', 'North_Land', 'Tropical_Land']},
-                    coords={'time': (('time'), duptake[model].time.values)}
-                )
-
         model_names = uptake[simulation][timeres].keys()
 
         sim_reg_models = {}
@@ -87,8 +36,8 @@ def feedback_regression(timeres, variable):
         }
 
         for model_name in model_names:
-            C = co2[timeres].loc[start:end]
-            T = temp[timeres].sel(time=slice(str(start), str(end)))
+            C = fb_id.co2[timeres].loc[start:end]
+            T = fb_id.temp[timeres].sel(time=slice(str(start), str(end)))
             U = uptake[simulation][timeres][model_name].sel(time=slice(str(start), str(end)))
 
             df = pd.DataFrame(data = {
@@ -115,40 +64,42 @@ def feedback_regression(timeres, variable):
         reg_models[simulation] = pd.DataFrame(sim_reg_models, index=['beta', 'gamma'])
 
         reg_models[simulation].loc['beta'] /= 2.12
-        reg_models[simulation].loc['gamma'] *= phi / rho
+        reg_models[simulation].loc['gamma'] *= fb_id.phi / fb_id.rho
 
         model_stats[simulation] = pd.DataFrame(sim_model_stats, index=model_names)
 
     return reg_models, model_stats
 
 def all_regstat(timeres, variable):
+    uptake = fb_id.trendy_duptake if timeres == "month" else fb_id.trendy_uptake
     all_regstats = {}
     for simulation in ["S1", "S3"]:
         df = FeedbackAnalysis.TRENDY(
-                                    co2[timeres],
-                                    temp[timeres],
+                                    fb_id.co2[timeres],
+                                    fb_id.temp[timeres],
                                     uptake[simulation][timeres],
                                     variable
                                     )
         all_regstats[simulation] = {model : pd.DataFrame(df.regstats()[model],
                                         index=df.regstats()['Year'])
-                   for model in model_names
+                   for model in uptake[simulation][timeres]
                }
 
     return all_regstats
 
 def mean_regstat(timeres, variable):
+    uptake = fb_id.trendy_duptake if timeres == "month" else fb_id.trendy_uptake
     mean_regstats = {}
     for simulation in ["S1", "S3"]:
         df = FeedbackAnalysis.TRENDY(
-                                    co2[timeres],
-                                    temp[timeres],
+                                    fb_id.co2[timeres],
+                                    fb_id.temp[timeres],
                                     uptake[simulation][timeres],
                                     variable
                                     )
         regstat = [pd.DataFrame(df.regstats()[model],
                                 index=df.regstats()['Year'])
-                   for model in model_names if model != 'LPJ-GUESS'
+                   for model in uptake[simulation][timeres]
                   ]
 
         mean_regstats[simulation] = regstat[0]
@@ -162,6 +113,7 @@ def mean_regstat(timeres, variable):
 
 """ FIGURES """
 def fb_trendy(timeres):
+    uptake = fb_id.trendy_duptake if timeres == "month" else fb_id.trendy_uptake
     fig = plt.figure(figsize=(14,10))
     ax = {}
     axl = fig.add_subplot(111, frame_on=False)
@@ -170,8 +122,8 @@ def fb_trendy(timeres):
     ylim = []
     for subplot, simulation in zip(["211", "212"], ["S1", "S3"]):
         df = FeedbackAnalysis.TRENDY(
-                                    co2[timeres],
-                                    temp[timeres],
+                                    fb_id.co2[timeres],
+                                    fb_id.temp[timeres],
                                     uptake[simulation][timeres],
                                     "Earth_Land"
                                     )
@@ -219,7 +171,8 @@ reg_models, model_stats = feedback_regression('month', 'North_Land')
 reg_models['S3']
 model_stats['S3'].mean(axis=0)
 
-all_regstat("year", "Earth_Land")["S3"]["OCN"]
-mean_regstat("year", "Earth_Land")
+all_regstat("month", "Earth_Land")['S3']['JSBACH']
+mean_regstat("year", "Earth_Land")['S3']
+mean_regstat("month", "Earth_Land")['S3']
 
 fb_trendy('month')

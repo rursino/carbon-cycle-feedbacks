@@ -14,67 +14,7 @@ from core import trendy_flux as TRENDYf
 
 import os
 
-
-""" FUNCTIONS """
-def deseasonalise_instance(instance_dict):
-    d_instance_dict = deepcopy(instance_dict)
-    for model in d_instance_dict:
-        d_instance_dict[model].data = xr.Dataset(
-            {key: (('time'), instance_dict[model].deseasonalise(key)) for
-            key in ['Earth_Land', 'South_Land', 'North_Land', 'Tropical_Land',]},
-            coords={'time': (('time'), instance_dict[model].data.time.values)}
-        )
-
-    return d_instance_dict
-
-def bandpass_instance(instance_dict, fc):
-    bp_instance_dict = deepcopy(instance_dict)
-
-    for model in bp_instance_dict:
-        bp_instance_dict[model].data = xr.Dataset(
-            {key: (('time'), instance_dict[model].bandpass(key, fc)) for
-            key in ['Earth_Land', 'South_Land', 'North_Land', 'Tropical_Land']},
-            coords={'time': (('time'), instance_dict[model].data.time.values)}
-        )
-
-    return bp_instance_dict
-
-
-""" INPUTS """
-FIGURE_DIRECTORY = "./../../latex/thesis/figures/"
-SPATIAL_DIRECTORY = "./../../output/TRENDY/spatial/output_all/"
-SPATIAL_MEAN_DIRECTORY = "./../../output/TRENDY/spatial/mean_all/"
-
-year_S1_trendy = {}
-year_S3_trendy = {}
-month_S1_trendy = {}
-month_S3_trendy = {}
-for model in os.listdir(SPATIAL_DIRECTORY):
-    model_dir = SPATIAL_DIRECTORY + model + '/'
-
-    if 'S1' in model:
-        year_S1_trendy[model] = TRENDYf.Analysis(xr.open_dataset(model_dir + 'year.nc'))
-        try:
-            month_S1_trendy[model] = TRENDYf.Analysis(xr.open_dataset(model_dir + 'month.nc'))
-        except FileNotFoundError:
-            pass
-    elif 'S3' in model:
-        year_S3_trendy[model] = TRENDYf.Analysis(xr.open_dataset(model_dir + 'year.nc'))
-        try:
-            month_S3_trendy[model] = TRENDYf.Analysis(xr.open_dataset(model_dir + 'month.nc'))
-        except FileNotFoundError:
-            pass
-
-year_mean = {
-    "S1": TRENDYf.Analysis(xr.open_dataset(SPATIAL_MEAN_DIRECTORY + 'S1/year.nc')),
-    "S3": TRENDYf.Analysis(xr.open_dataset(SPATIAL_MEAN_DIRECTORY + 'S3/year.nc'))
-}
-month_mean = {
-    "S1": TRENDYf.Analysis(xr.open_dataset(SPATIAL_MEAN_DIRECTORY + 'S1/year.nc')),
-    "S3": TRENDYf.Analysis(xr.open_dataset(SPATIAL_MEAN_DIRECTORY + 'S3/year.nc'))
-}
-
-co2 = pd.read_csv("./../../data/CO2/co2_year.csv").CO2[2:]
+import fig_input_data as id
 
 
 """ FIGURES """

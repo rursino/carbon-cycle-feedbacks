@@ -1,116 +1,24 @@
 """ IMPORTS """
 import matplotlib.pyplot as plt
 from scipy import stats
-from scipy import signal
 import pandas as pd
 import numpy as np
 import xarray as xr
-from copy import deepcopy
 
 import seaborn as sns
 sns.set_style('darkgrid')
 
-import sys
 from core import inv_flux as invf
 from core import trendy_flux as TRENDYf
 
-import os
-
-
-""" FUNCTIONS """
-def deseasonalise_instance(instance_dict):
-    d_instance_dict = deepcopy(instance_dict)
-    for model in d_instance_dict:
-        d_instance_dict[model].data = xr.Dataset(
-            {key: (('time'), instance_dict[model].deseasonalise(key)) for
-            key in ['Earth_Land', 'South_Land', 'North_Land', 'Tropical_Land']},
-                    # 'Earth_Ocean', 'South_Ocean', 'North_Ocean', 'Tropical_Ocean']},
-            coords={'time': (('time'), instance_dict[model].data.time.values)}
-        )
-
-    return d_instance_dict
-
-def bandpass_instance(instance_dict, fc):
-    bp_instance_dict = deepcopy(instance_dict)
-
-    for model in bp_instance_dict:
-        bp_instance_dict[model].data = xr.Dataset(
-            {key: (('time'), instance_dict[model].bandpass(key, fc)) for
-            key in ['Earth_Land', 'South_Land', 'North_Land', 'Tropical_Land',
-                    'Earth_Ocean', 'South_Ocean', 'North_Ocean', 'Tropical_Ocean']},
-            coords={'time': (('time'), instance_dict[model].data.time.values)}
-        )
-
-    return bp_instance_dict
-
-def bandpass_filter(x, btype, fc):
-    fs = 12
-    order = 5
-
-    if btype == "band":
-        assert type(fc) == list, "fc must be a list of two values."
-        fc = np.array(fc)
-
-    w = fc / (fs / 2) # Normalize the frequency.
-    b, a = signal.butter(order, w, btype)
-
-    return signal.filtfilt(b, a, x)
-
-
-""" INPUTS """
-FIGURE_DIRECTORY = "./../../latex/thesis/figures/"
-INV_DIRECTORY = "./../../output/inversions/spatial/output_all/"
-TRENDY_DIRECTORY = "./../../output/TRENDY/spatial/output_all/"
-TRENDY_MEAN_DIRECTORY = "./../../output/TRENDY/spatial/mean_all/"
-
-year_invf = {}
-month_invf = {}
-for model in os.listdir(INV_DIRECTORY):
-    model_dir = INV_DIRECTORY + model + '/'
-    year_invf[model] = invf.Analysis(xr.open_dataset(model_dir + 'year.nc'))
-    month_invf[model] = invf.Analysis(xr.open_dataset(model_dir + 'month.nc'))
-
-
-dmonth_invf = deseasonalise_instance(month_invf)
-bpmonth_invf = bandpass_instance(dmonth_invf, 1/(25*12))
-
-year_S1_trendy = {}
-year_S3_trendy = {}
-month_S1_trendy = {}
-month_S3_trendy = {}
-for model in os.listdir(TRENDY_DIRECTORY):
-    model_dir = TRENDY_DIRECTORY + model + '/'
-
-    if 'S1' in model:
-        year_S1_trendy[model] = TRENDYf.Analysis(xr.open_dataset(model_dir + 'year.nc'))
-        try:
-            month_S1_trendy[model] = TRENDYf.Analysis(xr.open_dataset(model_dir + 'month.nc'))
-        except FileNotFoundError:
-            pass
-    elif 'S3' in model:
-        year_S3_trendy[model] = TRENDYf.Analysis(xr.open_dataset(model_dir + 'year.nc'))
-        try:
-            month_S3_trendy[model] = TRENDYf.Analysis(xr.open_dataset(model_dir + 'month.nc'))
-        except FileNotFoundError:
-            pass
-
-year_mean = {
-    "S1": TRENDYf.Analysis(xr.open_dataset(TRENDY_MEAN_DIRECTORY + 'S1/year.nc')),
-    "S3": TRENDYf.Analysis(xr.open_dataset(TRENDY_MEAN_DIRECTORY + 'S3/year.nc'))
-}
-month_mean = {
-    "S1": TRENDYf.Analysis(xr.open_dataset(TRENDY_MEAN_DIRECTORY + 'S1/month.nc')),
-    "S3": TRENDYf.Analysis(xr.open_dataset(TRENDY_MEAN_DIRECTORY + 'S3/month.nc'))
-}
-
-co2 = pd.read_csv("./../../data/CO2/co2_year.csv").CO2[2:]
+import fig_input_data as id
 
 
 """ FIGURES """
 def inv_regional_cwt(timeres="year", save=False):
     invf_dict = {
-        "year": year_invf,
-        "month": dmonth_invf
+        "year": id.year_invf,
+        "month": id.dmonth_invf
     }
 
     variables = [['Earth_Land', 'South_Land', 'Tropical_Land', 'North_Land'],
@@ -195,8 +103,8 @@ def inv_regional_cwt(timeres="year", save=False):
 
 def trendy_regional_cwt(timeres='year', save=False):
     trendy_dict = {
-        "year": (year_S1_trendy, year_S3_trendy),
-        "month": (month_S1_trendy, month_S3_trendy)
+        "year": (id.year_S1_trendy, id.year_S3_trendy),
+        "month": (id.month_S1_trendy, id.month_S3_trendy)
     }
 
     vars = ['Earth_Land', 'South_Land', 'Tropical_Land', 'North_Land']
@@ -282,8 +190,8 @@ def trendy_regional_cwt(timeres='year', save=False):
 
 def trendy_regional_cwt_diff(timeres='year', save=False):
     trendy_dict = {
-        "year": (year_S1_trendy, year_S3_trendy),
-        "month": (month_S1_trendy, month_S3_trendy)
+        "year": (id.year_S1_trendy, id.year_S3_trendy),
+        "month": (id.month_S1_trendy, id.month_S3_trendy)
     }
 
     variables = ['Earth_Land', 'South_Land', 'Tropical_Land', 'North_Land']
@@ -369,8 +277,8 @@ def trendy_regional_cwt_diff(timeres='year', save=False):
 
 
 """ EXECUTION """
-inv_regional_cwt("month", save=False)
+inv_regional_cwt("year", save=False)
 
-trendy_regional_cwt('month', save=False)
+trendy_regional_cwt('year', save=False)
 
 trendy_regional_cwt_diff('year', save=False)
