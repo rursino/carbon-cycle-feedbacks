@@ -170,17 +170,18 @@ def fb_trendy(timeres):
         ax[subplot].legend([r'$\beta$', r'$u_{\gamma}$'])
         ax[subplot].set_ylabel(simulation, fontsize=14, labelpad=5)
 
+    ylbl = 'yr' if timeres == 'year' else timeres
     axl.set_xlabel("First year of 10-year window", fontsize=16, labelpad=10)
-    axl.set_ylabel('Feedback parameter   (yr$^{-1}$)', fontsize=16, labelpad=40)
+    axl.set_ylabel(f'Feedback parameter   ({ylbl}' + '$^{-1}$)', fontsize=16, labelpad=40)
 
 
 """ EXECUTION """
-reg_models, model_stats = feedback_regression('month', 'North_Land')
-reg_models['S1']
+reg_models, model_stats = feedback_regression('month', 'Earth_Land')
+reg_models['S3']
 model_stats['S3'].mean(axis=0)
 
 all_regstat("month", "Earth_Land")['S3']['OCN']
 mean_regstat("year", "Earth_Land")['S3']
 mean_regstat("month", "Earth_Land")['S3']
 
-fb_trendy('month')
+fb_trendy('year')

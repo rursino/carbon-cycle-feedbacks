@@ -133,8 +133,6 @@ def fb_inv(timeres):
         beta = df.params()['beta']
         gamma = df.params()['u_gamma'] # Note u_gamma is used to compare with beta.
 
-        return beta, gamma
-
         beta_mean = beta.mean(axis=1)
         beta_std = beta.std(axis=1)
         gamma_mean = gamma.mean(axis=1)

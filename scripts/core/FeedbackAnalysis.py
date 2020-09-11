@@ -132,8 +132,8 @@ class INVF:
 
         params_df = {}
         for param in params_dict:
-            df = pd.DataFrame(params_dict['beta']).T
-            df.columns = self.time_periods.keys()
+            df = pd.DataFrame(params_dict[param]).T
+            df.columns = self.fb_models.keys()
             params_df[param] = df
 
         phi, rho = 0.015, 1.93
