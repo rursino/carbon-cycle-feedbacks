@@ -1,0 +1,30 @@
+SPATIAL_DIRECTORY = './../../../data/TRENDY/models/'
+fVISITS1 = 'VISIT/S1/VISIT_S1_nbp_decode.nc'
+fVISITS3 = 'VISIT/S1/VISIT_S3_nbp_decode.nc'
+fJSBACH = 'JSBACH/S1/JSBACH_S1_nbp.nc'
+
+import xarray as xr
+
+VISITS1 = xr.open_dataset(SPATIAL_DIRECTORY + fVISITS1, decode_times=False)
+VISITS3 = xr.open_dataset(SPATIAL_DIRECTORY + fVISITS3, decode_times=False)
+JSBACH = xr.open_dataset(SPATIAL_DIRECTORY + fJSBACH)
+
+JSBACH_time = JSBACH.sel(time=slice('1860', '2018')).time.values
+
+new_VISITS1 = xr.Dataset(
+    {'nbp': (('time', 'lat', 'lon'), VISITS1.nbp.values)},
+    coords={
+            'lon': (('lon'), VISITS1.lon.values),
+            'lat': (('lat'), VISITS1.lat.values),
+            'time': (('time'), JSBACH_time)
+           }
+)
+
+new_VISITS3 = xr.Dataset(
+    {'nbp': (('time', 'lat', 'lon'), VISITS3.nbp.values)},
+    coords={
+            'lon': (('lon'), VISITS3.lon.values),
+            'lat': (('lat'), VISITS3.lat.values),
+            'time': (('time'), JSBACH_time)
+           }
+)
