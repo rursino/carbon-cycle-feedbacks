@@ -1,6 +1,6 @@
 SPATIAL_DIRECTORY = './../../../data/TRENDY/models/'
 fVISITS1 = 'VISIT/S1/VISIT_S1_nbp_decode.nc'
-fVISITS3 = 'VISIT/S1/VISIT_S3_nbp_decode.nc'
+fVISITS3 = 'VISIT/S3/VISIT_S3_nbp_decode.nc'
 fJSBACH = 'JSBACH/S1/JSBACH_S1_nbp.nc'
 
 import xarray as xr
@@ -28,3 +28,11 @@ new_VISITS3 = xr.Dataset(
             'time': (('time'), JSBACH_time)
            }
 )
+
+new_VISITS1.to_netcdf(SPATIAL_DIRECTORY + 'VISIT/S1/VISIT_S1_nbp.nc')
+new_VISITS3.to_netcdf(SPATIAL_DIRECTORY + 'VISIT/S3/VISIT_S3_nbp.nc')
+
+
+xr.open_dataset(SPATIAL_DIRECTORY + 'VISIT/S1/VISIT_S1_nbp.nc')
+
+xr.open_dataset(SPATIAL_DIRECTORY + 'VISIT/S3/VISIT_S3_nbp.nc')
