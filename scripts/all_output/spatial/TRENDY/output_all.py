@@ -11,7 +11,7 @@ import os
 CURRENT_DIR = os.path.dirname(__file__)
 
 import sys
-from core import TRENDY_flux as TRENDYf
+from core import trendy_flux as TRENDYf
 
 import xarray as xr
 import pickle

@@ -12,19 +12,19 @@ JSBACH = xr.open_dataset(SPATIAL_DIRECTORY + fJSBACH)
 JSBACH_time = JSBACH.sel(time=slice('1860', '2018')).time.values
 
 new_VISITS1 = xr.Dataset(
-    {'nbp': (('time', 'lat', 'lon'), VISITS1.nbp.values)},
+    {'nbp': (('time', 'latitude', 'longitude'), VISITS1.nbp.values)},
     coords={
-            'lon': (('lon'), VISITS1.lon.values),
-            'lat': (('lat'), VISITS1.lat.values),
+            'longitude': (('longitude'), VISITS1.lon.values),
+            'latitude': (('latitude'), VISITS1.lat.values),
             'time': (('time'), JSBACH_time)
            }
 )
 
 new_VISITS3 = xr.Dataset(
-    {'nbp': (('time', 'lat', 'lon'), VISITS3.nbp.values)},
+    {'nbp': (('time', 'latitude', 'longitude'), VISITS3.nbp.values)},
     coords={
-            'lon': (('lon'), VISITS3.lon.values),
-            'lat': (('lat'), VISITS3.lat.values),
+            'longitude': (('longitude'), VISITS3.lon.values),
+            'latitude': (('latitude'), VISITS3.lat.values),
             'time': (('time'), JSBACH_time)
            }
 )
@@ -36,3 +36,9 @@ new_VISITS3.to_netcdf(SPATIAL_DIRECTORY + 'VISIT/S3/VISIT_S3_nbp.nc')
 xr.open_dataset(SPATIAL_DIRECTORY + 'VISIT/S1/VISIT_S1_nbp.nc')
 
 xr.open_dataset(SPATIAL_DIRECTORY + 'VISIT/S3/VISIT_S3_nbp.nc')
+
+
+
+new_VISITS1
+new_VISITS3
+JSBACH
