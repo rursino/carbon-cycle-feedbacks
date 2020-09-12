@@ -8,6 +8,7 @@ from core import inv_flux as invf
 import numpy as np
 import xarray as xr
 from cftime import Datetime360Day
+import pandas as pd
 
 import pytest
 
@@ -15,7 +16,12 @@ import pytest
 def setup_module(module):
     print('--------------------setup--------------------')
     global original_ds, test_ds, month_output, year_output
-    global basic_test_result, lat, lon, land_vals, ocean_vals
+    global basic_test_result, lat, lon, land_vals, ocean_vals, co2_year, co2_month
+
+    CURRENT_DIR = './'
+
+    co2_year = pd.read_csv('./../data/co2/co2_year.csv', index_col='Year').CO2
+    co2_month = pd.read_csv('./../data/co2/co2_month.csv', index_col=['Year', 'Month']).CO2
 
     dir = CURRENT_DIR + "./../data/inversions/"
     fname = "fco2_CAMS-V17-1-2018_June2018-ext3_1979-2017_monthlymean_XYT.nc"
@@ -159,3 +165,49 @@ def test_months_add_to_years():
 
     for arg in args:
         assert np.subtract(*sums(*arg)) == 0
+
+def test_cascading_window_trend_year_co2():
+    df = invf.Analysis(year_output)
+
+    start = int(str(df.data.time[0].values)[:4])
+    end = int(str(df.data.time[-1].values)[:4])
+
+    dfco2 = co2_year.loc[start:end].values
+
+    df.data = xr.Dataset(
+        {'Earth_Land': (('time'), dfco2)},
+        coords={
+                'time': (('time'), df.data.time.values)
+               }
+    )
+
+    def cwt(window_size):
+        test_df = df.cascading_window_trend(indep='co2',
+                                            window_size=window_size)
+        return test_df
+
+    assert np.all(cwt(10).values.squeeze() == np.ones((1, len(df.data.time.values) - 10)))
+    assert np.all(cwt(25).values.squeeze() == np.ones((1, len(df.data.time.values) - 25)))
+
+def test_cascading_window_trend_month_co2():
+    df = invf.Analysis(month_output)
+
+    start = int(str(df.data.time[0].values)[:4])
+    end = int(str(df.data.time[-1].values)[:4])
+
+    dfco2 = co2_month.loc[start:end].values
+
+    df.data = xr.Dataset(
+        {'Earth_Land': (('time'), dfco2)},
+        coords={
+                'time': (('time'), df.data.time.values)
+               }
+    )
+
+    def cwt(window_size):
+        test_df = df.cascading_window_trend(indep='co2',
+                                            window_size=window_size)
+        return test_df
+
+    assert np.all(cwt(10).values.squeeze() == np.ones((1, len(df.data.time.values) - 10*12)))
+    assert np.all(cwt(25).values.squeeze() == np.ones((1, len(df.data.time.values) - 25*12)))
