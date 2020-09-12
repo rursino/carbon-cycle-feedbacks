@@ -20,6 +20,8 @@ import fig_input_data as id
 """ FIGURES """
 def trendy_yearplots(save=False):
 
+    year_mean = id.year_mean
+
     fig = plt.figure(figsize=(16,8))
     ax = fig.add_subplot(111)
 
@@ -39,8 +41,8 @@ def trendy_yearplots(save=False):
 
 def trendy_year_cwt(save=False, stat_values=False):
     trendy_year = {
-        'S1': year_S1_trendy,
-        'S3': year_S3_trendy
+        'S1': id.year_S1_trendy,
+        'S3': id.year_S3_trendy
     }
 
     fig = plt.figure(figsize=(16,12))
@@ -104,8 +106,8 @@ def trendy_year_cwt(save=False, stat_values=False):
 
 def trendy_month_cwt(fc=None, save=False, stat_values=False):
     trendy_month = {
-        'S1': month_S1_trendy,
-        'S3': month_S3_trendy
+        'S1': id.month_S1_trendy,
+        'S3': id.month_S3_trendy
     }
 
     fig = plt.figure(figsize=(16,12))
@@ -171,7 +173,7 @@ def trendy_month_cwt(fc=None, save=False, stat_values=False):
         return stat_vals
 
 def trendy_bandpass_timeseries(fc, save=False):
-    trendy_year = bandpass_instance(month_mean, fc)
+    trendy_year = id.bandpass_instance(id.month_mean, fc)
 
     fig = plt.figure(figsize=(16,8))
     ax = fig.add_subplot(111)
@@ -192,8 +194,8 @@ def trendy_bandpass_timeseries(fc, save=False):
 def trendy_powerspec(xlim, save=False):
     zip_list = zip(['211', '212'], ['S1', 'S3'])
     trendy_month = {
-        'S1': month_S1_trendy,
-        'S3': month_S3_trendy
+        'S1': id.month_S1_trendy,
+        'S3': id.month_S3_trendy
     }
 
     fig = plt.figure(figsize=(16,8))
@@ -243,12 +245,12 @@ def trendy_powerspec(xlim, save=False):
 
 
 """ EXECUTION """
-trendy_yearplots(save=True)
+trendy_yearplots(save=False)
 
-trendy_year_cwt(save=True, stat_values=True)
+trendy_year_cwt(save=False, stat_values=True)
 
-trendy_month_cwt(save=True, stat_values=True)
+trendy_month_cwt(save=False, stat_values=True)
 
-trendy_bandpass_timeseries(1/40, save=True)
+trendy_bandpass_timeseries(1/40, save=False)
 
-trendy_powerspec([7,0], save=True)
+trendy_powerspec([7,0], save=False)
