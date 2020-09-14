@@ -10,6 +10,10 @@ import numpy as np
 import xarray as xr
 
 import pytest
+import os
+
+CURRENT_DIR = os.path.dirname(__file__)
+
 
 """ SETUP """
 def setup_module(module):
