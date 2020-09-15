@@ -58,7 +58,7 @@ def inv_regional_cwt(timeres="year", save=False):
                         dataframe[i] = [v]
             for ind in dataframe:
                 row = np.array(dataframe[ind])
-                dataframe[ind] = np.pad(row, (0, 12 - len(row)), 'constant', constant_values=np.nan)
+                dataframe[ind] = np.pad(row, (0, pad_max_length - len(row)), 'constant', constant_values=np.nan)
 
             df = pd.DataFrame(dataframe).T.sort_index().iloc[3:]
             df *= 1e3  # if want MtC yr-1 uptake
@@ -97,14 +97,18 @@ def inv_regional_cwt(timeres="year", save=False):
                   )
 
     if save:
-        plt.savefig(FIGURE_DIRECTORY + f"inv_regional_{timeres}_cwt.png")
+        plt.savefig(id.FIGURE_DIRECTORY + f"inv_regional_{timeres}_cwt.png")
 
     return stat_vals
 
 def trendy_regional_cwt(timeres='year', save=False):
     trendy_dict = {
-        "year": (id.year_S1_trendy, id.year_S3_trendy),
-        "month": (id.month_S1_trendy, id.month_S3_trendy)
+        "year": (id.year_S1_trendy,
+                 id.year_S3_trendy
+                ),
+        "month": (id.deseasonalise_instance(id.month_S1_trendy),
+                  id.deseasonalise_instance(id.month_S3_trendy)
+                 )
     }
 
     vars = ['Earth_Land', 'South_Land', 'Tropical_Land', 'North_Land']
@@ -131,11 +135,9 @@ def trendy_regional_cwt(timeres='year', save=False):
                 index.append(df.index)
                 vals.append(df.values.squeeze())
 
-            pad_max_length = 12 if timeres == "month" else 6
+            pad_max_length = 10 if timeres == "month" else 5
             dataframe = {}
             for ind, val in zip(index, vals):
-                # if timeres == "month":
-                #     val = bandpass_filter(val, 'low', 365/667)
                 for i, v in zip(ind, val):
                     if i in dataframe.keys():
                         dataframe[i].append(v)
@@ -143,7 +145,7 @@ def trendy_regional_cwt(timeres='year', save=False):
                         dataframe[i] = [v]
             for ind in dataframe:
                 row = np.array(dataframe[ind])
-                dataframe[ind] = np.pad(row, (0, 12 - len(row)), 'constant', constant_values=np.nan)
+                dataframe[ind] = np.pad(row, (0, pad_max_length - len(row)), 'constant', constant_values=np.nan)
 
             df = pd.DataFrame(dataframe).T.sort_index().iloc[3:]
             df *= 1e3  # if want MtC yr-1 uptake
@@ -184,14 +186,18 @@ def trendy_regional_cwt(timeres='year', save=False):
                   )
 
     if save:
-        plt.savefig(FIGURE_DIRECTORY + f"trendy_regional_{timeres}_cwt.png")
+        plt.savefig(id.FIGURE_DIRECTORY + f"trendy_regional_{timeres}_cwt.png")
 
     return stat_vals
 
 def trendy_regional_cwt_diff(timeres='year', save=False):
     trendy_dict = {
-        "year": (id.year_S1_trendy, id.year_S3_trendy),
-        "month": (id.month_S1_trendy, id.month_S3_trendy)
+        "year": (id.year_S1_trendy,
+                 id.year_S3_trendy
+                ),
+        "month": (id.deseasonalise_instance(id.month_S1_trendy),
+                  id.deseasonalise_instance(id.month_S3_trendy)
+                 )
     }
 
     variables = ['Earth_Land', 'South_Land', 'Tropical_Land', 'North_Land']
@@ -225,11 +231,9 @@ def trendy_regional_cwt_diff(timeres='year', save=False):
         for i in range(len(all_vals[0])):
             vals.append(np.array(all_vals[1][i]) - np.array(all_vals[0][i]))
 
-        pad_max_length = 12 if timeres == "month" else 6
+        pad_max_length = 10 if timeres == "month" else 5
         dataframe = {}
         for ind, val in zip(index, vals):
-            # if timeres == "month":
-            #     val = bandpass_filter(val, 'low', 365/667)
             for i, v in zip(ind, val):
                 if i in dataframe.keys():
                     dataframe[i].append(v)
@@ -237,7 +241,7 @@ def trendy_regional_cwt_diff(timeres='year', save=False):
                     dataframe[i] = [v]
         for ind in dataframe:
             row = np.array(dataframe[ind])
-            dataframe[ind] = np.pad(row, (0, 12 - len(row)), 'constant', constant_values=np.nan)
+            dataframe[ind] = np.pad(row, (0, pad_max_length - len(row)), 'constant', constant_values=np.nan)
 
         df = pd.DataFrame(dataframe).T.sort_index().iloc[3:]
         df *= 1e3  # if want MtC yr-1 uptake
@@ -271,14 +275,16 @@ def trendy_regional_cwt_diff(timeres='year', save=False):
                   )
 
     if save:
-        plt.savefig(FIGURE_DIRECTORY + f"trendy_regional_{timeres}_cwt.png")
+        plt.savefig(id.FIGURE_DIRECTORY + f"trendy_regional_{timeres}_cwt.png")
 
     return stat_vals
 
-
 """ EXECUTION """
 inv_regional_cwt("year", save=False)
+inv_regional_cwt("month", save=False)
 
 trendy_regional_cwt('year', save=False)
+trendy_regional_cwt('month', save=False)
 
 trendy_regional_cwt_diff('year', save=False)
+trendy_regional_cwt_diff('month', save=False)

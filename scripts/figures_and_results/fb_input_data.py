@@ -80,8 +80,8 @@ trendy_uptake = {
 trendy_duptake = {'S1': {'year': {}, 'month': {}}, 'S3': {'year': {}, 'month': {}}}
 for sim in trendy_uptake:
     for timeres in trendy_uptake[sim]:
+        df_models = trendy_uptake[sim][timeres]
         for model in trendy_uptake[sim][timeres]:
-            df_models = trendy_uptake[sim][timeres]
             trendy_duptake[sim][timeres][model] = xr.Dataset(
                 {key: (('time'), deseasonalise(df_models[model][key].values)) for
                 key in ['Earth_Land', 'South_Land', 'North_Land', 'Tropical_Land']},

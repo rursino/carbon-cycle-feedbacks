@@ -86,14 +86,6 @@ def mean_inv_trend(compare_stats):
 
     return stats
 
-def std_inv_trend(compare_stats):
-    stats = {}
-    for region in ['land', 'ocean']:
-        stats[region] = compare_stats[region][['GCP_slope', 'model_slope']].std()
-        stats[region]['diff'] = (stats[region]['model_slope'] - stats[region]['GCP_slope'])  * 100 / abs(stats[region]['GCP_slope'])
-
-    return stats
-
 def trendy_regress_timeseries():
     stats = {}
     for model in trendy_modeleval:
@@ -131,35 +123,29 @@ def mean_trendy_trend(compare_stats):
 
     return df
 
-def std_trendy_trend(compare_stats):
-
-    df = compare_stats[['GCP_slope', 'model_slope']].std()
-    df['diff'] = (df['model_slope'] - df['GCP_slope'])  * 100 / abs(df['GCP_slope'])
-
-    return df
-
 
 """ INVF EXECUTION """
 inv_regress_timeseries()["ocean"]
 inv_regress_timeseries()["ocean"].mean()
 inv_regress_timeseries()["ocean"].std()
 
-inv_regress_CWT(10)["land"]
+# inv_regress_CWT(10)["land"]
 
 inv_trend = inv_compare_trend()
-inv_trend['land']
+inv_trend['ocean']
 mean_inv_trend(inv_trend)['ocean']
-std_inv_trend(inv_trend)['ocean']
+inv_trend['ocean'].std()
 
 
 """ TRENDY EXECUTION """
-trendy_regress_timeseries()
-# trendy_regress_timeseries().mean()
-# trendy_regress_timeseries().std()
+s3_timeseries = trendy_regress_timeseries().loc[('S3' in i for i in trendy_regress_timeseries().index)]
+s3_timeseries
+s3_timeseries.mean()
+s3_timeseries.std()
 
-trendy_regress_CWT(10)
+# trendy_regress_CWT(10)
 
-trendy_trend = trendy_compare_trend()
+trendy_trend = trendy_compare_trend().loc[('S3' in i for i in trendy_compare_trend().index)]
 trendy_trend
 mean_trendy_trend(trendy_trend)
-std_trendy_trend(trendy_trend)
+trendy_trend.std()

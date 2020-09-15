@@ -16,8 +16,20 @@ import os
 
 
 """ FUNCTIONS """
+def deseasonalise(x):
+    """
+    """
+
+    fs = 12
+    fc = 365/667
+
+    w = fc / (fs / 2) # Normalize the frequency.
+    b, a = signal.butter(5, w, 'low')
+
+    return signal.filtfilt(b, a, x)
+
 def deseasonalise_instance(instance_dict):
-    if 'JSBACH' in instance_dict.keys():
+    if 'JSBACH_S1_nbp' in instance_dict or 'JSBACH_S3_nbp' in instance_dict:
         vars = ['Earth_Land', 'South_Land', 'North_Land', 'Tropical_Land']
     else:
         vars = ['Earth_Land', 'South_Land', 'North_Land', 'Tropical_Land',
@@ -45,6 +57,21 @@ def bandpass_filter(x, btype, fc):
 
     return signal.filtfilt(b, a, x)
 
+def bandpass_instance(instance_dict, fc, btype='low'):
+    if 'JSBACH_S1_nbp' in instance_dict or 'JSBACH_S3_nbp' in instance_dict:
+        vars = ['Earth_Land', 'South_Land', 'North_Land', 'Tropical_Land']
+    else:
+        vars = ['Earth_Land', 'South_Land', 'North_Land', 'Tropical_Land',
+                'Earth_Ocean', 'South_Ocean', 'North_Ocean', 'Tropical_Ocean']
+    b_instance_dict = deepcopy(instance_dict)
+    for model in b_instance_dict:
+        b_instance_dict[model].data = xr.Dataset(
+            {key: (('time'), instance_dict[model].bandpass(key, fc, fs=12, btype=btype)) for
+            key in vars},
+            coords={'time': (('time'), instance_dict[model].data.time.values)}
+        )
+
+    return b_instance_dict
 
 """ INPUTS """
 FIGURE_DIRECTORY = "./../../latex/thesis/figures/"
@@ -58,7 +85,6 @@ for model in os.listdir(INV_DIRECTORY):
     model_dir = INV_DIRECTORY + model + '/'
     year_invf[model] = invf.Analysis(xr.open_dataset(model_dir + 'year.nc'))
     month_invf[model] = invf.Analysis(xr.open_dataset(model_dir + 'month.nc'))
-
 
 dmonth_invf = deseasonalise_instance(month_invf)
 

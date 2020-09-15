@@ -37,7 +37,7 @@ def trendy_yearplots(save=False):
                     labelpad=20)
 
     if save:
-        plt.savefig(FIGURE_DIRECTORY + f"trendy_yearplots.png")
+        plt.savefig(id.FIGURE_DIRECTORY + f"trendy_yearplots.png")
 
 def trendy_year_cwt(save=False, stat_values=False):
     trendy_year = {
@@ -99,15 +99,15 @@ def trendy_year_cwt(save=False, stat_values=False):
                     labelpad=20)
 
     if save:
-        plt.savefig(FIGURE_DIRECTORY + f"trendy_year_cwt.png")
+        plt.savefig(id.FIGURE_DIRECTORY + f"trendy_year_cwt.png")
 
     if stat_values:
         return stat_vals
 
 def trendy_month_cwt(fc=None, save=False, stat_values=False):
     trendy_month = {
-        'S1': id.month_S1_trendy,
-        'S3': id.month_S3_trendy
+        'S1': id.deseasonalise_instance(id.month_S1_trendy),
+        'S3': id.deseasonalise_instance(id.month_S3_trendy)
     }
 
     fig = plt.figure(figsize=(16,12))
@@ -138,8 +138,7 @@ def trendy_month_cwt(fc=None, save=False, stat_values=False):
                     dataframe[i] = [v]
         for ind in dataframe:
             row = np.array(dataframe[ind])
-            dataframe[ind] = np.pad(row, (0, 8 - len(row)), 'constant', constant_values=np.nan)
-
+            dataframe[ind] = np.pad(row, (0, 10 - len(row)), 'constant', constant_values=np.nan)
         df = pd.DataFrame(dataframe).T.sort_index()
         x = df.index
         y = df.mean(axis=1)
@@ -167,7 +166,7 @@ def trendy_month_cwt(fc=None, save=False, stat_values=False):
                     labelpad=20)
 
     if save:
-        plt.savefig(FIGURE_DIRECTORY + f"trendy_month_cwt.png")
+        plt.savefig(id.FIGURE_DIRECTORY + f"trendy_month_cwt.png")
 
     if stat_values:
         return stat_vals
@@ -179,7 +178,7 @@ def trendy_bandpass_timeseries(fc, save=False):
     ax = fig.add_subplot(111)
 
     for model in trendy_year:
-        df = trendy_year[model].data.Earth_Land
+        df = trendy_year[model].data.Earth_Land.sel(time=slice('1750', '2017'))
         ax.plot(df.time, df.values)
     plt.legend(trendy_year.keys())
 
@@ -189,7 +188,7 @@ def trendy_bandpass_timeseries(fc, save=False):
                     labelpad=20)
 
     if save:
-        plt.savefig(FIGURE_DIRECTORY + f"trendy_bandpass_timeseries.png")
+        plt.savefig(id.FIGURE_DIRECTORY + f"trendy_bandpass_timeseries.png")
 
 def trendy_powerspec(xlim, save=False):
     zip_list = zip(['211', '212'], ['S1', 'S3'])
@@ -241,7 +240,7 @@ def trendy_powerspec(xlim, save=False):
                     labelpad=20)
 
     if save:
-        plt.savefig(FIGURE_DIRECTORY + "trendy_powerspec.png")
+        plt.savefig(id.FIGURE_DIRECTORY + "trendy_powerspec.png")
 
 
 """ EXECUTION """

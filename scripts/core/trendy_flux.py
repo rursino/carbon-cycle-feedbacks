@@ -13,6 +13,7 @@ from datetime import datetime
 from scipy import stats, signal
 from core import GCP_flux as GCPf
 from itertools import *
+from collections import namedtuple
 
 
 """ INPUTS """
