@@ -16,3 +16,4 @@ scripts/all_output/feedbacks/__pycache__
 scripts/all_output/*/*/__pycache__
 scripts/devs/*/__pycache__
 pytests/.pytest_cache
+scripts/figures_and_results/__pycache__

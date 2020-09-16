@@ -274,6 +274,8 @@ class TRENDY:
 
         fb_models = self.fb_models
 
+        params_dict = {}
+
         beta_dict = {'Year': [start for start, end in self.time_periods]}
         gamma_dict = {'Year': [start for start, end in self.time_periods]}
         for model_name in fb_models:
@@ -291,14 +293,14 @@ class TRENDY:
             beta_dict[model_name] = params['beta']
             gamma_dict[model_name] = params['gamma']
 
-        betaDF = pd.DataFrame(beta_dict).set_index('Year')
-        gammaDF = pd.DataFrame(gamma_dict).set_index('Year')
+        params_dict['beta'] = pd.DataFrame(beta_dict).set_index('Year')
+        params_dict['gamma'] = pd.DataFrame(gamma_dict).set_index('Year')
 
         phi, rho = 0.015, 1.93
-        betaDF /= 2.12
-        gammaDF *= phi / rho
+        params_dict['beta'] /= 2.12
+        params_dict['u_gamma'] = params_dict['gamma'] * phi / rho
 
-        return betaDF, gammaDF
+        return params_dict
 
     def regstats(self):
         """

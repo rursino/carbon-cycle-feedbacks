@@ -30,6 +30,7 @@ def deseasonalise(x):
 DIR = './../../'
 OUTPUT_DIR = DIR + 'output/'
 INV_DIRECTORY = "./../../output/inversions/spatial/output_all/"
+FIGURE_DIRECTORY = "./../../latex/thesis/figures/"
 
 
 co2 = {
@@ -61,7 +62,7 @@ for model in invf_uptake['month']:
     )
 
 
-trendy_models = ['LPJ-GUESS', 'OCN', 'JSBACH', 'CLASS-CTEM', 'CABLE-POP']
+trendy_models = ['VISIT', 'OCN', 'JSBACH', 'CLASS-CTEM', 'CABLE-POP']
 trendy_uptake = {
     "S1": {
         "year": {model_name : xr.open_dataset(OUTPUT_DIR + f'TRENDY/spatial/output_all/{model_name}_S1_nbp/year.nc')
