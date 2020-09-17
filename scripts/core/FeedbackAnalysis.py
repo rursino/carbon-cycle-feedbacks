@@ -191,143 +191,9 @@ class INVF:
         return stats_dict
 
 
-class TRENDY_S1:
-    def __init__(self, co2, uptake, variable):
-        """ Initialise an instance of the TRENDY_S1 FeedbackAnalysis class.
-        Only pass S1 TRENDY models as uptake in this class.
-
-        Parameters:
-        -----------
-
-        co2: pd.Series
-
-            co2 series. Must follow time resolution from 'uptake'.
-
-        uptake: dict
-
-            dictionary of TRENDY S1 uptake datasets with different models.
-
-        variable: str
-
-            variable to regress in feedback analysis.
-
-        """
-
-        self.co2 = co2
-        self.uptake = uptake
-
-        self.var = variable
-
-        self.time_periods = (
-            (1960, 1969),
-            (1970, 1979),
-            (1980, 1989),
-            (1990, 1999),
-            (2000, 2009),
-            (2008, 2017),
-        )
-
-        start, end = 1960, 2017
-        input_models = {}
-        for model_name in self.uptake:
-            C = self.co2.loc[start:end]
-            U = self.uptake[model_name].sel(time=slice(str(start), str(end)))
-
-            input_models[model_name] = pd.DataFrame(data = {
-                                                "C": C,
-                                                "U": U[self.var]
-                                                }
-                                               )
-
-        self.input_models = input_models
-        self.fb_models = self._feedback_model()
-
-    def _feedback_model(self):
-        """
-        """
-
-        input_models = self.input_models
-
-        fb_models = {}
-        for model_name in input_models:
-            fb_models[model_name] = {}
-
-            for start, end in self.time_periods:
-                # Perform OLS regression on the three variables for analysis.
-                X = input_models[model_name]["C"].loc[start:end]
-                Y = input_models[model_name]["U"].loc[start:end]
-                X = sm.add_constant(X)
-
-                fb_models[model_name][(start, end)] = sm.OLS(Y, X).fit()
-
-        return fb_models
-
-    def params(self):
-        """
-        """
-
-        fb_models = self.fb_models
-
-        params_dict = {}
-
-        beta_dict = {'Year': [start for start, end in self.time_periods]}
-        for model_name in fb_models:
-            fb_model = fb_models[model_name]
-
-            params = {'beta': []}
-
-            for time_period in fb_model:
-                model = fb_model[time_period]
-
-                # Attributes
-                params['beta'].append(model.params.loc['C'])
-
-            beta_dict[model_name] = params['beta']
-
-        params_dict['beta'] = pd.DataFrame(beta_dict).set_index('Year')
-        params_dict['beta'] /= 2.12
-
-        return params_dict
-
-    def regstats(self):
-        """
-        """
-
-        fb_models = self.fb_models
-
-        stats_dict = {}
-
-        for model_name in fb_models:
-            fb_model = fb_models[model_name]
-
-            model_stats = {
-                'Year': [start for start, end in self.time_periods],
-                'r_squared': [],
-                't_values_beta': [],
-                'p_values_beta': [],
-                'mse_total': [],
-                'nobs': []
-            }
-
-            for time_period in fb_model:
-                model = fb_model[time_period]
-
-                # Attributes
-                model_stats['r_squared'].append(model.rsquared)
-                model_stats['t_values_beta'].append(model.tvalues.loc['C'])
-                model_stats['p_values_beta'].append(model.pvalues.loc['C'])
-                model_stats['mse_total'].append(model.mse_total)
-                model_stats['nobs'].append(model.nobs)
-
-            stats_dict[model_name] = pd.DataFrame(model_stats).set_index('Year')
-
-        return stats_dict
-
-
-class TRENDY_S3:
+class TRENDY:
     def __init__(self, co2, temp, uptake, variable):
-        """ Initialise an instance of the TRENDY_S3 FeedbackAnalysis class.
-        Only pass S3 TRENDY models as uptake in this class.
+        """ Initialise an instance of the TRENDY FeedbackAnalysis class.
 
         Parameters:
         -----------
@@ -342,7 +208,7 @@ class TRENDY_S3:
 
         uptake: dict
 
-            dictionary of TRENDY S3 uptake datasets with different models.
+            dictionary of TRENDY uptake datasets with different models.
 
         variable: str
 

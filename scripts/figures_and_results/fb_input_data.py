@@ -44,6 +44,13 @@ temp = {
     "month": xr.open_dataset(OUTPUT_DIR + f'TEMP/spatial/output_all/HadCRUT/month.nc')
 }
 
+temp_zero = {}
+for timeres in temp:
+    temp_zero[timeres] = xr.Dataset(
+        {key: (('time'), np.zeros(len(temp[timeres][key]))) for key in ['Earth', 'South', 'Tropical', 'North']},
+        coords={'time': (('time'), temp[timeres].time)}
+    )
+
 
 invf_models = os.listdir(INV_DIRECTORY)
 invf_uptake = {'year': {}, 'month': {}}

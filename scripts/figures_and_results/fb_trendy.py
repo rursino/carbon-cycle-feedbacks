@@ -24,18 +24,13 @@ def feedback_regression(timeres, variable):
     model_stats = {}
     for simulation in ['S1', 'S3']:
         model_names = uptake[simulation][timeres].keys()
+        if simulation == 'S1':
+            temp = fb_id.temp_zero[timeres]
+        elif simulation == 'S3':
+            temp = fb_id.temp[timeres]
 
         sim_reg_models = {}
-        if simulation == 'S1':
-            sim_model_stats = {
-                'r_squared': [],
-                't_values_beta': [],
-                'p_values_beta': [],
-                'mse_total': [],
-                'nobs': []
-            }
-        elif simulation == 'S3':
-            sim_model_stats = {
+        sim_model_stats = {
                 'r_squared': [],
                 't_values_beta': [],
                 't_values_gamma': [],
@@ -47,7 +42,7 @@ def feedback_regression(timeres, variable):
 
         for model_name in model_names:
             C = fb_id.co2[timeres].loc[start:end]
-            T = fb_id.temp[timeres].sel(time=slice(str(start), str(end)))
+            T = temp.sel(time=slice(str(start), str(end)))
             U = uptake[simulation][timeres][model_name].sel(time=slice(str(start), str(end)))
 
             df = pd.DataFrame(data = {
@@ -56,82 +51,65 @@ def feedback_regression(timeres, variable):
                                     "T": T['Earth']
                                     }
                                    )
-            if simulation == 'S1':
-                X = sm.add_constant(df["C"])
-                Y = df["U"]
-                reg_model = sm.OLS(Y, X).fit()
-                sim_reg_models[model_name] = reg_model.params['C']
-            elif simulation == 'S3':
-                X = sm.add_constant(df[["C", "T"]])
-                Y = df["U"]
-                reg_model = sm.OLS(Y, X).fit()
-                sim_reg_models[model_name] = reg_model.params[['C', 'T']].values
+
+            X = sm.add_constant(df[["C", "T"]])
+            Y = df["U"]
+            reg_model = sm.OLS(Y, X).fit()
+            sim_reg_models[model_name] = reg_model.params[['C', 'T']].values
 
             sim_model_stats['r_squared'].append(reg_model.rsquared)
             sim_model_stats['t_values_beta'].append(reg_model.tvalues.loc['C'])
             sim_model_stats['p_values_beta'].append(reg_model.pvalues.loc['C'])
-
-            if simulation == "S3":
-                sim_model_stats['t_values_gamma'].append(reg_model.tvalues.loc['T'])
-                sim_model_stats['p_values_gamma'].append(reg_model.pvalues.loc['T'])
-
+            sim_model_stats['t_values_gamma'].append(reg_model.tvalues.loc['T'])
+            sim_model_stats['p_values_gamma'].append(reg_model.pvalues.loc['T'])
             sim_model_stats['mse_total'].append(reg_model.mse_total)
             sim_model_stats['nobs'].append(reg_model.nobs)
 
-        if simulation == 'S1':
-            reg_models[simulation] = pd.DataFrame(sim_reg_models, index=['beta'])
-            reg_models[simulation].loc['beta'] /= 2.12
-        elif simulation == 'S3':
-            reg_models[simulation] = pd.DataFrame(sim_reg_models, index=['beta', 'gamma'])
-            reg_models[simulation].loc['beta'] /= 2.12
-            reg_models[simulation].loc['gamma'] *= fb_id.phi / fb_id.rho
+        reg_models[simulation] = pd.DataFrame(sim_reg_models, index=['beta', 'gamma'])
+        reg_models[simulation].loc['beta'] /= 2.12
+        reg_models[simulation].loc['gamma'] *= fb_id.phi / fb_id.rho
 
         model_stats[simulation] = pd.DataFrame(sim_model_stats, index=model_names)
 
     return reg_models, model_stats
 
-feedback_regression('year', 'Earth_Land')
-
 def all_regstat(timeres, variable):
     uptake = fb_id.trendy_duptake if timeres == "month" else fb_id.trendy_uptake
     all_regstats = {}
 
-    df_S1 = FeedbackAnalysis.TRENDY_S1(
-                                fb_id.co2[timeres],
-                                uptake['S1'][timeres],
-                                variable
-                                )
-
-    df_S3 = FeedbackAnalysis.TRENDY_S3(
-                                fb_id.co2[timeres],
-                                fb_id.temp[timeres],
-                                uptake['S3'][timeres],
-                                variable
-                                )
-    all_regstats['S1'] = {model : pd.DataFrame(df_S1.regstats()[model])
-               for model in uptake['S1'][timeres]}
-    all_regstats['S3'] = {model : pd.DataFrame(df_S3.regstats()[model])
-               for model in uptake['S3'][timeres]}
+    for simulation in ['S1', 'S3']:
+        if simulation == 'S1':
+            temp = fb_id.temp_zero[timeres]
+        elif simulation == 'S3':
+            temp = fb_id.temp[timeres]
+        df = FeedbackAnalysis.TRENDY(
+                                    fb_id.co2[timeres],
+                                    temp,
+                                    uptake[simulation][timeres],
+                                    variable
+                                    )
+        all_regstats[simulation] = {model : pd.DataFrame(df.regstats()[model])
+                   for model in uptake[simulation][timeres]}
 
     return all_regstats
 
 def mean_regstat(timeres, variable):
     uptake = fb_id.trendy_duptake if timeres == "month" else fb_id.trendy_uptake
     mean_regstats = {}
+
     for simulation in ["S1", "S3"]:
         if simulation == 'S1':
-            df = FeedbackAnalysis.TRENDY_S1(
-                                        fb_id.co2[timeres],
-                                        uptake[simulation][timeres],
-                                        variable
-                                        )
+            temp = fb_id.temp_zero[timeres]
         elif simulation == 'S3':
-            df = FeedbackAnalysis.TRENDY_S3(
-                                        fb_id.co2[timeres],
-                                        fb_id.temp[timeres],
-                                        uptake[simulation][timeres],
-                                        variable
-                                        )
+            temp = fb_id.temp[timeres]
+
+        df = FeedbackAnalysis.TRENDY(
+                                    fb_id.co2[timeres],
+                                    temp,
+                                    uptake[simulation][timeres],
+                                    variable
+                                    )
+
         regstat = [df.regstats()[model] for model in uptake[simulation][timeres]]
 
         index = regstat[0].index
@@ -165,35 +143,28 @@ def fb_trendy(timeres, save=False):
     ylim = []
     for subplot, simulation in zip(["211", "212"], ["S1", "S3"]):
         if simulation == 'S1':
-            df = FeedbackAnalysis.TRENDY_S1(
-                                        fb_id.co2[timeres],
-                                        uptake[simulation][timeres],
-                                        'Earth_Land'
-                                        )
-            beta = df.params()['beta']
-            beta_mean = beta.mean(axis=1)
-            beta_std = beta.std(axis=1)
-
-            ylim.append([beta_mean.min(), beta_mean.max()])
-
+            temp = fb_id.temp_zero[timeres]
         elif simulation == 'S3':
-            df = FeedbackAnalysis.TRENDY_S3(
-                                        fb_id.co2[timeres],
-                                        fb_id.temp[timeres],
-                                        uptake[simulation][timeres],
-                                        'Earth_Land'
-                                        )
-            beta = df.params()['beta']
-            beta_mean = beta.mean(axis=1)
-            beta_std = beta.std(axis=1)
+            temp = fb_id.temp[timeres]
 
-            gamma = df.params()['u_gamma']
-            gamma_mean = gamma.mean(axis=1)
-            gamma_std = gamma.std(axis=1)
+        df = FeedbackAnalysis.TRENDY(
+                                    fb_id.co2[timeres],
+                                    temp,
+                                    uptake[simulation][timeres],
+                                    'Earth_Land'
+                                    )
 
-            ylim.append([min(beta_mean.min(), gamma_mean.min()),
-                         max(beta_mean.max(), gamma_mean.max())
-                        ])
+        beta = df.params()['beta']
+        gamma = df.params()['u_gamma']
+
+        beta_mean = beta.mean(axis=1)
+        beta_std = beta.std(axis=1)
+        gamma_mean = gamma.mean(axis=1)
+        gamma_std = gamma.std(axis=1)
+
+        ylim.append([min(beta_mean.min(), gamma_mean.min()),
+                     max(beta_mean.max(), gamma_mean.max())
+                    ])
 
         ax[subplot] = fig.add_subplot(subplot)
 
@@ -248,18 +219,17 @@ def fb_regional_trendy(timeres, save=False):
     for subplot, parameter in zip(all_subplots, parameters):
         for var, color, bar_pos in zip(vars, colors, bar_position):
             if parameter[1] == 'S1':
-                df = FeedbackAnalysis.TRENDY_S1(
-                                            fb_id.co2[timeres],
-                                            uptake[parameter[1]][timeres],
-                                            var + '_Land'
-                                            )
+                temp = fb_id.temp_zero[timeres]
             elif parameter[1] == 'S3':
-                df = FeedbackAnalysis.TRENDY_S3(
-                                            fb_id.co2[timeres],
-                                            fb_id.temp[timeres],
-                                            uptake[parameter[1]][timeres],
-                                            var + '_Land'
-                                            )
+                temp = fb_id.temp[timeres]
+
+            df = FeedbackAnalysis.TRENDY(
+                                        fb_id.co2[timeres],
+                                        temp,
+                                        uptake[parameter[1]][timeres],
+                                        var + '_Land'
+                                        )
+
             param = df.params()[parameter[0]]
             param_mean = param.mean(axis=1)
             param_std = param.std(axis=1)
@@ -290,7 +260,6 @@ def fb_regional_trendy(timeres, save=False):
     if save:
         plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_trendy_regional_{timeres}.png")
 
-# START HERE
 def fb_regional_trendy2(timeres, save=False):
     uptake = (fb_id.trendy_duptake if timeres == "month" else
               fb_id.trendy_uptake)
@@ -312,9 +281,13 @@ def fb_regional_trendy2(timeres, save=False):
     ymin_land, ymax_land = [], []
     ymin_ocean, ymax_ocean = [], []
     for subplot, var in zip(all_subplots, vars):
+        if var[1] == 'S1':
+            temp = fb_id.temp_zero[timeres]
+        elif var[1] == 'S3':
+            temp = fb_id.temp[timeres]
         df = FeedbackAnalysis.TRENDY(
                                     fb_id.co2[timeres],
-                                    fb_id.temp[timeres],
+                                    temp,
                                     uptake[var[1]][timeres],
                                     var[0] + '_Land'
                                     )
@@ -365,6 +338,7 @@ def fb_regional_trendy2(timeres, save=False):
     if save:
         plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_trendy_regional_{timeres}2.png")
 
+fb_regional_trendy2('year')
 
 """ EXECUTION """
 reg_models, model_stats = feedback_regression('month', 'Earth_Land')
