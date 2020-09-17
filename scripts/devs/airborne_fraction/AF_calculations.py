@@ -8,18 +8,22 @@ sys.path.append('./../../core')
 import FeedbackAnalysis as FA
 
 import numpy as np
+import matplotlib.pyplot as plt
+
+
+""" PHI """
+def phi(C):
+    return np.log(C/290) * 3.74 / (np.log(2) * (C - 290))
+
+phi(270)
+
+x = np.linspace(280, 840)
+y = phi(x)
+plt.plot(x,y)
+plt.ylim([0,0.3])
 
 
 """ FUNCTIONS """
-
-
-
-""" EXECUTION """
-def phi(C):
-    return np.log(C/277.15) * 3.74 / np.log(2) / (C - 277.15)
-phi(390)
-phi(840)
-
 def TRENDY(variable, timeres):
     df = FA.FeedbackOutput("TRENDY", variable, timeres)
 
@@ -58,6 +62,7 @@ def inversions(variable, timeres):
     return 1/(1 + beta + gamma)
 
 
+""" EXECUTION """
 TRENDY("Earth_Land", "month") / 2
 
 1 / (1 / inversions("Earth_Land", "month") + 1 / inversions("Earth_Ocean", "month"))

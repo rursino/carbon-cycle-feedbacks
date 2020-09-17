@@ -89,4 +89,4 @@ for sim in trendy_uptake:
                 coords={'time': (('time'), df_models[model].time.values)}
             )
 
-phi, rho = 0.015, 1.93
+phi, rho = 0.0071, 1.93

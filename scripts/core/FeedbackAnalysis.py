@@ -136,7 +136,7 @@ class INVF:
             df.columns = self.fb_models.keys()
             params_df[param] = df
 
-        phi, rho = 0.015, 1.93
+        phi, rho = 0.0071, 1.93
         params_df['beta'] /= 2.12
         params_df['u_gamma'] = params_df['gamma'] * phi / rho
 
@@ -296,7 +296,7 @@ class TRENDY:
         params_dict['beta'] = pd.DataFrame(beta_dict).set_index('Year')
         params_dict['gamma'] = pd.DataFrame(gamma_dict).set_index('Year')
 
-        phi, rho = 0.015, 1.93
+        phi, rho = 0.0071, 1.93
         params_dict['beta'] /= 2.12
         params_dict['u_gamma'] = params_dict['gamma'] * phi / rho
 

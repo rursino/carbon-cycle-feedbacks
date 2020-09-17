@@ -27,8 +27,7 @@ T = (xr
         .sel(time=slice("1959", "2018"))
     ).Earth
 
-phi, rho = 0.015, 1.93
-
+phi, rho = 0.0071, 1.93
 
 """ FUNCTIONS """
 def feedback_regression(uptake, co2, temp):
