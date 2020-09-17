@@ -9,6 +9,8 @@ import xarray as xr
 import os
 from itertools import *
 
+from importlib import reload
+reload(FeedbackAnalysis)
 
 DIR = './../../../'
 OUTPUT_DIR = DIR + 'output/'

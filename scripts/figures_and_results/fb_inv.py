@@ -42,7 +42,7 @@ def feedback_regression(timeres, variable):
         df = pd.DataFrame(data = {
                                 "C": C,
                                 "U": U[variable],
-                                "T": T[variable.split('_')[0]]
+                                "T": T['Earth']
                                 }
                                )
 
@@ -298,25 +298,6 @@ def fb_regional_inv2(timeres, save=False):
 
     if save:
         plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_inv_regional_{timeres}2.png")
-
-
-
-def check(param, year):
-    array = []
-    for var in ['Earth_Land', 'South_Land', 'Tropical_Land', 'North_Land']:
-        df = FeedbackAnalysis.TRENDY(
-                                    fb_id.co2['year'],
-                                    fb_id.temp['year'],
-                                    fb_id.trendy_uptake['S1']['year'],
-                                    var
-                                    )
-
-        array.append(df.params()[param].loc[year].mean())
-
-    return array[0] - np.sum(array[1:])
-
-for param, year in product(['beta', 'u_gamma'], [1980, 1990, 2000, 2008]):
-    print(check(param, year))
 
 
 """ EXECUTION """

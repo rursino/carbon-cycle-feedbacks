@@ -73,7 +73,7 @@ class INVF:
             input_models[model_name] = pd.DataFrame(data = {
                                                 "C": C,
                                                 "U": U[self.var],
-                                                "T": T[self.var.split('_')[0]]
+                                                "T": T['Earth']
                                                 }
                                                )
 
@@ -241,7 +241,7 @@ class TRENDY:
             input_models[model_name] = pd.DataFrame(data = {
                                                 "C": C,
                                                 "U": U[self.var],
-                                                "T": T[self.var.split('_')[0]]
+                                                "T": T['Earth']
                                                 }
                                                )
 

@@ -44,7 +44,7 @@ def feedback_regression(timeres, variable):
             df = pd.DataFrame(data = {
                                     "C": C,
                                     "U": U[variable],
-                                    "T": T[variable.split('_')[0]]
+                                    "T": T['Earth']
                                     }
                                    )
 
