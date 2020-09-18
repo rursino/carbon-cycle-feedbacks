@@ -67,7 +67,7 @@ def feedback_regression(timeres, variable):
 
         reg_models[simulation] = pd.DataFrame(sim_reg_models, index=['beta', 'gamma'])
         reg_models[simulation].loc['beta'] /= 2.12
-        reg_models[simulation].loc['gamma'] *= fb_id.phi / fb_id.rho
+        reg_models[simulation].loc['u_gamma'] = reg_models[simulation].loc['gamma'] * fb_id.phi / fb_id.rho
 
         model_stats[simulation] = pd.DataFrame(sim_model_stats, index=model_names)
 
@@ -131,7 +131,6 @@ def mean_regstat(timeres, variable):
 
     return mean_regstats
 
-
 """ FIGURES """
 def fb_trendy(timeres, save=False):
     uptake = fb_id.trendy_duptake if timeres == "month" else fb_id.trendy_uptake
@@ -140,7 +139,6 @@ def fb_trendy(timeres, save=False):
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
 
-    ylim = []
     for subplot, simulation in zip(["211", "212"], ["S1", "S3"]):
         if simulation == 'S1':
             temp = fb_id.temp_zero[timeres]
@@ -154,45 +152,62 @@ def fb_trendy(timeres, save=False):
                                     'Earth_Land'
                                     )
 
+        whole_df = feedback_regression(timeres, "Earth_Land")[0][simulation].mean(axis=1)
         beta = df.params()['beta']
         gamma = df.params()['u_gamma']
+
+        whole_beta = whole_df['beta']
+        whole_gamma = whole_df['u_gamma']
 
         beta_mean = beta.mean(axis=1)
         beta_std = beta.std(axis=1)
         gamma_mean = gamma.mean(axis=1)
         gamma_std = gamma.std(axis=1)
 
-        ylim.append([min(beta_mean.min(), gamma_mean.min()),
-                     max(beta_mean.max(), gamma_mean.max())
-                    ])
+        if timeres == 'month':
+            whole_beta *= 12
+            whole_gamma *= 12
+            beta_mean *= 12
+            beta_std *= 12
+            gamma_mean *= 12
+            gamma_std *= 12
 
         ax[subplot] = fig.add_subplot(subplot)
+
+        ax[subplot].axhline(ls='--', color='k', alpha=0.5, lw=0.8)
 
         bar_width = 3
         if simulation == "S3":
             ax[subplot].bar(beta.index + 5 - bar_width / 2,
                             beta_mean,
-                            yerr=beta_std,
+                            yerr=beta_std * 1.645,
                             width=bar_width,
-                            color='green')
+                            color='green',
+                            label=r'$\beta$')
             ax[subplot].bar(gamma.index + 5 + bar_width / 2,
                             gamma_mean,
-                            yerr=gamma_std,
+                            yerr=gamma_std * 1.645,
                             width=bar_width,
-                            color='red')
+                            color='red',
+                            label=r'$u_{\gamma}$')
+            ax[subplot].axhline(y= whole_beta, ls='--', color='green', alpha=0.8, lw=1)
+            ax[subplot].axhline(y= whole_gamma, ls='--', color='red', alpha=0.8, lw=1)
+            ax[subplot].legend()
+
         elif simulation == "S1":
             ax[subplot].bar(beta.index + 5,
                             beta_mean,
                             yerr=beta_std,
                             width=bar_width,
-                            color='green')
+                            color='green',
+                            label=r'$\beta$')
+            ax[subplot].axhline(y= whole_beta, ls='--', color='green', alpha=0.8, lw=1)
+            ax[subplot].legend()
 
-        ax[subplot].legend([r'$\beta$', r'$u_{\gamma}$'])
         ax[subplot].set_ylabel(simulation, fontsize=14, labelpad=5)
 
-    ylbl = 'yr' if timeres == 'year' else timeres
     axl.set_xlabel("Middle year of 10-year window", fontsize=16, labelpad=10)
-    axl.set_ylabel(f'Feedback parameter   ({ylbl}' + '$^{-1}$)', fontsize=16, labelpad=40)
+    axl.set_ylabel('Feedback parameter   (yr$^{-1}$)', fontsize=16, labelpad=40)
 
     if save:
         plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_trendy_{timeres}.png")
@@ -338,14 +353,25 @@ def fb_regional_trendy2(timeres, save=False):
     if save:
         plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_trendy_regional_{timeres}2.png")
 
-fb_regional_trendy2('year')
 
 """ EXECUTION """
-reg_models, model_stats = feedback_regression('month', 'Earth_Land')
-reg_models['S1']
+whole_param = feedback_regression('month', 'Earth_Land')
+whole_param[0]['S1'].mean(axis=1)*12
+whole_param[0]['S3'].mean(axis=1)*12
 
-all_regstat("month", "Earth_Land")['S3']['OCN']
-mean_regstat("year", "Earth_Land")['S3']
-mean_regstat("month", "Earth_Land")['S3']
 
+
+whole_param[1]['S1'].mean()
+whole_param[1]['S3'].mean()
+
+land[0].mean(axis=1) / ocean[0].mean(axis=1)
+
+
+fb_trendy('month', save=False)
 fb_trendy('year', save=False)
+
+# all_regstat("month", "Earth_Land")['S3']['OCN']
+# mean_regstat("year", "Earth_Land")['S3']
+meanreg = mean_regstat("month", "Earth_Land")
+meanreg['S1']
+meanreg['S3']

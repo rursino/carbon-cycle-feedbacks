@@ -62,7 +62,7 @@ def feedback_regression(timeres, variable):
 
     reg_df = pd.DataFrame(reg_models, index=['beta', 'gamma'])
     reg_df.loc['beta'] /= 2.12
-    reg_df.loc['gamma'] *= fb_id.phi / fb_id.rho
+    reg_df.loc['u_gamma'] = reg_df.loc['gamma'] * fb_id.phi / fb_id.rho
 
     stats_df = pd.DataFrame(model_stats, index=model_names)
 
@@ -122,7 +122,6 @@ def fb_inv(timeres, save=False):
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
 
-    ylim = []
     for subplot, region in zip(["211", "212"], ["Land", "Ocean"]):
         df = FeedbackAnalysis.INVF(
                                     fb_id.co2[timeres],
@@ -130,38 +129,51 @@ def fb_inv(timeres, save=False):
                                     uptake,
                                     "Earth_" + region
                                     )
+        whole_df = feedback_regression(timeres, "Earth_" + region)[0].mean(axis=1)
         beta = df.params()['beta']
         gamma = df.params()['u_gamma'] # Note u_gamma is used to compare with beta.
+
+        whole_beta = whole_df['beta']
+        whole_gamma = whole_df['u_gamma']
 
         beta_mean = beta.mean(axis=1)
         beta_std = beta.std(axis=1)
         gamma_mean = gamma.mean(axis=1)
         gamma_std = gamma.std(axis=1)
 
-        ylim.append([min(beta_mean.min(), gamma_mean.min()),
-                     max(beta_mean.max(), gamma_mean.max())
-                    ])
+        if timeres == 'month':
+            whole_beta *= 12
+            whole_gamma *= 12
+            beta_mean *= 12
+            beta_std *= 12
+            gamma_mean *= 12
+            gamma_std *= 12
 
         ax[subplot] = fig.add_subplot(subplot)
+
+        ax[subplot].axhline(ls='--', color='k', alpha=0.5, lw=0.8)
+        ax[subplot].axhline(y= whole_beta, ls='--', color='green', alpha=0.8, lw=1)
+        ax[subplot].axhline(y= whole_gamma, ls='--', color='red', alpha=0.8, lw=1)
 
         bar_width = 3
         ax[subplot].bar(beta.index + 5 - bar_width / 2,
                         beta_mean,
-                        yerr=beta_std,
+                        yerr=beta_std * 1.645,
                         width=bar_width,
-                        color='green')
+                        color='green',
+                        label=r'$\beta$')
         ax[subplot].bar(gamma.index + 5 + bar_width / 2,
                         gamma_mean,
-                        yerr=gamma_std,
+                        yerr=gamma_std * 1.645,
                         width=bar_width,
-                        color='red')
+                        color='red',
+                        label=r'$u_{\gamma}$')
 
-        ax[subplot].legend([r'$\beta$', r'$u_{\gamma}$'])
+        ax[subplot].legend()
         ax[subplot].set_ylabel(region, fontsize=14, labelpad=5)
 
-    yunits = 'yr' if timeres == 'year' else timeres
     axl.set_xlabel("First year of 10-year window", fontsize=16, labelpad=10)
-    axl.set_ylabel(f'Feedback parameter   ({yunits}' + '$^{-1}$)',
+    axl.set_ylabel('Feedback parameter   (yr $^{-1}$)',
                    fontsize=16,
                    labelpad=40
                   )
@@ -301,12 +313,21 @@ def fb_regional_inv2(timeres, save=False):
 
 
 """ EXECUTION """
-reg_models, model_stats = feedback_regression('month', 'North_Land')
-reg_models
+land = feedback_regression('month', 'Earth_Land')
+land[0].mean(axis=1)*12
+land[1].mean()
 
-all_regstat("month", "Earth_Land")['CAMS']
-mean_regstat("year", "Earth_Land")
+ocean = feedback_regression('month', 'Earth_Ocean')
+ocean[0].mean(axis=1)*12
+ocean[1].mean()
+
+land[0].mean(axis=1) / ocean[0].mean(axis=1)
+
+fb_inv('year', save=True)
+
+# all_regstat("month", "Earth_Land")['CAMS']
 mean_regstat("month", "Earth_Land")
+mean_regstat("month", "Earth_Ocean")
 
-fb_inv('year', save=False)
+
 fb_regional_inv('year')

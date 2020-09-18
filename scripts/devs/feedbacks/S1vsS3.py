@@ -33,8 +33,6 @@ trendy_uptake = {
     }
 }
 
-len(temp_zero['year']['Earth'])
-
 temp_zero = {}
 for timeres in temp:
     temp_zero[timeres] = xr.Dataset(
@@ -42,10 +40,9 @@ for timeres in temp:
         coords={'time': (('time'), temp[timeres].time)}
     )
 
+timeres = 'month'
+S1 = FeedbackAnalysis.TRENDY(co2[timeres], temp_zero[timeres], trendy_uptake['S1'][timeres], 'Earth_Land')
+S3 = FeedbackAnalysis.TRENDY(co2[timeres], temp[timeres], trendy_uptake['S3'][timeres], 'Earth_Land')
+S3_zero = FeedbackAnalysis.TRENDY(co2[timeres], temp_zero[timeres], trendy_uptake['S3'][timeres], 'Earth_Land')
 
-del df
-S1 = FeedbackAnalysis.TRENDY(co2['year'], temp_zero['year'], trendy_uptake['S1']['year'], 'Earth_Land')
-S3 = FeedbackAnalysis.TRENDY(co2['year'], temp['year'], trendy_uptake['S3']['year'], 'Earth_Land')
-
-
-S1.regstats()
+S3.params()['beta'] - S1.params()['beta']
