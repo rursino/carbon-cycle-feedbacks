@@ -32,12 +32,10 @@ OUTPUT_DIR = DIR + 'output/'
 INV_DIRECTORY = "./../../output/inversions/spatial/output_all/"
 FIGURE_DIRECTORY = "./../../latex/thesis/figures/"
 
-
 co2 = {
     "year": pd.read_csv(DIR + f"data/CO2/co2_year.csv", index_col=["Year"]).CO2,
     "month": pd.read_csv(DIR + f"data/CO2/co2_month.csv", index_col=["Year", "Month"]).CO2
 }
-
 
 temp = {
     "year": xr.open_dataset(OUTPUT_DIR + f'TEMP/spatial/output_all/HadCRUT/year.nc'),

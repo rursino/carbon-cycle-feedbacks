@@ -9,6 +9,7 @@ import xarray as xr
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
 
+
 """ INPUTS """
 GCP_FILE = './../../../data/GCP/budget.csv'
 TEMP_OUTPUT_DIR = './../../../output/TEMP/spatial/output_all/'
