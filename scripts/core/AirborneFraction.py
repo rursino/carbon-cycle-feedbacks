@@ -64,7 +64,7 @@ class GCP:
         """
 
         phi = 0.015 / 2.12
-        rho = 1.94
+        rho = 1.93
 
         params = self._feedback_parameters().sum(axis=1)
         beta = params['CO2'] / 2.12
@@ -130,7 +130,7 @@ class INVF:
         self.uptake = uptake
 
         self.phi = 0.015 / 2.12
-        self.rho = 1.94
+        self.rho = 1.93
 
     def _feedback_parameters(self, variable):
         reg_models = {}
@@ -159,7 +159,6 @@ class INVF:
             reg_models[model_name] = reg_model.params[['C', 'T']].values
 
         reg_df = pd.DataFrame(reg_models, index=['beta', 'gamma'])
-        reg_df.loc['beta'] /= 2.12
         reg_df.loc['u_gamma'] = reg_df.loc['gamma'] * self.phi / self.rho
 
         return reg_df.mean(axis=1)
@@ -170,7 +169,7 @@ class INVF:
 
         land = self._feedback_parameters('Earth_Land')
         ocean = self._feedback_parameters('Earth_Ocean')
-        beta = (land + ocean)['beta'] * 12
+        beta = (land + ocean)['beta'] / 2.12 * 12
         u_gamma = (land + ocean)['u_gamma'] * 12
 
         b = 1 / np.log(1 + emission_rate / 100)
@@ -229,7 +228,7 @@ class TRENDY:
         self.uptake = uptake
 
         self.phi = 0.015 / 2.12
-        self.rho = 1.94
+        self.rho = 1.93
 
     def _feedback_parameters(self, variable):
         """

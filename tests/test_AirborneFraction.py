@@ -14,7 +14,6 @@ from itertools import *
 
 import pytest
 
-co2_month
 
 """ SETUP """
 def setup_module(module):
@@ -46,9 +45,9 @@ def setup_module(module):
             start = str(ds.time.values[0])[:4]
             end = str(ds.time.values[-1])[:4]
             C = co2_month.CO2.loc[int(start):int(end)].values
-            T = temp.sel(time=slice(start, end)).Earth.values
+            T = temp_month.sel(time=slice(start, end)).Earth.values
             invf_uptake_mock[timeres][model] = xr.Dataset(
-                {key: (('time'), (C + T) / 2) for key in ['Earth_Land', 'Earth_Ocean']},
+                {key: (('time'), (C + T) / 2 / 12) for key in ['Earth_Land', 'Earth_Ocean']},
                 coords={
                         'time': (('time'), ds.time.values)
                        }
@@ -64,35 +63,34 @@ def test_GCP_airborne():
     for sink, param in product(['land', 'ocean'], ['CO2', 'temp']):
         assert params[sink][param] == pytest.approx(0.5)
 
+    phi = 0.015 / 2.12
+    rho = 1.93
+
     emission_rate = 2
     b = 1 / np.log(1 + emission_rate / 100)
     beta = 0.5 * 2 / 2.12
-    u_gamma = 0.5 * 2 * 0.015 / 2.12 / 1.94
+    u_gamma = 0.5 * 2 * phi / rho
     u = 1 - b * (beta + u_gamma)
     test_af = 1 / u
 
-    return df.airborne_fraction(emission_rate), pytest.approx(test_af)
+    assert df.airborne_fraction(emission_rate) == pytest.approx(test_af)
 
 def test_invf_airborne():
     df = AirborneFraction.INVF(co2_month.CO2, temp_month, invf_uptake_mock['month'])
 
     land = df._feedback_parameters('Earth_Land')
     ocean = df._feedback_parameters('Earth_Ocean')
-    assert land['beta'] == pytest.approx(0.5 / 2.12)
-    assert land['gamma'] == pytest.approx(0.5)
-    assert ocean['beta'] == pytest.approx(0.5 / 2.12)
-    assert ocean['gamma'] == pytest.approx(0.5)
+    for region, param in product([land, ocean], ['beta', 'gamma']):
+        assert region[param] == pytest.approx(0.5 / 12)
+
+    phi = 0.015 / 2.12
+    rho = 1.93
 
     emission_rate = 2
     b = 1 / np.log(1 + emission_rate / 100)
     beta = 0.5 * 2 / 2.12
-    u_gamma = 0.5 * 2 * 0.015 / 2.12 / 1.94
+    u_gamma = 0.5 * 2 * phi / rho
     u = 1 - b * (beta + u_gamma)
     test_af = 1 / u
 
-    return df.airborne_fraction(emission_rate), pytest.approx(test_af)
-
-# CHECK INVF TEST, then tests should work
-
-test_GCP_airborne()
-test_invf_airborne()
+    assert df.airborne_fraction(emission_rate) == pytest.approx(test_af)
