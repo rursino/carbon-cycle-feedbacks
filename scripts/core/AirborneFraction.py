@@ -168,7 +168,7 @@ class INVF:
         reg_df = pd.DataFrame(reg_models, index=['beta', 'gamma'])
         reg_df.loc['u_gamma'] = reg_df.loc['gamma'] * self.phi / self.rho
 
-        return reg_df.mean(axis=1)
+        return reg_df
 
     def airborne_fraction(self, emission_rate=2):
         """
@@ -176,13 +176,14 @@ class INVF:
 
         land = self._feedback_parameters('Earth_Land')
         ocean = self._feedback_parameters('Earth_Ocean')
-        beta = (land + ocean)['beta'] / 2.12 * 12
-        u_gamma = (land + ocean)['u_gamma'] * 12
+        beta = (land + ocean).loc['beta'] / 2.12 * 12
+        u_gamma = (land + ocean).loc['u_gamma'] * 12
 
         b = 1 / np.log(1 + emission_rate / 100)
         u = 1 - b * (beta + u_gamma)
 
-        return 1 / u
+        af = 1 / u
+        return {'mean': af.mean(), 'std': af.std()}
 
     def landborne_fraction(self, emission_rate=2):
         """
@@ -191,13 +192,14 @@ class INVF:
         return NotImplementedError()
 
         params = self._feedback_parameters('Earth_Land')
-        beta = params['beta'] * 12
-        u_gamma = params['u_gamma'] * 12
+        beta = params.loc['beta'] * 12
+        u_gamma = params.loc['u_gamma'] * 12
 
         a = np.log(1 + emission_rate / 100)
         u = -1 + a / (beta + u_gamma)
 
-        return 1 / u
+        af = 1 / u
+        return {'mean': af.mean(), 'std': af.std()}
 
     def oceanborne_fraction(self, emission_rate=2):
         """
@@ -206,13 +208,14 @@ class INVF:
         return NotImplementedError()
 
         params = self._feedback_parameters('Earth_Ocean')
-        beta = params['beta'] * 12
-        u_gamma = params['u_gamma'] * 12
+        beta = params.loc['beta'] * 12
+        u_gamma = params.loc['u_gamma'] * 12
 
         a = np.log(1 + emission_rate / 100)
         u = -1 + a / (beta + u_gamma)
 
-        return 1 / u
+        af = 1 / u
+        return {'mean': af.mean(), 'std': af.std()}
 
 
 class TRENDY:
@@ -272,7 +275,7 @@ class TRENDY:
         reg_df.loc['beta'] /= 2.12
         reg_df.loc['u_gamma'] = reg_df.loc['gamma'] * self.phi / self.rho
 
-        return reg_df.mean(axis=1)
+        return reg_df
 
     def airborne_fraction(self, emission_rate=2):
         """
@@ -285,13 +288,15 @@ class TRENDY:
         ocean['beta'] /= 2.12
         ocean['u_gamma'] = ocean['gamma'] * self.phi / self.rho
 
-        beta = (land + ocean)['beta']
-        u_gamma = (land + ocean)['u_gamma']
+        params = land.add(ocean, axis=0)
+        beta = params.loc['beta']
+        u_gamma = params.loc['u_gamma']
 
         b = 1 / np.log(1 + emission_rate / 100)
         u = 1 - b * (beta + u_gamma)
 
-        return 1 / u
+        af = 1 / u
+        return {'mean': af.mean(), 'std': af.std()}
 
     def landborne_fraction(self, emission_rate=2):
         """
@@ -300,10 +305,11 @@ class TRENDY:
         return NotImplementedError()
 
         params = self._feedback_parameters('Earth_Land')
-        beta = params['beta']
-        u_gamma = params['u_gamma']
+        beta = params.loc['beta']
+        u_gamma = params.loc['u_gamma']
 
         a = np.log(1 + emission_rate / 100)
         u = -1 + a / (beta + u_gamma)
 
-        return 1 / u
+        af = 1 / u
+        return {'mean': af.mean(), 'std': af.std()}

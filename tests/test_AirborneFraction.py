@@ -104,8 +104,10 @@ def test_invf_airborne():
 
     land = df._feedback_parameters('Earth_Land')
     ocean = df._feedback_parameters('Earth_Ocean')
+
     for region, param in product([land, ocean], ['beta', 'gamma']):
-        assert region[param] == pytest.approx(0.5 / 12)
+        assert region.loc[param].mean() == pytest.approx(0.5 / 12)
+        assert region.loc[param].std() == pytest.approx(0.)
 
     phi = 0.015 / 2.12
     rho = 1.93
@@ -117,7 +119,8 @@ def test_invf_airborne():
     u = 1 - b * (beta + u_gamma)
     test_af = 1 / u
 
-    assert df.airborne_fraction(emission_rate) == pytest.approx(test_af)
+    assert df.airborne_fraction(emission_rate)['mean'] == pytest.approx(test_af)
+    assert df.airborne_fraction(emission_rate)['std'] == pytest.approx(0.)
 
 def test_trendy_airborne():
     df = AirborneFraction.TRENDY(co2_year, temp_year, trendy_uptake_mock['year'])
@@ -130,14 +133,15 @@ def test_trendy_airborne():
 
     land = df._feedback_parameters('Earth_Land')
     ocean = GCPdf._feedback_parameters()['ocean']
+
     ocean.index = ['beta', 'gamma']
     ocean['beta'] /= 2.12
     ocean['u_gamma'] = ocean['gamma'] * phi / rho
 
-    assert land['beta'] == pytest.approx(0.5 / 2.12)
-    assert land['gamma'] == pytest.approx(0.5)
-    assert ocean['beta'] == pytest.approx(0.5 / 2.12)
-    assert ocean['gamma'] == pytest.approx(0.5)
+    for parameter, divisor in zip(['beta', 'gamma'], [2.12, 1]):
+        assert land.loc[parameter].mean() == pytest.approx(0.5 / divisor)
+        assert land.loc[parameter].std() == pytest.approx(0.)
+        assert ocean[parameter] == pytest.approx(0.5 / divisor)
 
     # Test function
     emission_rate = 2
@@ -148,12 +152,13 @@ def test_trendy_airborne():
     test_af = 1 / u
 
     # Class function
-    class_beta = (land + ocean)['beta']
-    class_u_gamma = (land + ocean)['u_gamma']
+    params = land.add(ocean, axis=0)
+    class_beta = params.loc['beta']
+    class_u_gamma = params.loc['u_gamma']
 
     class_b = 1 / np.log(1 + emission_rate / 100)
-    class_u = 1 - class_b * (beta + u_gamma)
+    class_u = 1 - class_b * (class_beta + class_u_gamma)
 
     class_af = 1 / class_u
 
-    assert class_af == pytest.approx(test_af)
+    assert class_af.mean() == pytest.approx(test_af)
