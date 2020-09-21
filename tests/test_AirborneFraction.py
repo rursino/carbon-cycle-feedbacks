@@ -1,9 +1,6 @@
 """ pytest: AirborneFraction module.
 """
 
-from importlib import reload
-reload(AirborneFraction)
-
 """ IMPORTS """
 from core import AirborneFraction
 
@@ -20,7 +17,8 @@ import pytest
 """ SETUP """
 def setup_module(module):
     print('--------------------setup--------------------')
-    global co2_year, co2_month, temp_year, temp_month, invf_uptake, invf_uptake_mock
+    global co2_year, co2_month, temp_year, temp_month, invf_uptake
+    global invf_uptake_mock, trendy_uptake_mock
 
     INV_DIRECTORY = "./../output/inversions/spatial/output_all/"
     TRENDY_DIRECTORY = './../output/TRENDY/spatial/output_all/'
