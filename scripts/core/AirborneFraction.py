@@ -30,7 +30,7 @@ class GCP:
 
         """
 
-        self.co2 = co2[2:].CO2
+        self.co2 = co2[2:]
         self.temp = temp.sel(time=slice('1959', '2018')).Earth
 
         self.GCP = pd.read_csv(MAIN_DIRECTORY + 'data/GCP/budget.csv',
@@ -79,6 +79,8 @@ class GCP:
         """
         """
 
+        return NotImplementedError()
+
         phi = 0.015 / 2.12
         rho = 1.94
 
@@ -94,6 +96,8 @@ class GCP:
     def oceanborne_fraction(self, emission_rate=2):
         """
         """
+
+        return NotImplementedError()
 
         phi = 0.015 / 2.12
         rho = 1.94
@@ -117,11 +121,11 @@ class INVF:
 
         co2: pd.Series
 
-            co2 series. Must be the year time resolution.
+            co2 series. Must be in month time resolution.
 
         temp: xr.Dataset
 
-            HadCRUT dataset. Must be the year time resolution.
+            HadCRUT dataset. Must be in month time resolution.
 
         """
 
@@ -133,6 +137,9 @@ class INVF:
         self.rho = 1.93
 
     def _feedback_parameters(self, variable):
+        """
+        """
+
         reg_models = {}
 
         model_names = self.uptake.keys()
@@ -181,6 +188,8 @@ class INVF:
         """
         """
 
+        return NotImplementedError()
+
         params = self._feedback_parameters('Earth_Land')
         beta = params['beta'] * 12
         u_gamma = params['u_gamma'] * 12
@@ -193,6 +202,8 @@ class INVF:
     def oceanborne_fraction(self, emission_rate=2):
         """
         """
+
+        return NotImplementedError()
 
         params = self._feedback_parameters('Earth_Ocean')
         beta = params['beta'] * 12
@@ -263,13 +274,34 @@ class TRENDY:
 
         return reg_df.mean(axis=1)
 
+    def airborne_fraction(self, emission_rate=2):
+        """
+        """
+
+        land = self._feedback_parameters('Earth_Land')
+
+        ocean = GCP(self.co2, self.temp)._feedback_parameters()['ocean']
+        ocean.index = ['beta', 'gamma']
+        ocean['beta'] /= 2.12
+        ocean['u_gamma'] = ocean['gamma'] * self.phi / self.rho
+
+        beta = (land + ocean)['beta']
+        u_gamma = (land + ocean)['u_gamma']
+
+        b = 1 / np.log(1 + emission_rate / 100)
+        u = 1 - b * (beta + u_gamma)
+
+        return 1 / u
+
     def landborne_fraction(self, emission_rate=2):
         """
         """
 
+        return NotImplementedError()
+
         params = self._feedback_parameters('Earth_Land')
-        beta = params['beta'] * 12
-        u_gamma = params['u_gamma'] * 12
+        beta = params['beta']
+        u_gamma = params['u_gamma']
 
         a = np.log(1 + emission_rate / 100)
         u = -1 + a / (beta + u_gamma)
