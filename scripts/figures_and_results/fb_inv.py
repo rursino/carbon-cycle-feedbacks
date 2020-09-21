@@ -113,6 +113,36 @@ def mean_regstat(timeres, variable):
 
     return mean_regstat
 
+def median_regstat(timeres, variable):
+    uptake = fb_id.invf_duptake if timeres == "month" else fb_id.invf_uptake['year']
+
+    df = FeedbackAnalysis.INVF(
+                                fb_id.co2[timeres],
+                                fb_id.temp[timeres],
+                                uptake,
+                                variable
+                                )
+
+    regstat = [df.regstats()[model] for model in uptake]
+
+    index = regstat[0].index
+    columns = regstat[0].columns
+    array = np.zeros([len(index), len(columns)])
+    for i, j in product(range(len(index)), range(len(columns))):
+        values = []
+        for model_regstat in regstat:
+            val = model_regstat.iloc[i,j]
+            if val != np.nan:
+                values.append(val)
+        array[i][j] = np.nanmedian(values)
+
+    median_regstat = pd.DataFrame(array)
+    median_regstat.index = index
+    median_regstat.columns = columns
+
+    return median_regstat
+
+median_regstat('month', 'Earth_Land')
 
 """ FIGURES """
 def fb_inv(timeres, save=False):
@@ -209,11 +239,13 @@ def fb_regional_inv(timeres, save=False):
                                         var + parameter[1]
                                         )
             param = df.params()[parameter[0]]
+            if timeres == 'month':
+                param *= 12
+
             param_mean = param.mean(axis=1)
             param_std = param.std(axis=1)
 
             ax[subplot] = fig.add_subplot(subplot)
-
             ax[subplot].bar(param.index + 5 + bar_pos,
                             param_mean,
                             yerr=2*param_std,
@@ -228,9 +260,8 @@ def fb_regional_inv(timeres, save=False):
                                [r'$\beta$', r'$u_{\gamma}$']):
         ax[subplot].set_ylabel(region, fontsize=14, labelpad=5)
 
-    yunits = 'yr' if timeres == 'year' else timeres
     axl.set_xlabel("Middle year of 10-year window", fontsize=16, labelpad=10)
-    axl.set_ylabel(f'Feedback parameter   ({yunits}' + '$^{-1}$)',
+    axl.set_ylabel(r'Feedback parameter   (yr$^{-1}$)',
                    fontsize=16,
                    labelpad=40
                   )
@@ -267,6 +298,9 @@ def fb_regional_inv2(timeres, save=False):
         params = df.params()
         for parameter, color, bar_pos in zip(parameters, colors, bar_position):
             param = params[parameter]
+            if timeres == 'month':
+                param *= 12
+
             param_mean = param.mean(axis=1)
             param_std = param.std(axis=1)
 
@@ -301,9 +335,8 @@ def fb_regional_inv2(timeres, save=False):
                                ['Earth', 'South', 'Tropical', 'North']):
         ax[subplot].set_ylabel(region, fontsize=14, labelpad=5)
 
-    yunits = 'yr' if timeres == 'year' else timeres
     axl.set_xlabel("Middle year of 10-year window", fontsize=16, labelpad=10)
-    axl.set_ylabel(f'Feedback parameter   ({yunits}' + '$^{-1}$)',
+    axl.set_ylabel(r'Feedback parameter   (yr$^{-1}$)',
                    fontsize=16,
                    labelpad=40
                   )
@@ -314,10 +347,12 @@ def fb_regional_inv2(timeres, save=False):
 
 """ EXECUTION """
 land = feedback_regression('month', 'Earth_Land')
+land[0].median(axis=1)*12
 land[0].mean(axis=1)*12
 land[1].mean()
 
 ocean = feedback_regression('month', 'Earth_Ocean')
+ocean[0].median(axis=1)*12
 ocean[0].mean(axis=1)*12
 ocean[1].mean()
 
@@ -325,9 +360,18 @@ land[0].mean(axis=1) / ocean[0].mean(axis=1)
 
 fb_inv('year', save=True)
 
-# all_regstat("month", "Earth_Land")['CAMS']
-mean_regstat("month", "Earth_Land")
+all_regstat("month", "North_Land")
+
+
+median_regstat("month", "Earth_Land")
+median_regstat("month", "South_Land")
+median_regstat("month", "Tropical_Land")
+median_regstat("month", "North_Land")
+
 mean_regstat("month", "Earth_Ocean")
 
 
-fb_regional_inv('year')
+fb_regional_inv('year', save=True)
+fb_regional_inv('month', save=True)
+fb_regional_inv2('year', save=True)
+fb_regional_inv2('month', save=True)

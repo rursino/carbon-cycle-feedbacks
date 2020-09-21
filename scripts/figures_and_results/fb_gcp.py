@@ -25,9 +25,10 @@ C = pd.read_csv(INPUT_DIRECTORY + 'CO2/co2_year.csv',index_col='Year').CO2[2:]
 T = (xr
         .open_dataset('./../../output/TEMP/spatial/output_all/HadCRUT/year.nc')
         .sel(time=slice("1959", "2018"))
-    ).Earth
+    )
+T= T.Earth
 
-phi, rho = 0.0071, 1.93
+phi, rho = 0.015 / 2.12, 1.93
 
 """ FUNCTIONS """
 def feedback_regression(uptake, co2, temp):
