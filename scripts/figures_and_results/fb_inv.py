@@ -142,7 +142,6 @@ def median_regstat(timeres, variable):
 
     return median_regstat
 
-median_regstat('month', 'Earth_Land')
 
 """ FIGURES """
 def fb_inv(timeres, save=False):
@@ -360,7 +359,13 @@ land[0].mean(axis=1) / ocean[0].mean(axis=1)
 
 fb_inv('year', save=True)
 
-all_regstat("month", "North_Land")
+(FeedbackAnalysis
+    .INVF(fb_id.co2['month'], fb_id.temp['month'], fb_id.invf_duptake,'Earth_Land')
+    .params()
+    ['beta']
+)
+
+{model: all_regstat("month", "Earth_Land")[model]['p_values_beta'].values for model in all_regstat("month", "Earth_Land")}
 
 
 median_regstat("month", "Earth_Land")
