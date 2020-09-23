@@ -194,6 +194,7 @@ class INVF:
 class TRENDY:
     def __init__(self, co2, temp, uptake, variable):
         """ Initialise an instance of the TRENDY FeedbackAnalysis class.
+        Only use monthly time resolution.
 
         Parameters:
         -----------
@@ -233,14 +234,16 @@ class TRENDY:
 
         start, end = 1960, 2017
         input_models = {}
-        for model_name in self.uptake:
+        for model_name in self.uptake['S1']['month']:
             C = self.co2.loc[start:end]
             T = self.temp.sel(time=slice(str(start), str(end)))
-            U = self.uptake[model_name].sel(time=slice(str(start), str(end)))
+            U1 = self.uptake['S1']['month'][model_name].sel(time=slice(str(start), str(end)))
+            U3 = self.uptake['S3']['month'][model_name].sel(time=slice(str(start), str(end)))
 
             input_models[model_name] = pd.DataFrame(data = {
                                                 "C": C,
-                                                "U": U[self.var],
+                                                "U1": U1[self.var],
+                                                "U3m1": (U3-U1)[self.var],
                                                 "T": T['Earth']
                                                 }
                                                )
@@ -255,16 +258,19 @@ class TRENDY:
         input_models = self.input_models
 
         fb_models = {}
-        for model_name in input_models:
-            fb_models[model_name] = {}
 
-            for start, end in self.time_periods:
-                # Perform OLS regression on the three variables for analysis.
-                X = input_models[model_name][["C", "T"]].loc[start:end]
-                Y = input_models[model_name]["U"].loc[start:end]
-                X = sm.add_constant(X)
+        for sim, uptake, x_var in zip(['S1', 'S3'], ['U1', 'U3m1'], ['C', 'T']):
+            fb_models[sim] = {}
+            for model_name in input_models:
+                fb_models[sim][model_name] = {}
 
-                fb_models[model_name][(start, end)] = sm.OLS(Y, X).fit()
+                for start, end in self.time_periods:
+                    # Perform OLS regression on the three variables for analysis.
+                    X = input_models[model_name][x_var].loc[start:end]
+                    X = sm.add_constant(X)
+                    Y = input_models[model_name][uptake].loc[start:end]
+
+                    fb_models[sim][model_name][(start, end)] = sm.OLS(Y, X).fit()
 
         return fb_models
 
@@ -273,32 +279,38 @@ class TRENDY:
         """
 
         fb_models = self.fb_models
+        phi, rho = 0.015 / 2.12, 1.93
 
         params_dict = {}
 
-        beta_dict = {'Year': [start for start, end in self.time_periods]}
-        gamma_dict = {'Year': [start for start, end in self.time_periods]}
-        for model_name in fb_models:
-            fb_model = fb_models[model_name]
+        for sim, x_var in zip(['S1', 'S3'], ['C', 'T']):
+            params_dict[sim] = {}
+            beta_dict = {'Year': [start for start, end in self.time_periods]}
+            gamma_dict = {'Year': [start for start, end in self.time_periods]}
+            for model_name in fb_models[sim]:
+                fb_model = fb_models[sim][model_name]
 
-            params = {'beta': [], 'gamma': []}
+                params = {'beta': [], 'gamma': []}
 
-            for time_period in fb_model:
-                model = fb_model[time_period]
+                for time_period in fb_model:
+                    model = fb_model[time_period]
 
-                # Attributes
-                params['beta'].append(model.params.loc['C'])
-                params['gamma'].append(model.params.loc['T'])
+                    # Attributes
+                    if sim == 'S1':
+                        params['beta'].append(model.params.loc[x_var])
+                        params['gamma'].append(0.)
+                    if sim == 'S3':
+                        params['beta'].append(0.)
+                        params['gamma'].append(model.params.loc[x_var])
 
-            beta_dict[model_name] = params['beta']
-            gamma_dict[model_name] = params['gamma']
+                beta_dict[model_name] = params['beta']
+                gamma_dict[model_name] = params['gamma']
 
-        params_dict['beta'] = pd.DataFrame(beta_dict).set_index('Year')
-        params_dict['gamma'] = pd.DataFrame(gamma_dict).set_index('Year')
+            params_dict[sim]['beta'] = pd.DataFrame(beta_dict).set_index('Year')
+            params_dict[sim]['gamma'] = pd.DataFrame(gamma_dict).set_index('Year')
 
-        phi, rho = 0.0071, 1.93
-        params_dict['beta'] /= 2.12
-        params_dict['u_gamma'] = params_dict['gamma'] * phi / rho
+            params_dict[sim]['beta'] /= 2.12
+            params_dict[sim]['u_gamma'] = params_dict[sim]['gamma'] * phi / rho
 
         return params_dict
 
@@ -310,32 +322,44 @@ class TRENDY:
 
         stats_dict = {}
 
-        for model_name in fb_models:
-            fb_model = fb_models[model_name]
+        for sim in ['S1', 'S3']:
+            stats_dict[sim] = {}
 
-            model_stats = {
-                'Year': [start for start, end in self.time_periods],
-                'r_squared': [],
-                't_values_beta': [],
-                't_values_gamma': [],
-                'p_values_beta': [],
-                'p_values_gamma': [],
-                'mse_total': [],
-                'nobs': []
-            }
+            for model_name in fb_models[sim]:
+                fb_model = fb_models[sim][model_name]
 
-            for time_period in fb_model:
-                model = fb_model[time_period]
+                model_stats = {
+                    'Year': [start for start, end in self.time_periods],
+                    'r_squared': [],
+                    't_values_beta': [],
+                    't_values_gamma': [],
+                    'p_values_beta': [],
+                    'p_values_gamma': [],
+                    'mse_total': [],
+                    'nobs': []
+                }
 
-                # Attributes
-                model_stats['r_squared'].append(model.rsquared)
-                model_stats['t_values_beta'].append(model.tvalues.loc['C'])
-                model_stats['t_values_gamma'].append(model.tvalues.loc['T'])
-                model_stats['p_values_beta'].append(model.pvalues.loc['C'])
-                model_stats['p_values_gamma'].append(model.pvalues.loc['T'])
-                model_stats['mse_total'].append(model.mse_total)
-                model_stats['nobs'].append(model.nobs)
+                for time_period in fb_model:
+                    model = fb_model[time_period]
 
-            stats_dict[model_name] = pd.DataFrame(model_stats).set_index('Year')
+                    # Attributes
+                    model_stats['r_squared'].append(model.rsquared)
+                    if sim == 'S1':
+                        model_stats['t_values_beta'].append(model.tvalues.loc['C'])
+                        model_stats['t_values_gamma'].append(np.nan)
+                        model_stats['p_values_beta'].append(model.pvalues.loc['C'])
+                        model_stats['p_values_gamma'].append(np.nan)
+                    if sim == 'S3':
+                        model_stats['t_values_beta'].append(np.nan)
+                        model_stats['t_values_gamma'].append(model.tvalues.loc['T'])
+                        model_stats['p_values_beta'].append(np.nan)
+                        model_stats['p_values_gamma'].append(model.pvalues.loc['T'])
+                    model_stats['mse_total'].append(model.mse_total)
+                    model_stats['nobs'].append(model.nobs)
+
+                stats_dict[sim][model_name] = (pd
+                                                .DataFrame(model_stats)
+                                                .set_index('Year')
+                                              )
 
         return stats_dict
