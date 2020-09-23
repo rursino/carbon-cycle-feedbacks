@@ -1,5 +1,6 @@
 """ IMPORTS """
 from core import AirborneFraction
+
 import pandas as pd
 import xarray as xr
 import numpy as np
@@ -117,3 +118,24 @@ inv_af_models().loc[['CTRACKER', 'JAMSTEC', 'Rayner']].std()['AF']
 inv_af_models().loc[['CAMS', 'JENA_s76', 'JENA_s85']]['AF']
 inv_af_models().loc[['CAMS', 'JENA_s76', 'JENA_s85']].mean()['AF']
 inv_af_models().loc[['CAMS', 'JENA_s76', 'JENA_s85']].std()['AF']
+
+
+# TRENDY individual models
+def trendy_af_models(emission_rate=2):
+    land = TRENDYdf._feedback_parameters('Earth_Land')
+
+    ocean = GCPdf._feedback_parameters()['ocean']
+    ocean.index = ['beta', 'gamma']
+    ocean['beta'] /= 2.12
+    ocean['u_gamma'] = ocean['gamma'] * 0.015 / 2.12 / 1.93
+
+    params = land.add(ocean, axis=0)
+    beta = params.loc['beta']
+    u_gamma = params.loc['u_gamma']
+
+    b = 1 / np.log(1 + emission_rate / 100)
+    u = 1 - b * (beta + u_gamma)
+
+    return 1 / u
+
+trendy_af_models()
