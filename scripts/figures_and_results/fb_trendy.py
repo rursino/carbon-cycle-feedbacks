@@ -327,14 +327,14 @@ whole_param[1]['S1']
 whole_param[1]['S3']
 
 
-medianreg = median_regstat("Earth_Land")
+medianreg = median_regstat("North_Land")
 medianreg['S1']
 medianreg['S3']
 
 
 """ FIGURES """
-fb_trendy(save=True)
+fb_trendy(save=False)
 
-fb_regional_trendy(save=True)
+fb_regional_trendy(save=False)
 
-fb_regional_trendy2(save=True)
+fb_regional_trendy2(save=False)
