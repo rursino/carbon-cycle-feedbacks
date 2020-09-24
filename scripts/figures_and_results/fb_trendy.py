@@ -17,17 +17,13 @@ import fb_input_data as fb_id
 
 
 """ FUNCTIONS """
-def feedback_regression(timeres, variable):
-    uptake = fb_id.trendy_duptake if timeres == "month" else fb_id.trendy_uptake
+def feedback_regression(variable):
+    uptake = fb_id.trendy_duptake
     start, end = 1960, 2017
     reg_models = {}
     model_stats = {}
     for simulation in ['S1', 'S3']:
-        model_names = uptake[simulation][timeres].keys()
-        if simulation == 'S1':
-            temp = fb_id.temp_zero[timeres]
-        elif simulation == 'S3':
-            temp = fb_id.temp[timeres]
+        model_names = uptake[simulation]['month'].keys()
 
         sim_reg_models = {}
         sim_model_stats = {
@@ -41,9 +37,13 @@ def feedback_regression(timeres, variable):
             }
 
         for model_name in model_names:
-            C = fb_id.co2[timeres].loc[start:end]
-            T = temp.sel(time=slice(str(start), str(end)))
-            U = uptake[simulation][timeres][model_name].sel(time=slice(str(start), str(end)))
+            C = fb_id.co2['month'].loc[start:end]
+            T = fb_id.temp['month'].sel(time=slice(str(start), str(end)))
+            if simulation == 'S1':
+                U = uptake['S1']['month'][model_name]
+            elif simulation == 'S3':
+                U = uptake['S3']['month'][model_name] - uptake['S1']['month'][model_name]
+            U = U.sel(time=slice(str(start), str(end)))
 
             df = pd.DataFrame(data = {
                                     "C": C,
@@ -52,20 +52,38 @@ def feedback_regression(timeres, variable):
                                     }
                                    )
 
-            X = sm.add_constant(df[["C", "T"]])
+            if simulation == 'S1':
+                x_var = 'C'
+                other_var = 'T'
+            elif simulation == 'S3':
+                x_var = 'T'
+                other_var = 'C'
+            X = sm.add_constant(df[x_var])
             Y = df["U"]
             reg_model = sm.OLS(Y, X).fit()
-            sim_reg_models[model_name] = reg_model.params[['C', 'T']].values
-
+            reg_model_params = reg_model.params
+            reg_model_params[other_var] = 0
+            sim_reg_models[model_name] = (reg_model_params
+                                            .loc[[x_var, other_var]]
+                                            .sort_index()
+                                         )
             sim_model_stats['r_squared'].append(reg_model.rsquared)
-            sim_model_stats['t_values_beta'].append(reg_model.tvalues.loc['C'])
-            sim_model_stats['p_values_beta'].append(reg_model.pvalues.loc['C'])
-            sim_model_stats['t_values_gamma'].append(reg_model.tvalues.loc['T'])
-            sim_model_stats['p_values_gamma'].append(reg_model.pvalues.loc['T'])
+            if simulation == 'S1':
+                sim_model_stats['t_values_beta'].append(reg_model.tvalues.loc['C'])
+                sim_model_stats['p_values_beta'].append(reg_model.pvalues.loc['C'])
+                sim_model_stats['t_values_gamma'].append(np.nan)
+                sim_model_stats['p_values_gamma'].append(np.nan)
+            elif simulation == 'S3':
+                sim_model_stats['t_values_beta'].append(np.nan)
+                sim_model_stats['p_values_beta'].append(np.nan)
+                sim_model_stats['t_values_gamma'].append(reg_model.tvalues.loc['T'])
+                sim_model_stats['p_values_gamma'].append(reg_model.pvalues.loc['T'])
             sim_model_stats['mse_total'].append(reg_model.mse_total)
             sim_model_stats['nobs'].append(reg_model.nobs)
 
-        reg_models[simulation] = pd.DataFrame(sim_reg_models, index=['beta', 'gamma'])
+        df = pd.DataFrame(sim_reg_models)
+        df.index = ['beta', 'gamma']
+        reg_models[simulation] = df
         reg_models[simulation].loc['beta'] /= 2.12
         reg_models[simulation].loc['u_gamma'] = reg_models[simulation].loc['gamma'] * fb_id.phi / fb_id.rho
 
@@ -73,44 +91,35 @@ def feedback_regression(timeres, variable):
 
     return reg_models, model_stats
 
-def all_regstat(timeres, variable):
-    uptake = fb_id.trendy_duptake if timeres == "month" else fb_id.trendy_uptake
+def all_regstat(variable):
+    uptake = fb_id.trendy_duptake
     all_regstats = {}
 
     for simulation in ['S1', 'S3']:
-        if simulation == 'S1':
-            temp = fb_id.temp_zero[timeres]
-        elif simulation == 'S3':
-            temp = fb_id.temp[timeres]
         df = FeedbackAnalysis.TRENDY(
-                                    fb_id.co2[timeres],
-                                    temp,
-                                    uptake[simulation][timeres],
+                                    fb_id.co2['month'],
+                                    fb_id.temp['month'],
+                                    uptake,
                                     variable
                                     )
-        all_regstats[simulation] = {model : pd.DataFrame(df.regstats()[model])
-                   for model in uptake[simulation][timeres]}
+        all_regstats[simulation] = {model : pd.DataFrame(df.regstats()[simulation][model])
+                   for model in uptake[simulation]['month']}
 
     return all_regstats
 
-def mean_regstat(timeres, variable):
-    uptake = fb_id.trendy_duptake if timeres == "month" else fb_id.trendy_uptake
+def median_regstat(variable):
+    uptake = fb_id.trendy_duptake
     mean_regstats = {}
 
     for simulation in ["S1", "S3"]:
-        if simulation == 'S1':
-            temp = fb_id.temp_zero[timeres]
-        elif simulation == 'S3':
-            temp = fb_id.temp[timeres]
-
         df = FeedbackAnalysis.TRENDY(
-                                    fb_id.co2[timeres],
-                                    temp,
-                                    uptake[simulation][timeres],
+                                    fb_id.co2['month'],
+                                    fb_id.temp['month'],
+                                    uptake,
                                     variable
                                     )
 
-        regstat = [df.regstats()[model] for model in uptake[simulation][timeres]]
+        regstat = [df.regstats()[simulation][model] for model in uptake[simulation]['month']]
 
         index = regstat[0].index
         columns = regstat[0].columns
@@ -121,7 +130,7 @@ def mean_regstat(timeres, variable):
                 val = model_regstat.iloc[i,j]
                 if val != np.nan:
                     values.append(val)
-            array[i][j] = np.nanmean(values)
+            array[i][j] = np.nanmedian(values)
 
         mean_regstat = pd.DataFrame(array)
         mean_regstat.index = index
@@ -131,101 +140,80 @@ def mean_regstat(timeres, variable):
 
     return mean_regstats
 
+
 """ FIGURES """
-def fb_trendy(timeres, save=False):
-    uptake = fb_id.trendy_duptake if timeres == "month" else fb_id.trendy_uptake
-    fig = plt.figure(figsize=(14,10))
+def fb_trendy(save=False):
+    uptake = fb_id.trendy_duptake
+    fig = plt.figure(figsize=(14,6))
     ax = {}
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
 
-    for subplot, simulation in zip(["211", "212"], ["S1", "S3"]):
-        if simulation == 'S1':
-            temp = fb_id.temp_zero[timeres]
-        elif simulation == 'S3':
-            temp = fb_id.temp[timeres]
+    bar_width = 3
+    param_details = {
+        'beta': {
+                    'bar_width': -bar_width,
+                    'color': 'green',
+                    'label': r'$\beta$'
+                },
+        'u_gamma': {
+                    'bar_width': bar_width,
+                    'color': 'red',
+                    'label': r'$u_{\gamma}$'
+                }
+    }
+
+    for simulation, param in zip(["S1", "S3"], ['beta', 'u_gamma']):
+        subplot = '111'
+        bw = param_details[param]['bar_width']
+        color = param_details[param]['color']
+        label = param_details[param]['label']
 
         df = FeedbackAnalysis.TRENDY(
-                                    fb_id.co2[timeres],
-                                    temp,
-                                    uptake[simulation][timeres],
+                                    fb_id.co2['month'],
+                                    fb_id.temp['month'],
+                                    uptake,
                                     'Earth_Land'
                                     )
 
-        whole_df = feedback_regression(timeres, "Earth_Land")[0][simulation].mean(axis=1)
-        beta = df.params()['beta']
-        gamma = df.params()['u_gamma']
+        whole_df = feedback_regression("Earth_Land")[0][simulation].mean(axis=1)
+        whole_param = whole_df[param] * 12
 
-        whole_beta = whole_df['beta']
-        whole_gamma = whole_df['u_gamma']
-
-        beta_mean = beta.mean(axis=1)
-        beta_std = beta.std(axis=1)
-        gamma_mean = gamma.mean(axis=1)
-        gamma_std = gamma.std(axis=1)
-
-        if timeres == 'month':
-            whole_beta *= 12
-            whole_gamma *= 12
-            beta_mean *= 12
-            beta_std *= 12
-            gamma_mean *= 12
-            gamma_std *= 12
+        param = df.params()[simulation][param]
+        param_mean = param.mean(axis=1) * 12
+        param_std = param.std(axis=1) * 12
 
         ax[subplot] = fig.add_subplot(subplot)
 
         ax[subplot].axhline(ls='--', color='k', alpha=0.5, lw=0.8)
-
-        bar_width = 3
-        if simulation == "S3":
-            ax[subplot].bar(beta.index + 5 - bar_width / 2,
-                            beta_mean,
-                            yerr=beta_std * 1.645,
-                            width=bar_width,
-                            color='green',
-                            label=r'$\beta$')
-            ax[subplot].bar(gamma.index + 5 + bar_width / 2,
-                            gamma_mean,
-                            yerr=gamma_std * 1.645,
-                            width=bar_width,
-                            color='red',
-                            label=r'$u_{\gamma}$')
-            ax[subplot].axhline(y= whole_beta, ls='--', color='green', alpha=0.8, lw=1)
-            ax[subplot].axhline(y= whole_gamma, ls='--', color='red', alpha=0.8, lw=1)
-            ax[subplot].legend()
-
-        elif simulation == "S1":
-            ax[subplot].bar(beta.index + 5,
-                            beta_mean,
-                            yerr=beta_std,
-                            width=bar_width,
-                            color='green',
-                            label=r'$\beta$')
-            ax[subplot].axhline(y= whole_beta, ls='--', color='green', alpha=0.8, lw=1)
-            ax[subplot].legend()
-
-        ax[subplot].set_ylabel(simulation, fontsize=14, labelpad=5)
+        ax[subplot].bar(param.index + 5 + bw / 2,
+                        param_mean,
+                        yerr=param_std * 1.645,
+                        width=abs(bar_width),
+                        color=color,
+                        label=label)
+        ax[subplot].axhline(y= whole_param, ls='--', color=color, alpha=0.8, lw=1)
+        ax[subplot].legend()
 
     axl.set_xlabel("Middle year of 10-year window", fontsize=16, labelpad=10)
-    axl.set_ylabel('Feedback parameter   (yr$^{-1}$)', fontsize=16, labelpad=40)
+    axl.set_ylabel('Feedback parameter   (yr$^{-1}$)', fontsize=16, labelpad=20)
 
     if save:
-        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_trendy_{timeres}.png")
+        plt.savefig(fb_id.FIGURE_DIRECTORY + "fb_trendy_month.png")
 
-def fb_regional_trendy(timeres, save=False):
-    uptake = (fb_id.trendy_duptake if timeres == "month" else
-              fb_id.trendy_uptake)
+def fb_regional_trendy(save=False):
+    uptake = fb_id.trendy_duptake
 
-    all_subplots = ['221', '222', '224']
+    all_subplots = ['211', '212']
     # Note u_gamma is used to compare with beta.
-    parameters = [['beta', 'S1'], ['beta', 'S3'], ['u_gamma', 'S3']]
+    parameters = [['beta', 'S1'], ['u_gamma', 'S3']]
 
     vars = ['Earth', 'South', 'Tropical', 'North']
     colors = ['gray', 'blue', 'orange', 'green']
     bar_width = 1.25
     bar_position = np.arange(-2, 2) * bar_width
 
-    fig = plt.figure(figsize=(14,10))
+    fig = plt.figure(figsize=(16,6))
     ax = {}
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
@@ -233,84 +221,69 @@ def fb_regional_trendy(timeres, save=False):
 
     for subplot, parameter in zip(all_subplots, parameters):
         for var, color, bar_pos in zip(vars, colors, bar_position):
-            if parameter[1] == 'S1':
-                temp = fb_id.temp_zero[timeres]
-            elif parameter[1] == 'S3':
-                temp = fb_id.temp[timeres]
-
             df = FeedbackAnalysis.TRENDY(
-                                        fb_id.co2[timeres],
-                                        temp,
-                                        uptake[parameter[1]][timeres],
+                                        fb_id.co2['month'],
+                                        fb_id.temp['month'],
+                                        uptake,
                                         var + '_Land'
                                         )
 
-            param = df.params()[parameter[0]]
-            param_mean = param.mean(axis=1)
-            param_std = param.std(axis=1)
+            param = df.params()[parameter[1]][parameter[0]]
+            param_mean = param.mean(axis=1) * 12
+            param_std = param.std(axis=1) * 12
 
             ax[subplot] = fig.add_subplot(subplot)
 
             ax[subplot].bar(param.index + 5 + bar_pos,
                             param_mean,
-                            yerr=2*param_std,
+                            yerr=param_std*1.645,
                             width=bar_width,
                             color=color)
 
-    ax["221"].set_xlabel("S1", fontsize=14, labelpad=5)
-    ax["221"].xaxis.set_label_position('top')
-    ax["222"].set_xlabel("S3", fontsize=14, labelpad=5)
-    ax["222"].xaxis.set_label_position('top')
-    for subplot, region in zip(["221", "224"],
-                               [r'$\beta$', r'$u_{\gamma}$']):
-        ax[subplot].set_ylabel(region, fontsize=14, labelpad=5)
+    ax["211"].set_xlabel(r'$\beta$', fontsize=14, labelpad=5)
+    ax["211"].xaxis.set_label_position('top')
+    ax["212"].set_xlabel(r'$u_{\gamma}$', fontsize=14, labelpad=5)
+    ax["212"].xaxis.set_label_position('top')
 
-    yunits = 'yr' if timeres == 'year' else timeres
     axl.set_xlabel("Middle year of 10-year window", fontsize=16, labelpad=10)
-    axl.set_ylabel(f'Feedback parameter   ({yunits}' + '$^{-1}$)',
+    axl.set_ylabel(r'Feedback parameter   (yr $^{-1}$)',
                    fontsize=16,
-                   labelpad=40
+                   labelpad=20
                   )
 
     if save:
-        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_trendy_regional_{timeres}.png")
+        plt.savefig(fb_id.FIGURE_DIRECTORY + "fb_trendy_regional_month.png")
 
-def fb_regional_trendy2(timeres, save=False):
-    uptake = (fb_id.trendy_duptake if timeres == "month" else
-              fb_id.trendy_uptake)
+def fb_regional_trendy2(save=False):
+    uptake = fb_id.trendy_duptake
 
-    all_subplots = ['42'+str(i) for i in range(1,9)]
-    vars = product(['Earth', 'South', 'Tropical', 'North'], ['S1', 'S3'])
+    all_subplots = ['41'+str(i) for i in range(1,5)]
+    vars = ['Earth', 'South', 'Tropical', 'North']
 
     # Note u_gamma is used to compare with beta.
     parameters = ['beta', 'u_gamma']
+    simulations = ['S1', 'S3']
     colors = ['green', 'red']
     bar_width = 1.5
     bar_position = np.arange(-1, 1) * bar_width
 
-    fig = plt.figure(figsize=(14,10))
+    fig = plt.figure(figsize=(16,14))
     ax = {}
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
 
-    ymin_land, ymax_land = [], []
-    ymin_ocean, ymax_ocean = [], []
+    ymin, ymax = [], []
     for subplot, var in zip(all_subplots, vars):
-        if var[1] == 'S1':
-            temp = fb_id.temp_zero[timeres]
-        elif var[1] == 'S3':
-            temp = fb_id.temp[timeres]
         df = FeedbackAnalysis.TRENDY(
-                                    fb_id.co2[timeres],
-                                    temp,
-                                    uptake[var[1]][timeres],
-                                    var[0] + '_Land'
+                                    fb_id.co2['month'],
+                                    fb_id.temp['month'],
+                                    uptake,
+                                    var + '_Land'
                                     )
-        params = df.params()
-        for parameter, color, bar_pos in zip(parameters, colors, bar_position):
-            param = params[parameter]
-            param_mean = param.mean(axis=1)
-            param_std = param.std(axis=1)
+        for parameter, sim, color, bar_pos in zip(parameters, simulations, colors, bar_position):
+            param = df.params()[sim][parameter]
+            param_mean = param.mean(axis=1) * 12
+            param_std = param.std(axis=1) * 12
 
             ax[subplot] = fig.add_subplot(subplot)
 
@@ -320,58 +293,48 @@ def fb_regional_trendy2(timeres, save=False):
                             width=bar_width,
                             color=color)
 
-            if var[1] == 'S1' and subplot != "421":
-                ymin_land.append((param_mean - 2*param_std).min())
-                ymax_land.append((param_mean + 2*param_std).max())
-            if var[1] == 'S3' and subplot != "422":
-                ymin_ocean.append((param_mean - 2*param_std).min())
-                ymax_ocean.append((param_mean + 2*param_std).max())
+            if subplot != "411":
+                ymin.append((param_mean - 1.645*param_std).min())
+                ymax.append((param_mean + 1.645*param_std).max())
 
     delta = 0.05
-    for subplot in ["423", "425", "427"]:
-        ax[subplot].set_ylim([min(ymin_land) - delta * abs(min(ymin_land)),
-                              max(ymax_land) + delta * abs(max(ymax_land))])
-    for subplot in ["424", "426", "428"]:
-        ax[subplot].set_ylim([min(ymin_ocean) - delta * abs(min(ymin_ocean)),
-                              max(ymax_ocean) + delta * abs(max(ymax_ocean))])
+    for subplot in ["412", "413", "414"]:
+        ax[subplot].set_ylim([min(ymin) - delta * abs(min(ymin)),
+                              max(ymax) + delta * abs(max(ymax))])
 
-    ax["421"].set_xlabel("S1", fontsize=14, labelpad=5)
-    ax["421"].xaxis.set_label_position('top')
-    ax["422"].set_xlabel("S3", fontsize=14, labelpad=5)
-    ax["422"].xaxis.set_label_position('top')
-    for subplot, region in zip(["421", "423", "425", "427"],
+    for subplot, region in zip(["411", "412", "413", "414"],
                                ['Earth', 'South', 'Tropical', 'North']):
         ax[subplot].set_ylabel(region, fontsize=14, labelpad=5)
 
-    yunits = 'yr' if timeres == 'year' else timeres
     axl.set_xlabel("Middle year of 10-year window", fontsize=16, labelpad=10)
-    axl.set_ylabel(f'Feedback parameter   ({yunits}' + '$^{-1}$)',
+    axl.set_ylabel(r'Feedback parameter   (yr$^{-1}$)',
                    fontsize=16,
                    labelpad=40
                   )
 
     if save:
-        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_trendy_regional_{timeres}2.png")
+        plt.savefig(fb_id.FIGURE_DIRECTORY + "fb_trendy_regional_month2.png")
 
 
 """ EXECUTION """
-whole_param = feedback_regression('month', 'Earth_Land')
+whole_param = feedback_regression('Earth_Land')
 whole_param[0]['S1'].mean(axis=1)*12
 whole_param[0]['S3'].mean(axis=1)*12
 
 
 
-whole_param[1]['S1'].mean()
-whole_param[1]['S3'].mean()
-
-land[0].mean(axis=1) / ocean[0].mean(axis=1)
+whole_param[1]['S1']
+whole_param[1]['S3']
 
 
-fb_trendy('month', save=False)
-fb_trendy('year', save=False)
+medianreg = median_regstat("Earth_Land")
+medianreg['S1']
+medianreg['S3']
 
-# all_regstat("month", "Earth_Land")['S3']['OCN']
-# mean_regstat("year", "Earth_Land")['S3']
-meanreg = mean_regstat("month", "Earth_Land")
-meanreg['S1']
-meanreg['S3']
+
+""" FIGURES """
+fb_trendy(save=True)
+
+fb_regional_trendy(save=True)
+
+fb_regional_trendy2(save=True)
