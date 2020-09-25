@@ -58,13 +58,13 @@ def bandpass_filter(x, btype, fc):
     return signal.filtfilt(b, a, x)
 
 def bandpass_instance(instance_dict, fc, btype='low'):
-    if 'JSBACH_S1_nbp' in instance_dict or 'JSBACH_S3_nbp' in instance_dict:
+    if 'JSBACH_S1_nbp' in instance_dict or 'JSBACH_S3_nbp' in instance_dict or 'S1' in instance_dict or 'S3' in instance_dict:
         vars = ['Earth_Land', 'South_Land', 'North_Land', 'Tropical_Land']
     else:
         vars = ['Earth_Land', 'South_Land', 'North_Land', 'Tropical_Land',
                 'Earth_Ocean', 'South_Ocean', 'North_Ocean', 'Tropical_Ocean']
     b_instance_dict = deepcopy(instance_dict)
-    for model in b_instance_dict:
+    for model in instance_dict:
         b_instance_dict[model].data = xr.Dataset(
             {key: (('time'), instance_dict[model].bandpass(key, fc, fs=12, btype=btype)) for
             key in vars},

@@ -13,6 +13,8 @@ import os
 
 import fig_input_data as id
 
+import pickle
+
 
 """ FIGURES """
 def inv_yearplots(save=False):
@@ -20,12 +22,20 @@ def inv_yearplots(save=False):
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
 
+    inv_df = {}
+
     for subplot, var in zip(['211', '212'], ['Earth_Land', 'Earth_Ocean']):
+        inv_df_models = {}
         ax = fig.add_subplot(subplot)
         for model in id.year_invf:
             df = id.year_invf[model].data[var]
             ax.plot(df.time, df.values)
+
+            inv_df_models[model] = df
+
         plt.legend(id.year_invf.keys())
+
+        inv_df[var] = inv_df_models
 
     axl.set_title("Uptake: Inversions - Annual", fontsize=32, pad=20)
     axl.set_xlabel("Year", fontsize=16, labelpad=10)
@@ -35,17 +45,25 @@ def inv_yearplots(save=False):
     if save:
         plt.savefig(FIGURE_DIRECTORY + "inv_yearplots.png")
 
+    return inv_df
+
 def inv_monthplots(save=False):
     fig = plt.figure(figsize=(16,10))
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
 
+    inv_df = {}
+
     for subplot, var in zip(['211', '212'], ['Earth_Land', 'Earth_Ocean']):
+        inv_df_models = {}
         ax = fig.add_subplot(subplot)
         for model in id.month_invf:
             df = id.month_invf[model].data[var]
             ax.plot(df.time, df.values)
+            inv_df_models[model] = df
         plt.legend(id.month_invf.keys())
+
+        inv_df[var] = inv_df_models
 
     axl.set_title("Uptake: Inversions - Monthly", fontsize=32, pad=20)
     axl.set_xlabel("Year", fontsize=16, labelpad=10)
@@ -55,6 +73,8 @@ def inv_monthplots(save=False):
     if save:
         plt.savefig(FIGURE_DIRECTORY + "inv_monthplots.png")
 
+    return inv_df
+
 def inv_year_cwt(save=False, stat_values=False):
     zip_list = zip(['211', '212'], ['Earth_Land', 'Earth_Ocean'])
 
@@ -62,6 +82,8 @@ def inv_year_cwt(save=False, stat_values=False):
     fig = plt.figure(figsize=(16,8))
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
+
+    inv_cwt = {}
 
     for subplot, var in zip_list:
         ax = fig.add_subplot(subplot)
@@ -87,6 +109,11 @@ def inv_year_cwt(save=False, stat_values=False):
         x = df.index
         y = df.mean(axis=1)
         std = df.std(axis=1)
+
+        inv_cwt[var] = (pd
+                            .DataFrame({'CO2 (ppm)': x, 'CWT (GtC/yr/ppm)': y, 'std': std})
+                            .set_index('CO2 (ppm)')
+                        )
 
         ax.plot(x, y, color='red')
         ax.fill_between(x, y - 2*std, y + 2*std, color='gray', alpha=0.2)
@@ -114,6 +141,8 @@ def inv_year_cwt(save=False, stat_values=False):
     if stat_values:
         return stat_vals
 
+    return inv_cwt
+
 def inv_month_cwt(fc=None, save=False, stat_values=False):
     zip_list = zip(['211', '212'], ['Earth_Land', 'Earth_Ocean'])
 
@@ -121,6 +150,8 @@ def inv_month_cwt(fc=None, save=False, stat_values=False):
     fig = plt.figure(figsize=(16,8))
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
+
+    inv_cwt = {}
 
     for subplot, var in zip_list:
         ax = fig.add_subplot(subplot)
@@ -146,6 +177,11 @@ def inv_month_cwt(fc=None, save=False, stat_values=False):
         x = df.index
         y = df.mean(axis=1)
         std = df.std(axis=1)
+
+        inv_cwt[var] = (pd
+                            .DataFrame({'CO2 (ppm)': x, 'CWT (GtC/yr/ppm)': y, 'std': std})
+                            .set_index('CO2 (ppm)')
+                        )
 
         ax.plot(x, y, color='red')
         ax.fill_between(x, y - 2*std, y + 2*std, color='gray', alpha=0.2)
@@ -173,6 +209,8 @@ def inv_month_cwt(fc=None, save=False, stat_values=False):
     if stat_values:
         return stat_vals
 
+    return inv_cwt
+
 def inv_powerspec(xlim, save=False):
     zip_list = zip(['211', '212'], ['Earth_Land', 'Earth_Ocean'])
 
@@ -180,12 +218,20 @@ def inv_powerspec(xlim, save=False):
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
 
+    inv_cwt = {}
+
     for subplot, var in zip_list:
         ax = fig.add_subplot(subplot)
 
         psd = id.month_invf['JAMSTEC'].psd(var, fs=12)
         x = psd.iloc[:,0]
         y = psd.iloc[:,1]
+
+        inv_cwt[var] = (pd
+                            .DataFrame({'Period (years)': x.values,
+                                        'Spectral Variance': y.values})
+                            .set_index('Period (years)')
+                        )
 
         ax.semilogy(x, y)
         ax.invert_xaxis()
@@ -200,6 +246,8 @@ def inv_powerspec(xlim, save=False):
     if save:
         plt.savefig(FIGURE_DIRECTORY + "inv_powerspec.png")
 
+    return inv_cwt
+
 
 """ EXECUTION """
 inv_yearplots(save=False)
@@ -211,3 +259,10 @@ inv_year_cwt(save=False, stat_values=True)
 inv_month_cwt(save=False, stat_values=True)
 
 inv_powerspec([10,0], save=False)
+
+# PICKLE
+pickle.dump(inv_yearplots(), open(id.FIGURE_DIRECTORY+'/rayner_df/inv_yearplots.pik', 'wb'))
+pickle.dump(inv_monthplots(), open(id.FIGURE_DIRECTORY+'/rayner_df/inv_monthplots.pik', 'wb'))
+pickle.dump(inv_year_cwt(), open(id.FIGURE_DIRECTORY+'/rayner_df/inv_year_cwt.pik', 'wb'))
+pickle.dump(inv_month_cwt(), open(id.FIGURE_DIRECTORY+'/rayner_df/inv_month_cwt.pik', 'wb'))
+pickle.dump(inv_powerspec([10,0]), open(id.FIGURE_DIRECTORY+'/rayner_df/inv_powerspec.pik', 'wb'))

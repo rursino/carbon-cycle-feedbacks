@@ -13,9 +13,11 @@ from core import trendy_flux as TRENDYf
 
 import fig_input_data as id
 
+import pickle
+
 
 """ FIGURES """
-def inv_regional_cwt(timeres="year", save=False):
+def inv_regional_cwt(timeres="year", save=False, stat_values=False):
     invf_dict = {
         "year": id.year_invf,
         "month": id.dmonth_invf
@@ -33,6 +35,8 @@ def inv_regional_cwt(timeres="year", save=False):
     ax = {}
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
+
+    cwt_vals = {}
 
     for subplots, vars in zip_list:
         ymin, ymax = [], []
@@ -67,6 +71,11 @@ def inv_regional_cwt(timeres="year", save=False):
             y = df.mean(axis=1)
             std = df.std(axis=1)
 
+            cwt_vals[var] = (pd
+                                .DataFrame({'CO2 (ppm)': x, 'CWT (MtC/yr/ppm)': y, 'std': std})
+                                .set_index('CO2 (ppm)')
+                            )
+
             ax[subplot].plot(x, y, color=color)
             ax[subplot].fill_between(x, y - 2*std, y + 2*std, color='gray', alpha=0.2)
             ax[subplot].axhline(ls='--', color='k', alpha=0.5, lw=1)
@@ -99,9 +108,12 @@ def inv_regional_cwt(timeres="year", save=False):
     if save:
         plt.savefig(id.FIGURE_DIRECTORY + f"inv_regional_{timeres}_cwt.png")
 
-    return stat_vals
+    if stat_values:
+        return stat_vals
 
-def trendy_regional_cwt(timeres='year', save=False):
+    return cwt_vals
+
+def trendy_regional_cwt(timeres='year', save=False, stat_values=False):
     trendy_dict = {
         "year": (id.year_S1_trendy,
                  id.year_S3_trendy
@@ -115,7 +127,7 @@ def trendy_regional_cwt(timeres='year', save=False):
     all_subplots = [['42' + str(num) for num in range(i,i+8,2)] for i in range(1,3)]
     colors = ['black', 'blue', 'orange', 'green']
 
-    zip_list = zip(all_subplots, trendy_dict[timeres])
+    zip_list = zip(all_subplots, ['S1', 'S3'], trendy_dict[timeres])
 
     stat_vals = []
     fig = plt.figure(figsize=(16,8))
@@ -123,9 +135,12 @@ def trendy_regional_cwt(timeres='year', save=False):
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
 
-    for subplots, trendy_sim in zip_list:
+    cwt_vals = {}
+
+    for subplots, sim, trendy_sim in zip_list:
         ymin, ymax = [], []
         stat_vals_sim = {}
+        cwt_sim = {}
         for subplot, var, color in zip(subplots, vars, colors):
             ax[subplot] = fig.add_subplot(subplot)
 
@@ -154,6 +169,11 @@ def trendy_regional_cwt(timeres='year', save=False):
             y = df.mean(axis=1)
             std = df.std(axis=1)
 
+            cwt_sim[var] = (pd
+                                .DataFrame({'CO2 (ppm)': x, 'CWT (MtC/yr/ppm)': y, 'std': std})
+                                .set_index('CO2 (ppm)')
+                            )
+
             ax[subplot].plot(x, y, color=color)
             ax[subplot].fill_between(x, y - 2*std, y + 2*std, color='gray', alpha=0.2)
             ax[subplot].axhline(ls='--', color='k', alpha=0.5, lw=1)
@@ -164,6 +184,7 @@ def trendy_regional_cwt(timeres='year', save=False):
             ymax.append((y + 2*std).max())
 
         stat_vals.append(stat_vals_sim)
+        cwt_vals[sim] = cwt_sim
 
         delta = 0.1
         for subplot in subplots:
@@ -188,9 +209,12 @@ def trendy_regional_cwt(timeres='year', save=False):
     if save:
         plt.savefig(id.FIGURE_DIRECTORY + f"trendy_regional_{timeres}_cwt.png")
 
-    return stat_vals
+    if stat_values:
+        return stat_vals
 
-def trendy_regional_cwt_diff(timeres='year', save=False):
+    return cwt_vals
+
+def trendy_regional_cwt_diff(timeres='year', save=False, stat_values=False):
     trendy_dict = {
         "year": (id.year_S1_trendy,
                  id.year_S3_trendy
@@ -211,6 +235,8 @@ def trendy_regional_cwt_diff(timeres='year', save=False):
     ax = {}
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
+
+    cwt_vals = {}
 
     ymin, ymax = [], []
     for subplot, var, color in zip_list:
@@ -250,6 +276,11 @@ def trendy_regional_cwt_diff(timeres='year', save=False):
         y = df.mean(axis=1)
         std = df.std(axis=1)
 
+        cwt_vals[var] = (pd
+                            .DataFrame({'CO2 (ppm)': x, 'CWT (MtC/yr/ppm)': y, 'std': std})
+                            .set_index('CO2 (ppm)')
+                        )
+
         ax[subplot].plot(x, y, color=color)
         ax[subplot].fill_between(x, y - 2*std, y + 2*std, color='gray', alpha=0.2)
         ax[subplot].axhline(ls='--', color='k', alpha=0.5, lw=1)
@@ -275,9 +306,13 @@ def trendy_regional_cwt_diff(timeres='year', save=False):
                   )
 
     if save:
-        plt.savefig(id.FIGURE_DIRECTORY + f"trendy_regional_{timeres}_cwt.png")
+        plt.savefig(id.FIGURE_DIRECTORY + f"trendy_regional_{timeres}_cwt_diff.png")
 
-    return stat_vals
+    if stat_values:
+        return stat_vals
+
+    return cwt_vals
+
 
 """ EXECUTION """
 inv_regional_cwt("year", save=False)
@@ -288,3 +323,14 @@ trendy_regional_cwt('month', save=False)
 
 trendy_regional_cwt_diff('year', save=False)
 trendy_regional_cwt_diff('month', save=False)
+
+
+# PICKLE
+pickle.dump(inv_regional_cwt("year"), open(id.FIGURE_DIRECTORY+'/rayner_df/inv_regional_year_cwt.pik', 'wb'))
+pickle.dump(inv_regional_cwt("month"), open(id.FIGURE_DIRECTORY+'/rayner_df/inv_regional_month_cwt.pik', 'wb'))
+
+pickle.dump(trendy_regional_cwt('year'), open(id.FIGURE_DIRECTORY+'/rayner_df/trendy_regional_year_cwt.pik', 'wb'))
+pickle.dump(trendy_regional_cwt('month'), open(id.FIGURE_DIRECTORY+'/rayner_df/trendy_regional_month_cwt.pik', 'wb'))
+
+pickle.dump(trendy_regional_cwt_diff('year'), open(id.FIGURE_DIRECTORY+'/rayner_df/trendy_regional_year_cwt_diff.pik', 'wb'))
+pickle.dump(trendy_regional_cwt_diff('month'), open(id.FIGURE_DIRECTORY+'/rayner_df/trendy_regional_month_cwt_diff.pik', 'wb'))

@@ -16,6 +16,8 @@ import os
 
 import fig_input_data as id
 
+import pickle
+
 
 """ FIGURES """
 def trendy_yearplots(save=False):
@@ -25,9 +27,14 @@ def trendy_yearplots(save=False):
     fig = plt.figure(figsize=(16,8))
     ax = fig.add_subplot(111)
 
+    trendy_df_models = {}
+
     for sim in year_mean.keys():
         df = year_mean[sim].data.Earth_Land
         ax.plot(df.time, df.values)
+
+        trendy_df_models[sim] = df
+
     ax.axhline(ls='--', color='k', alpha=0.5, lw=1)
     plt.legend(year_mean.keys(), fontsize=14)
 
@@ -39,6 +46,8 @@ def trendy_yearplots(save=False):
     if save:
         plt.savefig(id.FIGURE_DIRECTORY + f"trendy_yearplots.png")
 
+    return trendy_df_models
+
 def trendy_year_cwt(save=False, stat_values=False):
     trendy_year = {
         'S1': id.year_S1_trendy,
@@ -48,6 +57,8 @@ def trendy_year_cwt(save=False, stat_values=False):
     fig = plt.figure(figsize=(16,12))
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
+
+    trendy_cwt = {}
 
     subplots = ['211', '212']
     stat_vals = []
@@ -77,6 +88,11 @@ def trendy_year_cwt(save=False, stat_values=False):
         y = df.mean(axis=1)
         std = df.std(axis=1)
 
+        trendy_cwt[sim] = (pd
+                            .DataFrame({'CO2 (ppm)': x, 'CWT (GtC/yr/ppm)': y, 'std': std})
+                            .set_index('CO2 (ppm)')
+                        )
+
         ax.plot(x, y, color='red')
         ax.fill_between(x, y - 2*std, y + 2*std, color='gray', alpha=0.2)
 
@@ -104,6 +120,8 @@ def trendy_year_cwt(save=False, stat_values=False):
     if stat_values:
         return stat_vals
 
+    return trendy_cwt
+
 def trendy_month_cwt(fc=None, save=False, stat_values=False):
     trendy_month = {
         'S1': id.deseasonalise_instance(id.month_S1_trendy),
@@ -113,6 +131,8 @@ def trendy_month_cwt(fc=None, save=False, stat_values=False):
     fig = plt.figure(figsize=(16,12))
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
+
+    trendy_cwt = {}
 
     subplots = ['211', '212']
     stat_vals = []
@@ -144,6 +164,11 @@ def trendy_month_cwt(fc=None, save=False, stat_values=False):
         y = df.mean(axis=1)
         std = df.std(axis=1)
 
+        trendy_cwt[sim] = (pd
+                            .DataFrame({'CO2 (ppm)': x, 'CWT (GtC/yr/ppm)': y, 'std': std})
+                            .set_index('CO2 (ppm)')
+                        )
+
         ax.plot(x, y, color='red')
         ax.fill_between(x, y - 2*std, y + 2*std, color='gray', alpha=0.2)
 
@@ -171,15 +196,22 @@ def trendy_month_cwt(fc=None, save=False, stat_values=False):
     if stat_values:
         return stat_vals
 
+    return trendy_cwt
+
 def trendy_bandpass_timeseries(fc, save=False):
     trendy_year = id.bandpass_instance(id.month_mean, fc)
 
     fig = plt.figure(figsize=(16,8))
     ax = fig.add_subplot(111)
 
+    trendy_bp = {}
+
     for model in trendy_year:
         df = trendy_year[model].data.Earth_Land.sel(time=slice('1750', '2017'))
         ax.plot(df.time, df.values)
+
+        trendy_bp[model] = df
+
     plt.legend(trendy_year.keys())
 
     ax.set_title(f"Uptake: TRENDY - Low-pass filtered: 1/{1/fc} years)", fontsize=32, pad=20)
@@ -189,6 +221,8 @@ def trendy_bandpass_timeseries(fc, save=False):
 
     if save:
         plt.savefig(id.FIGURE_DIRECTORY + f"trendy_bandpass_timeseries.png")
+
+    return trendy_bp
 
 def trendy_powerspec(xlim, save=False):
     zip_list = zip(['211', '212'], ['S1', 'S3'])
@@ -200,6 +234,8 @@ def trendy_powerspec(xlim, save=False):
     fig = plt.figure(figsize=(16,8))
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
+
+    ps = {}
 
     for subplot, sim in zip_list:
         ax = fig.add_subplot(subplot)
@@ -229,6 +265,12 @@ def trendy_powerspec(xlim, save=False):
         X = df.index
         Y = df.mean(axis=1)
 
+        ps[sim] = (pd
+                        .DataFrame({'Period (Years)': X,
+                                    'Spectral Variance': Y})
+                        .set_index('Period (Years)')
+                    )
+
         ax.semilogy(X, Y)
         ax.invert_xaxis()
         ax.set_xlim(xlim)
@@ -242,6 +284,8 @@ def trendy_powerspec(xlim, save=False):
     if save:
         plt.savefig(id.FIGURE_DIRECTORY + "trendy_powerspec.png")
 
+    return ps
+
 
 """ EXECUTION """
 trendy_yearplots(save=False)
@@ -253,3 +297,11 @@ trendy_month_cwt(save=False, stat_values=True)
 trendy_bandpass_timeseries(1/40, save=False)
 
 trendy_powerspec([7,0], save=False)
+
+
+# PICKLE
+pickle.dump(trendy_yearplots(), open(id.FIGURE_DIRECTORY+'/rayner_df/trendy_yearplots.pik', 'wb'))
+pickle.dump(trendy_year_cwt(), open(id.FIGURE_DIRECTORY+'/rayner_df/trendy_year_cwt.pik', 'wb'))
+pickle.dump(trendy_month_cwt(), open(id.FIGURE_DIRECTORY+'/rayner_df/trendy_month_cwt.pik', 'wb'))
+pickle.dump(trendy_bandpass_timeseries(1/40), open(id.FIGURE_DIRECTORY+'/rayner_df/trendy_bandpass_timeseries.pik', 'wb'))
+pickle.dump(trendy_powerspec([7,0]), open(id.FIGURE_DIRECTORY+'/rayner_df/trendy_powerspec.pik', 'wb'))

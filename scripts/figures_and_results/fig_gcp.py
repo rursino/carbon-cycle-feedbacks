@@ -10,6 +10,8 @@ import sys
 from copy import deepcopy
 from core import GCP_flux as GCPf
 
+import pickle
+
 
 """ INPUTS """
 FIGURE_DIRECTORY = "./../../latex/thesis/figures/"
@@ -32,7 +34,6 @@ def bandpass_instance(instance, fc):
 
     return bp_instance
 
-
 """ FIGURES """
 def gcp_landocean(save=False):
     plt.figure(figsize=(15,8))
@@ -47,6 +48,11 @@ def gcp_landocean(save=False):
 
     if save:
         plt.savefig(FIGURE_DIRECTORY + "gcp_landocean.png")
+
+    # For P.Rayner
+    return pd.DataFrame({'land': land.values, 'ocean': ocean.values},
+                        index=land.index
+                        )
 
 def gcp_simple_regression(save=False, stat_values=False):
     zip_list = zip(['211', '212'], ['land', 'ocean'], [land, ocean])
@@ -80,11 +86,20 @@ def gcp_simple_regression(save=False, stat_values=False):
 
     if stat_values:
         return stat_vals
+    else:
+        # For P.Rayner
+        df_dict = {}
+        for region in stat_vals:
+            df_dict[region] = (stat_vals[region].slope * co2.values +
+                               stat_vals[region].intercept)
+
+        return pd.DataFrame(df_dict, index=co2.values)
 
 def gcp_cwt(save=False, stat_values=False):
     zip_list = zip(['211', '212'], ['land', 'ocean'], [land_GCPf, ocean_GCPf])
 
     stat_vals = {}
+    cwt_vals = {}
     fig = plt.figure(figsize=(16,8))
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
@@ -95,6 +110,11 @@ def gcp_cwt(save=False, stat_values=False):
         sink_cwt_df = sink.cascading_window_trend(indep="CO2", window_size=10)
         x = sink_cwt_df.index
         y = sink_cwt_df.values.squeeze()
+
+        cwt_vals[var] = (pd
+                            .DataFrame({'CO2 (ppm)': x, 'CWT (GtC/yr/ppm)': y})
+                            .set_index('CO2 (ppm)')
+                        )
 
         regstats = stats.linregress(x, y)
         slope, intercept, rvalue, pvalue, _ = regstats
@@ -117,13 +137,19 @@ def gcp_cwt(save=False, stat_values=False):
 
     if stat_values:
         return stat_vals
+    else:
+        # For P.Rayner
+        return cwt_vals
 
 def gcp_powerspec(save=False):
     zip_list = zip(['211', '212'], ['land', 'ocean'], [land_GCPf, ocean_GCPf])
 
+    powerspec_df = {}
+
     fig = plt.figure(figsize=(16,8))
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
+    psd_vals = {}
 
     for subplot, var, sink in zip_list:
         ax = fig.add_subplot(subplot)
@@ -131,6 +157,12 @@ def gcp_powerspec(save=False):
         sink_psd = sink.psd()
         x = sink_psd.iloc[:,0]
         y = sink_psd.iloc[:,1]
+
+        psd_vals[var] = (pd
+                            .DataFrame({'Period (years)': x.values,
+                                        'Spectral Variance': y.values})
+                            .set_index('Period (years)')
+                        )
 
         ax.semilogy(x, y)
         ax.invert_xaxis()
@@ -142,6 +174,8 @@ def gcp_powerspec(save=False):
 
     if save:
         plt.savefig(FIGURE_DIRECTORY + "gcp_powerspec.png")
+
+    return psd_vals
 
 def gcp_cwt_bandpass(save=False, stat_values=False, fc=1/10):
     zip_list = zip(
@@ -155,12 +189,19 @@ def gcp_cwt_bandpass(save=False, stat_values=False, fc=1/10):
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
 
+    cwt_vals = {}
+
     for subplot, var, sink in zip_list:
         ax = fig.add_subplot(subplot)
 
         sink_cwt_df = sink.cascading_window_trend(indep="CO2", window_size=10)
         x = sink_cwt_df.index
         y = sink_cwt_df.values.squeeze()
+
+        cwt_vals[var] = (pd
+                            .DataFrame({'CO2 (ppm)': x, 'CWT (GtC/yr/ppm)': y})
+                            .set_index('CO2 (ppm)')
+                        )
 
         regstats = stats.linregress(x, y)
         slope, intercept, rvalue, pvalue, _ = regstats
@@ -185,6 +226,8 @@ def gcp_cwt_bandpass(save=False, stat_values=False, fc=1/10):
     if stat_values:
         return stat_vals
 
+    return cwt_vals
+
 
 """ EXECUTION """
 gcp_landocean(save=False)
@@ -201,3 +244,11 @@ gcp_powerspec(save=False)
 stat_cwt_bp = gcp_cwt_bandpass(save=False, stat_values=True, fc=1/25)
 (stat_cwt_bp['land'].slope * 60 *(co2.iloc[-1] - co2.iloc[0])**2 / 1e3,
 stat_cwt_bp['ocean'].slope * 60 *(co2.iloc[-1] - co2.iloc[0])**2 / 1e3)
+
+
+# PICKLE
+pickle.dump(gcp_landocean(), open(FIGURE_DIRECTORY+'/rayner_df/gcp_landocean.pik', 'wb'))
+pickle.dump(gcp_simple_regression(), open(FIGURE_DIRECTORY+'/rayner_df/gcp_simple_regression.pik', 'wb'))
+pickle.dump(gcp_cwt(), open(FIGURE_DIRECTORY+'/rayner_df/gcp_cwt.pik', 'wb'))
+pickle.dump(gcp_powerspec(), open(FIGURE_DIRECTORY+'/rayner_df/gcp_powerspec.pik', 'wb'))
+pickle.dump(gcp_cwt_bandpass(), open(FIGURE_DIRECTORY+'/rayner_df/gcp_cwt_bandpass.pik', 'wb'))
