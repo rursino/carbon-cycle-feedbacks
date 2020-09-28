@@ -3,7 +3,7 @@
 # Adjustments here: beta /= 2.12 to get GtC/GtC = 1
 # Adjustments not made here: getting /yr, not trivial.
 
-CMIP4 = {
+C4MIP = {
     'beta_land': -1.35 / 2.12, 'beta_ocean': -1.13 / 2.12,
     'gamma_land': 79, 'gamma_ocean': 30
 }
@@ -17,3 +17,19 @@ CMIP5 = {
     'beta_land': -1.2 / 2.12, 'beta_ocean': -0.82 / 2.12,
     'gamma_land': 75.4, 'gamma_ocean': 17.3
 }
+
+whole_CMIP = {}
+for param in C4MIP:
+    whole_CMIP[param] = [C4MIP[param], CMIP5[param], CMIP6[param]]
+
+import pandas as pd
+
+df = pd.DataFrame(whole_CMIP, index=['C4MIP', 'CMIP5', 'CMIP6'])
+
+phi = 0.015 / 2.12
+rho = 1.93
+
+df['u_gamma_land'] = df['gamma_land'] * phi / rho
+df['u_gamma_ocean'] = df['gamma_ocean'] * phi / rho
+
+df

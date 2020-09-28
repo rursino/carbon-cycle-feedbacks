@@ -13,6 +13,7 @@ from copy import deepcopy
 
 
 """ INPUTS """
+FIGURE_DIRECTORY = "./../../latex/thesis/figures/"
 INPUT_DIRECTORY = './../../data/'
 U = pd.read_csv(INPUT_DIRECTORY + 'GCP/budget.csv',
                 index_col='Year',
@@ -139,6 +140,9 @@ def fb_gcp_decade(save=False):
 
     axl.set_ylabel('Feedback parameter ($yr^{-1}$)', fontsize=18, labelpad=15)
 
+    if save:
+        plt.savefig(FIGURE_DIRECTORY + f"fb_gcp.png")
+
 
 """ EXECUTION """
 latex_fb_gcp()[['beta', 'u_gamma']].sum(axis=1)
@@ -154,7 +158,7 @@ abs(land_fwr)
 
 abs(land_fwr / ocean_fwr).mean()
 
-fb_gcp_decade()
+fb_gcp_decade(True)
 
 
 

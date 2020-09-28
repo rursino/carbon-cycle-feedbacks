@@ -110,4 +110,4 @@ def af_feedbacks(params, a=2, phi=0.015/2.12, rho=1.94):
     u = 1 - b * (params.beta + params.gamma * phi / rho)
     return 1 / u
 
-af_feedbacks(paramsT, 2)
+af_feedbacks(paramsT, 1.9)
