@@ -75,42 +75,6 @@ class GCP:
 
         return 1 / u
 
-    def landborne_fraction(self, emission_rate=2):
-        """
-        """
-
-        return NotImplementedError()
-
-        phi = 0.015 / 2.12
-        rho = 1.94
-
-        params = self._feedback_parameters()['land']
-        beta = params['CO2'] / 2.12
-        u_gamma = params['temp'] * phi / rho
-
-        a = np.log(1 + emission_rate / 100)
-        u = -1 + a / (beta + u_gamma)
-
-        return 1 / u
-
-    def oceanborne_fraction(self, emission_rate=2):
-        """
-        """
-
-        return NotImplementedError()
-
-        phi = 0.015 / 2.12
-        rho = 1.94
-
-        params = self._feedback_parameters()['ocean']
-        beta = params['CO2'] / 2.12
-        u_gamma = params['temp'] * phi / rho
-
-        a = np.log(1 + emission_rate / 100)
-        u = -1 + a / (beta + u_gamma)
-
-        return 1 / u
-
 
 class INVF:
     def __init__(self, co2, temp, uptake):
@@ -181,38 +145,6 @@ class INVF:
 
         b = 1 / np.log(1 + emission_rate / 100)
         u = 1 - b * (beta + u_gamma)
-
-        af = 1 / u
-        return {'mean': af.mean(), 'std': af.std()}
-
-    def landborne_fraction(self, emission_rate=2):
-        """
-        """
-
-        return NotImplementedError()
-
-        params = self._feedback_parameters('Earth_Land')
-        beta = params.loc['beta'] * 12
-        u_gamma = params.loc['u_gamma'] * 12
-
-        a = np.log(1 + emission_rate / 100)
-        u = -1 + a / (beta + u_gamma)
-
-        af = 1 / u
-        return {'mean': af.mean(), 'std': af.std()}
-
-    def oceanborne_fraction(self, emission_rate=2):
-        """
-        """
-
-        return NotImplementedError()
-
-        params = self._feedback_parameters('Earth_Ocean')
-        beta = params.loc['beta'] * 12
-        u_gamma = params.loc['u_gamma'] * 12
-
-        a = np.log(1 + emission_rate / 100)
-        u = -1 + a / (beta + u_gamma)
 
         af = 1 / u
         return {'mean': af.mean(), 'std': af.std()}
@@ -294,22 +226,6 @@ class TRENDY:
 
         b = 1 / np.log(1 + emission_rate / 100)
         u = 1 - b * (beta + u_gamma)
-
-        af = 1 / u
-        return {'mean': af.mean(), 'std': af.std()}
-
-    def landborne_fraction(self, emission_rate=2):
-        """
-        """
-
-        return NotImplementedError()
-
-        params = self._feedback_parameters('Earth_Land')
-        beta = params.loc['beta']
-        u_gamma = params.loc['u_gamma']
-
-        a = np.log(1 + emission_rate / 100)
-        u = -1 + a / (beta + u_gamma)
 
         af = 1 / u
         return {'mean': af.mean(), 'std': af.std()}
