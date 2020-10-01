@@ -148,7 +148,7 @@ def fb_gcp_decade(save=False):
     axl.set_ylabel('Feedback parameter ($yr^{-1}$)', fontsize=18, labelpad=15)
 
     if save:
-        plt.savefig(FIGURE_DIRECTORY + f"fb_gcp.png")
+        plt.savefig(FIGURE_DIRECTORY + f"fb_gcp_decade.png")
 
     return fb_gcp_vals
 
