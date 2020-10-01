@@ -15,6 +15,8 @@ from core import FeedbackAnalysis
 
 import fb_input_data as fb_id
 
+import pickle
+
 
 """ FUNCTIONS """
 def feedback_regression(variable):
@@ -163,11 +165,13 @@ def fb_trendy(save=False):
                 }
     }
 
-    for simulation, param in zip(["S1", "S3"], ['beta', 'u_gamma']):
+    fb_trendy_df = {}
+
+    for simulation, parameter in zip(["S1", "S3"], ['beta', 'u_gamma']):
         subplot = '111'
-        bw = param_details[param]['bar_width']
-        color = param_details[param]['color']
-        label = param_details[param]['label']
+        bw = param_details[parameter]['bar_width']
+        color = param_details[parameter]['color']
+        label = param_details[parameter]['label']
 
         df = FeedbackAnalysis.TRENDY(
                                     fb_id.co2['month'],
@@ -177,11 +181,14 @@ def fb_trendy(save=False):
                                     )
 
         whole_df = feedback_regression("Earth_Land")[0][simulation].mean(axis=1)
-        whole_param = whole_df[param] * 12
+        whole_param = whole_df[parameter] * 12
 
-        param = df.params()[simulation][param]
+        param = df.params()[simulation][parameter]
         param_mean = param.mean(axis=1) * 12
         param_std = param.std(axis=1) * 12
+
+        fb_trendy_df[parameter] = pd.DataFrame({'Mean': param_mean,
+                                            '90_conf_interval': 1.645*param_std})
 
         ax[subplot] = fig.add_subplot(subplot)
 
@@ -201,6 +208,8 @@ def fb_trendy(save=False):
     if save:
         plt.savefig(fb_id.FIGURE_DIRECTORY + "fb_trendy_month.png")
 
+    return fb_trendy_df
+
 def fb_regional_trendy(save=False):
     uptake = fb_id.trendy_duptake
 
@@ -218,6 +227,7 @@ def fb_regional_trendy(save=False):
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
 
+    fb_trendy_df = {}
 
     for subplot, parameter in zip(all_subplots, parameters):
         for var, color, bar_pos in zip(vars, colors, bar_position):
@@ -231,6 +241,9 @@ def fb_regional_trendy(save=False):
             param = df.params()[parameter[1]][parameter[0]]
             param_mean = param.mean(axis=1) * 12
             param_std = param.std(axis=1) * 12
+
+            fb_trendy_df[parameter[0]] = pd.DataFrame({'Mean': param_mean,
+                                                       '90_conf_interval': 1.645*param_std})
 
             ax[subplot] = fig.add_subplot(subplot)
 
@@ -254,6 +267,8 @@ def fb_regional_trendy(save=False):
     if save:
         plt.savefig(fb_id.FIGURE_DIRECTORY + "fb_trendy_regional_month.png")
 
+    return fb_trendy_df
+
 def fb_regional_trendy2(save=False):
     uptake = fb_id.trendy_duptake
 
@@ -272,6 +287,8 @@ def fb_regional_trendy2(save=False):
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
 
+    fb_trendy_df = {}
+
     ymin, ymax = [], []
     for subplot, var in zip(all_subplots, vars):
         df = FeedbackAnalysis.TRENDY(
@@ -284,6 +301,9 @@ def fb_regional_trendy2(save=False):
             param = df.params()[sim][parameter]
             param_mean = param.mean(axis=1) * 12
             param_std = param.std(axis=1) * 12
+
+            fb_trendy_df[(var+'_Land', parameter)] = pd.DataFrame({'Mean': param_mean,
+                                                           '90_conf_interval': 1.645*param_std})
 
             ax[subplot] = fig.add_subplot(subplot)
 
@@ -315,6 +335,8 @@ def fb_regional_trendy2(save=False):
     if save:
         plt.savefig(fb_id.FIGURE_DIRECTORY + "fb_trendy_regional_month2.png")
 
+    return fb_trendy_df
+
 
 """ EXECUTION """
 whole_param = feedback_regression('Earth_Land')
@@ -338,3 +360,8 @@ fb_trendy(save=False)
 fb_regional_trendy(save=False)
 
 fb_regional_trendy2(save=False)
+
+# Pickle
+pickle.dump(fb_trendy(), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_trendy_month.pik', 'wb'))
+pickle.dump(fb_regional_trendy(), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_trendy_regional_month.pik', 'wb'))
+pickle.dump(fb_regional_trendy2(), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_trendy_regional_month2.pik', 'wb'))

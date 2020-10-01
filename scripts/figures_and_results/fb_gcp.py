@@ -11,6 +11,8 @@ from statsmodels import api as sm
 
 from copy import deepcopy
 
+import pickle
+
 
 """ INPUTS """
 FIGURE_DIRECTORY = "./../../latex/thesis/figures/"
@@ -118,6 +120,8 @@ def fb_gcp_decade(save=False):
 
     bar_width = 4
 
+    fb_gcp_vals = {}
+
     for subplot, sink in zip(['211', '212'], ['land', 'ocean']):
         ax[subplot] = fig.add_subplot(subplot)
 
@@ -125,10 +129,13 @@ def fb_gcp_decade(save=False):
         x_beta = [int(year) - bar_width / 2 for year in df[sink].index]
         x_ugamma = [int(year) + bar_width / 2 for year in df[sink].index]
         y = df[sink]
+        y['beta'] /= 2.12
 
-        ax[subplot].bar(x_beta, y['beta'] / 2.12, width=bar_width, color='green')
+        fb_gcp_vals[sink] = y[['beta', 'u_gamma']]
+
+        ax[subplot].bar(x_beta, y['beta'], width=bar_width, color='green')
         ax[subplot].bar(x_ugamma, y['u_gamma'], width=bar_width, color='red')
-        ax[subplot].plot(x, y['beta'] / 2.12 + y['u_gamma'], color='black')
+        ax[subplot].plot(x, y['beta'] + y['u_gamma'], color='black')
 
         ax[subplot].legend([r'$\alpha$', r'$\beta$', r'$u_{\gamma}$'],
                            fontsize=12)
@@ -143,6 +150,7 @@ def fb_gcp_decade(save=False):
     if save:
         plt.savefig(FIGURE_DIRECTORY + f"fb_gcp.png")
 
+    return fb_gcp_vals
 
 """ EXECUTION """
 latex_fb_gcp()[['beta', 'u_gamma']].sum(axis=1)
@@ -171,3 +179,7 @@ plt.bar(range(0, 19, 3),T.resample({"time": "10Y"}).mean().values)
 plt.bar(range(1, 20, 3), resample(Uo))
 # plt.bar(range(2, 21, 3), resample(Ul))
 plt.legend(['T', 'Uo'])
+
+
+# Pickle
+pickle.dump(fb_gcp_decade(), open(FIGURE_DIRECTORY+'/rayner_df/fb_gcp_decade.pik', 'wb'))
