@@ -64,24 +64,11 @@ beta = (land['beta'] + ocean['beta'])
 u_gamma = (land['u_gamma'] + ocean['u_gamma'])
 
 
-beta + u_gamma
-
 b = 1 / np.log(1 + emission_rate / 100)
 u = 1 - b * (beta + u_gamma)
 
 af = 1 / u
 af_results = {'mean': af.mean(axis=1), 'std': af.std(axis=1)}
-
-af_results
-
-plt.bar(af_results['mean'].index,
-        af_results['mean'].values,
-        # yerr=1.645*af_results['std'].values,
-        width=5
-       )
-
-plt.bar(alpha.mean(axis=1).index - 3, alpha.mean(axis=1).values, width=3)
-
 
 def plot():
     alpha = beta + u_gamma
@@ -96,8 +83,16 @@ def plot():
 plot()
 
 
+def af_func(a, *x):
+    alpha = np.linspace(*x)
+    u = 1 - (1/(a/100)) * alpha
+    af = 1 / u
+    plt.plot(alpha,af)
 
-alpha = np.linspace(-2, 2)
-u = 1 - (1/0.02)*alpha
-af = 1 / u
-plt.plot(alpha,af)
+
+f = lambda x : 1 / (1 - 50*x)
+f(1/50+0.000000001)
+
+
+af_func(2,-2,0)
+af_func(2,1/25,2)
