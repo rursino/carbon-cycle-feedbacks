@@ -287,6 +287,13 @@ def trendy_powerspec(xlim, save=False):
     return ps
 
 
+id.enso.index = pd.date_range('1959-01', '2020-01', freq='M')
+enso = id.enso.loc['1960-01':'2017-12']
+uptake = id.month_S3_trendy['JSBACH_S3_nbp'].data.Earth_Land.sel(time=slice('1960-01', '2017-12'))
+
+
+stats.linregress(enso.values.squeeze(), uptake.values)
+
 """ EXECUTION """
 trendy_yearplots(save=False)
 
