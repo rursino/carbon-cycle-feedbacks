@@ -374,17 +374,21 @@ def fb_regional_inv2(timeres, save=False):
 
 
 """ EXECUTION """
-land = feedback_regression('month', 'Earth_Land')
-land[0].median(axis=1)*12
-land[0].mean(axis=1)*12
+land = feedback_regression('year', 'Earth_Land')
+land[0].mean(axis=1)
 land[1].mean()
 
-ocean = feedback_regression('month', 'Earth_Ocean')
-ocean[0].median(axis=1)*12
-ocean[0].mean(axis=1)*12
+ocean = feedback_regression('year', 'Earth_Ocean')
+ocean[0].mean(axis=1)
 ocean[1].mean()
 
 land[0].mean(axis=1) / ocean[0].mean(axis=1)
+
+
+# Carbon gained/lost
+land[0].mean(axis=1)[['beta', 'u_gamma']] * (2017 - 1976)
+ocean[0].mean(axis=1)[['beta', 'u_gamma']] * (2017 - 1976) * (400 - 350) * 2.12
+
 
 fb_inv('year', save=True)
 
