@@ -384,12 +384,6 @@ ocean[1].mean()
 
 land[0].mean(axis=1) / ocean[0].mean(axis=1)
 
-
-# Carbon gained/lost
-land[0].mean(axis=1)[['beta', 'u_gamma']] * (2017 - 1976)
-ocean[0].mean(axis=1)[['beta', 'u_gamma']] * (2017 - 1976) * (400 - 350) * 2.12
-
-
 fb_inv('year', save=True)
 
 (FeedbackAnalysis
@@ -413,6 +407,17 @@ fb_regional_inv('year', save=True)
 fb_regional_inv('month', save=True)
 fb_regional_inv2('year', save=True)
 fb_regional_inv2('month', save=True)
+
+
+# Carbon gained/lost
+co2 = pd.read_csv('./../../data/CO2/co2_year.csv', index_col='Year')
+temp =
+co2_fb = co2.CO2.loc[1976:2017].values * 2.12
+
+(land[0].mean(axis=1)['beta'] * co2_fb).sum()
+land[0].mean(axis=1)['gamma'] * co2_fb
+ocean[0].mean(axis=1)[['beta', 'u_gamma']]
+
 
 # Pickle
 pickle.dump(fb_inv('year'), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_inv_year.pik', 'wb'))
