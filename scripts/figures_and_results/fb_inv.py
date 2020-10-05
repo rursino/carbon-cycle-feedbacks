@@ -266,7 +266,7 @@ def fb_regional_inv(timeres, save=False):
             ax[subplot] = fig.add_subplot(subplot)
             ax[subplot].bar(param.index + 5 + bar_pos,
                             param_mean,
-                            yerr=2*param_std,
+                            yerr=1.645*param_std,
                             width=bar_width,
                             color=color)
 
@@ -334,16 +334,16 @@ def fb_regional_inv2(timeres, save=False):
 
             ax[subplot].bar(param.index + 5 + bar_pos,
                             param_mean,
-                            yerr=2*param_std,
+                            yerr=1.645*param_std,
                             width=bar_width,
                             color=color)
 
             if var[1] == '_Land' and subplot != "421":
-                ymin_land.append((param_mean - 2*param_std).min())
-                ymax_land.append((param_mean + 2*param_std).max())
+                ymin_land.append((param_mean - 1.645*param_std).min())
+                ymax_land.append((param_mean + 1.645*param_std).max())
             if var[1] == '_Ocean' and subplot != "422":
-                ymin_ocean.append((param_mean - 2*param_std).min())
-                ymax_ocean.append((param_mean + 2*param_std).max())
+                ymin_ocean.append((param_mean - 1.645*param_std).min())
+                ymax_ocean.append((param_mean + 1.645*param_std).max())
 
     delta = 0.05
     for subplot in ["423", "425", "427"]:

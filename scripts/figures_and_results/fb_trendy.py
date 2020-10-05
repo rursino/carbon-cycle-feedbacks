@@ -309,7 +309,7 @@ def fb_regional_trendy2(save=False):
 
             ax[subplot].bar(param.index + 5 + bar_pos,
                             param_mean,
-                            yerr=2*param_std,
+                            yerr=1.645*param_std,
                             width=bar_width,
                             color=color)
 
