@@ -1,12 +1,14 @@
-""" Development of cascading window trend functions for both time and CO2.
+""" Development of cascading window trend functions.
 """
 
 """ IMPORTS """
 import sys
 from core import inv_flux as invf
+from core import trendy_flux as TRENDYf
 
 from importlib import reload
-reload(invf)
+reload(invf);
+reload(TRENDYf);
 
 import xarray as xr
 import pandas as pd
@@ -18,16 +20,12 @@ import matplotlib.pyplot as plt
 
 """ INPUTS """
 fname = "./../../../output/inversions/spatial/output_all/JENA_s76/year.nc"
+df = xr.open_dataset(fname)
+co2 = pd.read_csv('./../../../data/co2/co2_year.csv', index_col='Year').CO2
+
+trendy_df = xr.open_dataset("./../../../output/TRENDY/spatial/output_all/VISIT_S3_nbp/year.nc")
 
 
 """ DEVS """
-ds = xr.open_dataset(fname)
-df = invf.Analysis(ds)
-
-plt.plot(df.data.South_Land.values)
-plt.plot(df.deseasonalise("South_Land"))
-
-df.cascading_window_trend("time", "North_Land", plot=True, window_size=15,
-                            include_linreg=True)
-
-df.cascading_window_trend("CO2", "North_Land", plot=True, window_size=15)
+invf.Analysis(df).cascading_window_trend()
+TRENDYf.Analysis(trendy_df).cascading_window_trend().plot()

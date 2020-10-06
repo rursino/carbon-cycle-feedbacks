@@ -333,6 +333,9 @@ class Analysis:
             self.time_resolution = "M"
             self.tformat = "%Y-%m"
 
+        CO2fname = MAIN_DIR + f"data/CO2/co2_year.csv"
+        self.CO2 = pd.read_csv(CO2fname, index_col='Year')['CO2']
+
     def plot_timeseries(self, variable, time=None):
         """ Plot a variable against time.
 
@@ -378,8 +381,7 @@ class Analysis:
             timeres = "year"
             index_col = "Year"
 
-        CO2fname = MAIN_DIR + f"data/CO2/co2_{timeres}.csv"
-        CO2 = pd.read_csv(CO2fname, index_col=index_col)['CO2']
+        CO2 = self.CO2
 
         index = {
             "year": pd.to_datetime(time).year,
@@ -396,9 +398,7 @@ class Analysis:
         except AttributeError:
             return CO2.loc[index_to_pass]
 
-    def cascading_window_trend(self, indep="time", variable="Earth_Land",
-                            window_size=25, plot=False, include_pearson=False,
-                            include_linreg=False):
+    def cascading_window_trend(self, variable='Earth_Land', window_size=10, plot=False):
         """ Calculates the slope of the trend of an uptake variable for each
         time window and for a given window size. The function also plots the
         slopes as a timeseries and, if prompted, the r-value of each slope as
@@ -406,11 +406,6 @@ class Analysis:
 
         Parameters
         ==========
-
-        indep: string, optional
-
-            Regress uptake variable over "time" or "CO2".
-            Defaults to "time".
 
         variable: string, optional
 
@@ -426,101 +421,27 @@ class Analysis:
 
             Option to show plots of the slopes.
             Defaults to False.
-
-        include_pearson: bool, optional
-
-            Option to include dataframe and plot of
-            r-values for each year.
-
-            Defaults to False.
-
-        include_linreg: bool, optional
-
-            Option to include a linear regression of the cascading window plot.
-            Defaults to False.
-
         """
 
         df = self.data
 
-        def to_numerical(data):
-            return (pd.to_numeric(data) /
-                    (3600 * 24 * 365 *1e9) + 1969
-                    )
+        index = pd.to_datetime(df.time.values).year
 
-        x_time = df.time.values
-        if indep == "time":
-            x_var = to_numerical(x_time)
-            ts_xlabel = "Year"
-            cascading_yunit = "(GtC/yr$^2$)"
-            cas_linreg_yunit = "(GtC/yr$^3$)"
-            cascading_xlabel = f"First year of {window_size}-year window"
-        else:
-            x_var = self._time_to_CO2(x_time)
-            ts_xlabel = "CO2 (ppm)"
-            cascading_yunit = "(GtC/yr/ppm)"
-            cas_linreg_yunit = "(GtC/yr/ppm$^2$)"
-            cascading_xlabel = f"Start of {window_size}-year CO2 window (ppm)"
+        cwt_df = pd.DataFrame(
+            {
+                'U': df[variable].values,
+                'CO2': self.CO2.loc[index].values
+            },
+            index=index
+        )
 
-        if self.time_resolution == "M":
-            window_size *= 12
+        cwt = []
+        for i in range(len(cwt_df) - window_size):
+            sub_df = cwt_df.iloc[i:i+window_size]
+            slope = stats.linregress(sub_df.CO2.values, sub_df.U.values).slope
+            cwt.append(slope)
 
-        roll_vals, r_vals = [], []
-        for i in range(0, len(x_time) - window_size):
-            sub_x = x_var[i:i+window_size+1]
-            sub_vals = df[variable].sel(time = slice(x_time[i],
-                                               x_time[i+window_size])
-                                       ).values
-
-            linreg = stats.linregress(sub_x, sub_vals)
-
-            roll_vals.append(linreg[0])
-            r_vals.append(linreg[2])
-
-        if self.time_resolution == "M":
-            ws_plotlabel = f"{int(window_size / 12)}-year"
-        else:
-            ws_plotlabel = f"{window_size}-year"
-
-        roll_df = pd.DataFrame({f"{ws_plotlabel} trend slope": roll_vals},
-                               index=x_var[:-window_size]
-                              )
-
-        if plot:
-
-            plt.figure(figsize=(22,16))
-
-            plt.subplot(211)
-            plt.plot(x_var, self.data[variable].values)
-            plt.xlabel(ts_xlabel, fontsize=20)
-            plt.ylabel("C flux to the atmosphere (GtC)", fontsize=20)
-
-            plt.subplot(212)
-            plt.plot(x_var[:-window_size], roll_df.values, color='g')
-            plt.xlabel(cascading_xlabel, fontsize=20)
-            plt.ylabel(f"Slope of C flux trend {cascading_yunit}", fontsize=20)
-
-
-            if include_linreg:
-                x = x_var[:-window_size]
-                y = roll_df.values.squeeze()
-                slope, intercept, rvalue, pvalue, _ = stats.linregress(x, y)
-                plt.plot(x, slope * x + intercept, color='r')
-
-                xloc = x.min() + 0.05 * (x.max() - x.min())
-                yloc = y.min() + 0.05 * (y.max() - y.min())
-                text = (f'slope: {slope:.3f} {cas_linreg_yunit}\n'
-                        f'r = {rvalue:.3f}\n'
-                        f'p = {pvalue:.3f}')
-                plt.text(xloc, yloc, text, fontsize=16)
-
-        if include_pearson:
-            r_df = pd.DataFrame({"r-values of trends": r_vals},
-                        index=x_var[:-window_size]
-                        )
-            return roll_df, r_df
-        else:
-            return roll_df
+        return pd.DataFrame({'CWT': cwt}, index=cwt_df.index[:-window_size]).CWT
 
     def psd(self, variable, fs, xlim=None, plot=False):
         """ Calculates the power spectral density (psd) of a timeseries of a
