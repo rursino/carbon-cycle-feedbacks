@@ -246,6 +246,30 @@ stat_cwt_bp = gcp_cwt_bandpass(save=False, stat_values=True, fc=1/25)
 stat_cwt_bp['ocean'].slope * 60 *(co2.iloc[-1] - co2.iloc[0])**2 / 1e3)
 
 
+# ENSO variability
+land
+
+enso = pd.read_csv("./../../data/climate_indices/soi_bom.csv", index_col="Year")
+enso
+
+enso.index = pd.date_range('1959-1', '2020-1', freq='M')
+soi_annual = enso.loc['1959-1':'2018-12'].resample('Y').mean().SOI
+soi_annual.index = land.index
+
+land.values
+
+soi_uptake = pd.DataFrame(
+                {'land': land.values,
+                 'ocean': ocean.values,
+                 'soi': soi_annual.values},
+                index=land.index)
+
+soi_uptake.plot()
+
+plt.scatter(soi_uptake.land, soi_uptake.soi)
+stats.linregress(soi_uptake.ocean, soi_uptake.soi)
+
+
 # PICKLE
 pickle.dump(gcp_landocean(), open(FIGURE_DIRECTORY+'/rayner_df/gcp_landocean.pik', 'wb'))
 pickle.dump(gcp_simple_regression(), open(FIGURE_DIRECTORY+'/rayner_df/gcp_simple_regression.pik', 'wb'))
