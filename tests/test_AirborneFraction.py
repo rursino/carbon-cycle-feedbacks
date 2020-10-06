@@ -17,36 +17,34 @@ import pytest
 """ SETUP """
 def setup_module(module):
     print('--------------------setup--------------------')
-    global co2_year, co2_month, temp_year, temp_month, invf_uptake
+    global co2_year, temp_year, temp_month, invf_uptake
     global invf_uptake_mock, trendy_uptake_mock
 
     INV_DIRECTORY = "./../output/inversions/spatial/output_all/"
     TRENDY_DIRECTORY = './../output/TRENDY/spatial/output_all/'
 
     co2_year = pd.read_csv("./../data/CO2/co2_year.csv", index_col=["Year"]).CO2
-    co2_month = pd.read_csv("./../data/CO2/co2_month.csv", index_col=["Year", "Month"]).CO2
 
     temp_year = xr.open_dataset('./../output/TEMP/spatial/output_all/HadCRUT/year.nc')
-    temp_month = xr.open_dataset('./../output/TEMP/spatial/output_all/HadCRUT/month.nc')
 
     invf_models = os.listdir(INV_DIRECTORY)
-    invf_uptake = {'year': {}, 'month': {}}
+    invf_uptake = {'year': {}}
     for timeres in invf_uptake:
         for model in invf_models:
             model_dir = INV_DIRECTORY + model + '/'
             invf_uptake[timeres][model] = xr.open_dataset(model_dir + f'{timeres}.nc')
 
-    invf_uptake_mock = {'month': {}}
+    invf_uptake_mock = {'year': {}}
     for timeres in invf_uptake_mock:
         for model in invf_models:
             model_dir = INV_DIRECTORY + model + '/'
             ds =  xr.open_dataset(model_dir + f'{timeres}.nc')
             start = str(ds.time.values[0])[:4]
             end = str(ds.time.values[-1])[:4]
-            C = co2_month.loc[int(start):int(end)].values
-            T = temp_month.sel(time=slice(start, end)).Earth.values
+            C = co2_year.loc[int(start):int(end)].values
+            T = temp_year.sel(time=slice(start, end)).Earth.values
             invf_uptake_mock[timeres][model] = xr.Dataset(
-                {key: (('time'), (C + T) / 2 / 12) for key in ['Earth_Land', 'Earth_Ocean']},
+                {key: (('time'), (C + T) / 2) for key in ['Earth_Land', 'Earth_Ocean']},
                 coords={
                         'time': (('time'), ds.time.values)
                        }
@@ -100,13 +98,13 @@ def test_GCP_airborne():
     assert df.airborne_fraction(emission_rate) == pytest.approx(test_af)
 
 def test_invf_airborne():
-    df = AirborneFraction.INVF(co2_month, temp_month, invf_uptake_mock['month'])
+    df = AirborneFraction.INVF(co2_year, temp_year, invf_uptake_mock['year'])
 
     land = df._feedback_parameters('Earth_Land')
     ocean = df._feedback_parameters('Earth_Ocean')
 
     for region, param in product([land, ocean], ['beta', 'gamma']):
-        assert region.loc[param].mean() == pytest.approx(0.5 / 12)
+        assert region.loc[param].mean() == pytest.approx(0.5)
         assert region.loc[param].std() == pytest.approx(0.)
 
     phi = 0.015 / 2.12

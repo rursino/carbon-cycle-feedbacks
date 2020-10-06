@@ -25,17 +25,17 @@ def setup_module(module):
     INV_DIRECTORY = "./../output/inversions/spatial/output_all/"
     TRENDY_DIR = './../output/TRENDY/spatial/output_all/'
 
-    co2 = pd.read_csv('./../data/co2/co2_month.csv', index_col=['Year', 'Month']).CO2
-    temp = xr.open_dataset('./../output/TEMP/spatial/output_all/HadCRUT/month.nc')
+    co2 = pd.read_csv('./../data/co2/co2_year.csv', index_col='Year').CO2
+    temp = xr.open_dataset('./../output/TEMP/spatial/output_all/HadCRUT/year.nc')
 
     invf_models = os.listdir(INV_DIRECTORY)
-    invf_uptake = {'month': {}}
+    invf_uptake = {'year': {}}
     for timeres in invf_uptake:
         for model in invf_models:
             model_dir = INV_DIRECTORY + model + '/'
             invf_uptake[timeres][model] = xr.open_dataset(model_dir + f'{timeres}.nc')
 
-    invf_uptake_mock = {'month': {}}
+    invf_uptake_mock = {'year': {}}
     for timeres in invf_uptake_mock:
         for model in invf_models:
             model_dir = INV_DIRECTORY + model + '/'
@@ -53,21 +53,21 @@ def setup_module(module):
 
     trendy_models = ['VISIT', 'OCN', 'JSBACH', 'CLASS-CTEM', 'CABLE-POP']
     trendy_uptake = {
-            'S1': { 'month': {
+            'S1': { 'year': {
                 model_name : xr.open_dataset(
-                    TRENDY_DIR + f'{model_name}_S1_nbp/month.nc'
+                    TRENDY_DIR + f'{model_name}_S1_nbp/year.nc'
                     )
                     for model_name in trendy_models
             }},
-            'S3': { 'month': {
+            'S3': { 'year': {
                 model_name : xr.open_dataset(
-                    TRENDY_DIR + f'{model_name}_S3_nbp/month.nc'
+                    TRENDY_DIR + f'{model_name}_S3_nbp/year.nc'
                     )
                     for model_name in trendy_models
             }}
         }
 
-    trendy_uptake_mock = {'S1': {'month': {}}, 'S3': {'month': {}}}
+    trendy_uptake_mock = {'S1': {'year': {}}, 'S3': {'year': {}}}
     for sim in trendy_uptake_mock:
         for timeres in trendy_uptake_mock[sim]:
             for model in trendy_models:
@@ -112,7 +112,7 @@ def test_whole_feedback():
     assert reg_model.nobs == len(C)
 
 def test_invf_feedback_model():
-    df = FeedbackAnalysis.INVF(co2, temp, invf_uptake_mock['month'], 'Earth_Land')
+    df = FeedbackAnalysis.INVF(co2, temp, invf_uptake_mock['year'], 'Earth_Land')
 
     params_df = df.params()
     flatten_params = (params_df['beta'].values.flatten() * 2.12)
@@ -129,10 +129,15 @@ def test_invf_feedback_model():
         pgamma = np.unique(regstats[model]['p_values_gamma'])
         nobs = np.unique(regstats[model]['nobs'])
 
-        assert rsquared[~np.isnan(rsquared)].squeeze() == 1.0
-        assert pbeta[~np.isnan(pbeta)].squeeze() == 0.0
-        assert pgamma[~np.isnan(pgamma)].squeeze() == 0.0
-        assert nobs[~np.isnan(nobs)].squeeze() == 120.0
+        rsquared[~np.isnan(rsquared)].squeeze()
+        pbeta[~np.isnan(pbeta)].squeeze()
+        pgamma[~np.isnan(pgamma)].squeeze()
+        nobs[~np.isnan(nobs)].squeeze()
+
+        assert np.all(rsquared[~np.isnan(rsquared)].squeeze() == pytest.approx(1.0))
+        assert np.all(pbeta[~np.isnan(pbeta)].squeeze() == pytest.approx(0.0))
+        assert np.all(pgamma[~np.isnan(pgamma)].squeeze() == pytest.approx(0.0))
+        assert np.all(nobs[~np.isnan(nobs)].squeeze() == pytest.approx(10.0))
 
 def test_trendy_feedback_model():
     df = FeedbackAnalysis.TRENDY(co2, temp, trendy_uptake_mock, 'Earth_Land')
@@ -160,14 +165,16 @@ def test_trendy_feedback_model():
             pgamma = np.unique(regstats[sim][model]['p_values_gamma'])
             nobs = np.unique(regstats[sim][model]['nobs'])
 
-            assert rsquared[~np.isnan(rsquared)].squeeze() == 1.0
+            assert rsquared[~np.isnan(rsquared)].squeeze() == pytest.approx(1.0)
             if sim == 'S1':
-                assert pbeta[~np.isnan(pbeta)].squeeze() == 0.0
+                assert np.all(pbeta[~np.isnan(pbeta)].squeeze() == pytest.approx(0.0))
                 assert not pgamma[~np.isnan(pgamma)]
             if sim == 'S3':
                 assert not pbeta[~np.isnan(pbeta)]
-                assert pgamma[~np.isnan(pgamma)].squeeze() == 0.0
-            assert nobs[~np.isnan(nobs)].squeeze() == 120.0
+                assert np.all(pgamma[~np.isnan(pgamma)].squeeze() == pytest.approx(0.0))
+            assert nobs[~np.isnan(nobs)].squeeze() == 10.0
+
+
 
 def test_invf_regionals_add_to_global():
     variables = ['Earth_Land', 'South_Land', 'Tropical_Land', 'North_Land',
@@ -178,7 +185,7 @@ def test_invf_regionals_add_to_global():
                     .INVF(
                         co2,
                         temp,
-                        invf_uptake['month'],
+                        invf_uptake['year'],
                         var
                         )
                     .params()
@@ -202,7 +209,7 @@ def test_invf_regionals_add_to_global():
                 - ocean['North_Ocean'])
 
     zip_list = product(
-        ['beta', 'gamma'], invf_uptake['month'].keys(),
+        ['beta', 'gamma'], invf_uptake['year'].keys(),
         [1980, 1990, 2000, 2008]
     )
     for parameter, model_name, window in zip_list:
@@ -236,7 +243,7 @@ def test_trendy_regionals_add_to_global():
 
     for sim in ['S1', 'S3']:
         zip_list = product(
-            ['beta', 'gamma'], trendy_uptake[sim]['month'].keys(),
+            ['beta', 'gamma'], trendy_uptake[sim]['year'].keys(),
             [1980, 1990, 2000, 2008]
         )
         for parameter, model_name, window in zip_list:
