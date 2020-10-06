@@ -12,20 +12,6 @@ import os
 from core import FeedbackAnalysis
 
 
-""" FUNCTIONS """
-def deseasonalise(x):
-    """
-    """
-
-    fs = 12
-    fc = 365/667
-
-    w = fc / (fs / 2) # Normalize the frequency.
-    b, a = signal.butter(5, w, 'low')
-
-    return signal.filtfilt(b, a, x)
-
-
 """ INPUTS """
 DIR = './../../'
 OUTPUT_DIR = DIR + 'output/'
@@ -57,15 +43,6 @@ for timeres in invf_uptake:
         model_dir = INV_DIRECTORY + model + '/'
         invf_uptake[timeres][model] = xr.open_dataset(model_dir + f'{timeres}.nc')
 
-invf_duptake = {}
-for model in invf_uptake['month']:
-    invf_duptake[model] = xr.Dataset(
-        {key: (('time'), deseasonalise(invf_uptake['month'][model][key].values)) for
-        key in ['Earth_Land', 'South_Land', 'North_Land', 'Tropical_Land',
-        'Earth_Ocean', 'South_Ocean', 'North_Ocean', 'Tropical_Ocean']},
-        coords={'time': (('time'), invf_uptake['month'][model].time.values)}
-    )
-
 
 trendy_models = ['VISIT', 'OCN', 'JSBACH', 'CLASS-CTEM', 'CABLE-POP']
 trendy_uptake = {
@@ -82,16 +59,5 @@ trendy_uptake = {
         for model_name in trendy_models if model_name != "LPJ-GUESS"}
     }
 }
-
-trendy_duptake = {'S1': {'year': {}, 'month': {}}, 'S3': {'year': {}, 'month': {}}}
-for sim in trendy_uptake:
-    for timeres in trendy_uptake[sim]:
-        df_models = trendy_uptake[sim][timeres]
-        for model in trendy_uptake[sim][timeres]:
-            trendy_duptake[sim][timeres][model] = xr.Dataset(
-                {key: (('time'), deseasonalise(df_models[model][key].values)) for
-                key in ['Earth_Land', 'South_Land', 'North_Land', 'Tropical_Land']},
-                coords={'time': (('time'), df_models[model].time.values)}
-            )
 
 phi, rho = 0.0071, 1.93

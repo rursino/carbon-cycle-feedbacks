@@ -19,8 +19,9 @@ import pickle
 
 
 """ FUNCTIONS """
-def feedback_regression(timeres, variable):
-    uptake = fb_id.invf_duptake if timeres == "month" else fb_id.invf_uptake['year']
+def feedback_regression(variable):
+    timeres = 'year'
+    uptake = fb_id.invf_uptake[timeres]
     reg_models = {}
     model_stats = {
         'r_squared': [],
@@ -70,8 +71,9 @@ def feedback_regression(timeres, variable):
 
     return reg_df, stats_df
 
-def all_regstat(timeres, variable):
-    uptake = fb_id.invf_duptake if timeres == "month" else fb_id.invf_uptake['year']
+def all_regstat(variable):
+    timeres = 'year'
+    uptake = fb_id.invf_uptake['year']
 
     df = FeedbackAnalysis.INVF(
                                 fb_id.co2[timeres],
@@ -86,8 +88,9 @@ def all_regstat(timeres, variable):
 
     return all_regstats
 
-def mean_regstat(timeres, variable):
-    uptake = fb_id.invf_duptake if timeres == "month" else fb_id.invf_uptake['year']
+def mean_regstat(variable):
+    timeres = 'year'
+    uptake = fb_id.invf_uptake['year']
 
     df = FeedbackAnalysis.INVF(
                                 fb_id.co2[timeres],
@@ -115,8 +118,9 @@ def mean_regstat(timeres, variable):
 
     return mean_regstat
 
-def median_regstat(timeres, variable):
-    uptake = fb_id.invf_duptake if timeres == "month" else fb_id.invf_uptake['year']
+def median_regstat(variable):
+    timeres = 'year'
+    uptake = fb_id.invf_uptake['year']
 
     df = FeedbackAnalysis.INVF(
                                 fb_id.co2[timeres],
@@ -146,8 +150,10 @@ def median_regstat(timeres, variable):
 
 
 """ FIGURES """
-def fb_inv(timeres, save=False):
-    uptake = fb_id.invf_duptake if timeres == "month" else fb_id.invf_uptake['year']
+def fb_inv(save=False):
+    timeres = 'year'
+    uptake = fb_id.invf_uptake['year']
+
     fig = plt.figure(figsize=(14,10))
     ax = {}
     axl = fig.add_subplot(111, frame_on=False)
@@ -162,7 +168,7 @@ def fb_inv(timeres, save=False):
                                     uptake,
                                     "Earth_" + region
                                     )
-        whole_df = feedback_regression(timeres, "Earth_" + region)[0].mean(axis=1)
+        whole_df = feedback_regression("Earth_" + region)[0].mean(axis=1)
         beta = df.params()['beta']
         gamma = df.params()['u_gamma'] # Note u_gamma is used to compare with beta.
 
@@ -173,14 +179,6 @@ def fb_inv(timeres, save=False):
         beta_std = beta.std(axis=1)
         gamma_mean = gamma.mean(axis=1)
         gamma_std = gamma.std(axis=1)
-
-        if timeres == 'month':
-            whole_beta *= 12
-            whole_gamma *= 12
-            beta_mean *= 12
-            beta_std *= 12
-            gamma_mean *= 12
-            gamma_std *= 12
 
         fb_inv_df[region] = pd.DataFrame(
             {
@@ -224,8 +222,9 @@ def fb_inv(timeres, save=False):
 
     return fb_inv_df
 
-def fb_regional_inv(timeres, save=False):
-    uptake = fb_id.invf_duptake if timeres == "month" else fb_id.invf_uptake['year']
+def fb_regional_inv(save=False):
+    timeres = 'year'
+    uptake = fb_id.invf_uptake['year']
 
     all_subplots = ['22'+str(i) for i in range(1,5)]
     # Note u_gamma is used to compare with beta.
@@ -254,9 +253,6 @@ def fb_regional_inv(timeres, save=False):
                                         variable
                                         )
             param = df.params()[parameter[0]]
-            if timeres == 'month':
-                param *= 12
-
             param_mean = param.mean(axis=1)
             param_std = param.std(axis=1)
 
@@ -289,8 +285,9 @@ def fb_regional_inv(timeres, save=False):
 
     return fb_reg_inv
 
-def fb_regional_inv2(timeres, save=False):
-    uptake = fb_id.invf_duptake if timeres == "month" else fb_id.invf_uptake['year']
+def fb_regional_inv2(save=False):
+    timeres = 'year'
+    uptake = fb_id.invf_uptake['year']
 
     all_subplots = ['42'+str(i) for i in range(1,9)]
     vars = product(['Earth', 'South', 'Tropical', 'North'], ['_Land', '_Ocean'])
@@ -321,8 +318,6 @@ def fb_regional_inv2(timeres, save=False):
         params = df.params()
         for parameter, color, bar_pos in zip(parameters, colors, bar_position):
             param = params[parameter]
-            if timeres == 'month':
-                param *= 12
 
             param_mean = param.mean(axis=1)
             param_std = param.std(axis=1)
@@ -374,39 +369,37 @@ def fb_regional_inv2(timeres, save=False):
 
 
 """ EXECUTION """
-land = feedback_regression('year', 'Earth_Land')
+land = feedback_regression('Earth_Land')
 land[0].mean(axis=1)
 land[1].mean()
 
-ocean = feedback_regression('year', 'Earth_Ocean')
+ocean = feedback_regression('Earth_Ocean')
 ocean[0].mean(axis=1)
 ocean[1].mean()
 
 land[0].mean(axis=1) / ocean[0].mean(axis=1)
 
-fb_inv('year', save=True)
+fb_inv(save=False)
 
 (FeedbackAnalysis
-    .INVF(fb_id.co2['month'], fb_id.temp['month'], fb_id.invf_duptake,'Earth_Land')
+    .INVF(fb_id.co2['year'], fb_id.temp['year'], fb_id.invf_uptake['year'], 'Earth_Land')
     .params()
     ['beta']
 )
 
-{model: all_regstat("month", "Earth_Land")[model]['p_values_beta'].values for model in all_regstat("month", "Earth_Land")}
+{model: all_regstat("Earth_Land")[model]['p_values_beta'].values for model in all_regstat("Earth_Land")}
 
 
-median_regstat("month", "Earth_Land")
-median_regstat("month", "South_Land")
-median_regstat("month", "Tropical_Land")
-median_regstat("month", "North_Land")
+median_regstat("Earth_Land")
+median_regstat("South_Land")
+median_regstat("Tropical_Land")
+median_regstat("North_Land")
 
-mean_regstat("month", "Earth_Ocean")
+median_regstat("Earth_Ocean")
 
 
-fb_regional_inv('year', save=True)
-fb_regional_inv('month', save=True)
-fb_regional_inv2('year', save=True)
-fb_regional_inv2('month', save=True)
+fb_regional_inv(save=False)
+fb_regional_inv2(save=False)
 
 
 # Carbon gained/lost
@@ -420,9 +413,6 @@ ocean[0].mean(axis=1)[['beta', 'u_gamma']]
 
 
 # Pickle
-pickle.dump(fb_inv('year'), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_inv_year.pik', 'wb'))
-pickle.dump(fb_inv('month'), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_inv_month.pik', 'wb'))
-# pickle.dump(fb_regional_inv('year'), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_inv_regional_year.pik', 'wb'))
-# pickle.dump(fb_regional_inv('month'), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_inv_regional_month.pik', 'wb'))
-# pickle.dump(fb_regional_inv2('year'), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_inv_regional_year2.pik', 'wb'))
-pickle.dump(fb_regional_inv2('month'), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_inv_regional_month2.pik', 'wb'))
+pickle.dump(fb_inv(), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_inv_year.pik', 'wb'))
+# pickle.dump(fb_regional_inv(), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_inv_regional_year.pik', 'wb'))
+pickle.dump(fb_regional_inv2(), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_inv_regional_year2.pik', 'wb'))

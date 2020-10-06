@@ -85,11 +85,11 @@ class INVF:
 
         co2: pd.Series
 
-            co2 series. Must be in month time resolution.
+            co2 series. Must be in year time resolution.
 
         temp: xr.Dataset
 
-            HadCRUT dataset. Must be in month time resolution.
+            HadCRUT dataset. Must be in year time resolution.
 
         """
 
@@ -140,8 +140,8 @@ class INVF:
 
         land = self._feedback_parameters('Earth_Land')
         ocean = self._feedback_parameters('Earth_Ocean')
-        beta = (land + ocean).loc['beta'] / 2.12 * 12
-        u_gamma = (land + ocean).loc['u_gamma'] * 12
+        beta = (land + ocean).loc['beta'] / 2.12
+        u_gamma = (land + ocean).loc['u_gamma']
 
         b = 1 / np.log(1 + emission_rate / 100)
         u = 1 - b * (beta + u_gamma)

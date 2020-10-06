@@ -17,15 +17,17 @@ import fb_input_data as fb_id
 
 import pickle
 
+from importlib import reload
+reload(FeedbackAnalysis);
 
 """ FUNCTIONS """
 def feedback_regression(variable):
-    uptake = fb_id.trendy_duptake
+    uptake = fb_id.trendy_uptake
     start, end = 1960, 2017
     reg_models = {}
     model_stats = {}
     for simulation in ['S1', 'S3']:
-        model_names = uptake[simulation]['month'].keys()
+        model_names = uptake[simulation]['year'].keys()
 
         sim_reg_models = {}
         sim_model_stats = {
@@ -39,12 +41,12 @@ def feedback_regression(variable):
             }
 
         for model_name in model_names:
-            C = fb_id.co2['month'].loc[start:end]
-            T = fb_id.temp['month'].sel(time=slice(str(start), str(end)))
+            C = fb_id.co2['year'].loc[start:end]
+            T = fb_id.temp['year'].sel(time=slice(str(start), str(end)))
             if simulation == 'S1':
-                U = uptake['S1']['month'][model_name]
+                U = uptake['S1']['year'][model_name]
             elif simulation == 'S3':
-                U = uptake['S3']['month'][model_name] - uptake['S1']['month'][model_name]
+                U = uptake['S3']['year'][model_name] - uptake['S1']['year'][model_name]
             U = U.sel(time=slice(str(start), str(end)))
 
             df = pd.DataFrame(data = {
@@ -94,18 +96,18 @@ def feedback_regression(variable):
     return reg_models, model_stats
 
 def all_regstat(variable):
-    uptake = fb_id.trendy_duptake
+    uptake = fb_id.trendy_uptake
     all_regstats = {}
 
     for simulation in ['S1', 'S3']:
         df = FeedbackAnalysis.TRENDY(
-                                    fb_id.co2['month'],
-                                    fb_id.temp['month'],
+                                    fb_id.co2['year'],
+                                    fb_id.temp['year'],
                                     uptake,
                                     variable
                                     )
         all_regstats[simulation] = {model : pd.DataFrame(df.regstats()[simulation][model])
-                   for model in uptake[simulation]['month']}
+                   for model in uptake[simulation]['year']}
 
     return all_regstats
 
@@ -115,13 +117,13 @@ def median_regstat(variable):
 
     for simulation in ["S1", "S3"]:
         df = FeedbackAnalysis.TRENDY(
-                                    fb_id.co2['month'],
-                                    fb_id.temp['month'],
+                                    fb_id.co2['year'],
+                                    fb_id.temp['year'],
                                     uptake,
                                     variable
                                     )
 
-        regstat = [df.regstats()[simulation][model] for model in uptake[simulation]['month']]
+        regstat = [df.regstats()[simulation][model] for model in uptake[simulation]['year']]
 
         index = regstat[0].index
         columns = regstat[0].columns
@@ -145,7 +147,7 @@ def median_regstat(variable):
 
 """ FIGURES """
 def fb_trendy(save=False):
-    uptake = fb_id.trendy_duptake
+    uptake = fb_id.trendy_uptake
     fig = plt.figure(figsize=(14,6))
     ax = {}
     axl = fig.add_subplot(111, frame_on=False)
@@ -174,18 +176,18 @@ def fb_trendy(save=False):
         label = param_details[parameter]['label']
 
         df = FeedbackAnalysis.TRENDY(
-                                    fb_id.co2['month'],
-                                    fb_id.temp['month'],
+                                    fb_id.co2['year'],
+                                    fb_id.temp['year'],
                                     uptake,
                                     'Earth_Land'
                                     )
 
         whole_df = feedback_regression("Earth_Land")[0][simulation].mean(axis=1)
-        whole_param = whole_df[parameter] * 12
+        whole_param = whole_df[parameter]
 
         param = df.params()[simulation][parameter]
-        param_mean = param.mean(axis=1) * 12
-        param_std = param.std(axis=1) * 12
+        param_mean = param.mean(axis=1)
+        param_std = param.std(axis=1)
 
         fb_trendy_df[parameter] = pd.DataFrame({'Mean': param_mean,
                                             '90_conf_interval': 1.645*param_std})
@@ -206,12 +208,12 @@ def fb_trendy(save=False):
     axl.set_ylabel('Feedback parameter   (yr$^{-1}$)', fontsize=16, labelpad=20)
 
     if save:
-        plt.savefig(fb_id.FIGURE_DIRECTORY + "fb_trendy_month.png")
+        plt.savefig(fb_id.FIGURE_DIRECTORY + "fb_trendy_year.png")
 
     return fb_trendy_df
 
 def fb_regional_trendy(save=False):
-    uptake = fb_id.trendy_duptake
+    uptake = fb_id.trendy_uptake
 
     all_subplots = ['211', '212']
     # Note u_gamma is used to compare with beta.
@@ -232,15 +234,15 @@ def fb_regional_trendy(save=False):
     for subplot, parameter in zip(all_subplots, parameters):
         for var, color, bar_pos in zip(vars, colors, bar_position):
             df = FeedbackAnalysis.TRENDY(
-                                        fb_id.co2['month'],
-                                        fb_id.temp['month'],
+                                        fb_id.co2['year'],
+                                        fb_id.temp['year'],
                                         uptake,
                                         var + '_Land'
                                         )
 
             param = df.params()[parameter[1]][parameter[0]]
-            param_mean = param.mean(axis=1) * 12
-            param_std = param.std(axis=1) * 12
+            param_mean = param.mean(axis=1)
+            param_std = param.std(axis=1)
 
             fb_trendy_df[parameter[0]] = pd.DataFrame({'Mean': param_mean,
                                                        '90_conf_interval': 1.645*param_std})
@@ -265,12 +267,14 @@ def fb_regional_trendy(save=False):
                   )
 
     if save:
-        plt.savefig(fb_id.FIGURE_DIRECTORY + "fb_trendy_regional_month.png")
+        plt.savefig(fb_id.FIGURE_DIRECTORY + "fb_trendy_regional_year.png")
 
     return fb_trendy_df
 
+fb_regional_trendy()
+
 def fb_regional_trendy2(save=False):
-    uptake = fb_id.trendy_duptake
+    uptake = fb_id.trendy_uptake
 
     all_subplots = ['41'+str(i) for i in range(1,5)]
     vars = ['Earth', 'South', 'Tropical', 'North']
@@ -292,15 +296,15 @@ def fb_regional_trendy2(save=False):
     ymin, ymax = [], []
     for subplot, var in zip(all_subplots, vars):
         df = FeedbackAnalysis.TRENDY(
-                                    fb_id.co2['month'],
-                                    fb_id.temp['month'],
+                                    fb_id.co2['year'],
+                                    fb_id.temp['year'],
                                     uptake,
                                     var + '_Land'
                                     )
         for parameter, sim, color, bar_pos in zip(parameters, simulations, colors, bar_position):
             param = df.params()[sim][parameter]
-            param_mean = param.mean(axis=1) * 12
-            param_std = param.std(axis=1) * 12
+            param_mean = param.mean(axis=1)
+            param_std = param.std(axis=1)
 
             fb_trendy_df[(var+'_Land', parameter)] = pd.DataFrame({'Mean': param_mean,
                                                            '90_conf_interval': 1.645*param_std})
@@ -333,11 +337,9 @@ def fb_regional_trendy2(save=False):
                   )
 
     if save:
-        plt.savefig(fb_id.FIGURE_DIRECTORY + "fb_trendy_regional_month2.png")
+        plt.savefig(fb_id.FIGURE_DIRECTORY + "fb_trendy_regional_year2.png")
 
     return fb_trendy_df
-
-
 """ EXECUTION """
 whole_param = feedback_regression('Earth_Land')
 whole_param[0]['S1'].mean(axis=1)*12
@@ -362,6 +364,6 @@ fb_regional_trendy(save=False)
 fb_regional_trendy2(save=False)
 
 # Pickle
-pickle.dump(fb_trendy(), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_trendy_month.pik', 'wb'))
-pickle.dump(fb_regional_trendy(), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_trendy_regional_month.pik', 'wb'))
-pickle.dump(fb_regional_trendy2(), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_trendy_regional_month2.pik', 'wb'))
+pickle.dump(fb_trendy(), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_trendy_year.pik', 'wb'))
+pickle.dump(fb_regional_trendy(), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_trendy_regional_year.pik', 'wb'))
+pickle.dump(fb_regional_trendy2(), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_trendy_regional_year2.pik', 'wb'))

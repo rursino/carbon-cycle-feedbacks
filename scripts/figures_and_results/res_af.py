@@ -1,26 +1,15 @@
 """ IMPORTS """
 from core import AirborneFraction
 
+from importlib import reload
+reload(AirborneFraction);
+
 import pandas as pd
 import xarray as xr
 import numpy as np
 from scipy import signal
 
 import os
-
-
-""" FUNCTIONS """
-def deseasonalise(x):
-    """
-    """
-
-    fs = 12
-    fc = 365/667
-
-    w = fc / (fs / 2) # Normalize the frequency.
-    b, a = signal.butter(5, w, 'low')
-
-    return signal.filtfilt(b, a, x)
 
 
 """ INPUTS """
@@ -54,16 +43,6 @@ for timeres in invf_uptake:
         model_dir = INV_DIRECTORY + model + '/'
         invf_uptake[timeres][model] = xr.open_dataset(model_dir + f'{timeres}.nc')
 
-invf_duptake = {}
-for model in invf_uptake['month']:
-    invf_duptake[model] = xr.Dataset(
-        {key: (('time'), deseasonalise(invf_uptake['month'][model][key].values)) for
-        key in ['Earth_Land', 'South_Land', 'North_Land', 'Tropical_Land',
-        'Earth_Ocean', 'South_Ocean', 'North_Ocean', 'Tropical_Ocean']},
-        coords={'time': (('time'), invf_uptake['month'][model].time.values)}
-    )
-
-
 trendy_models = ['VISIT', 'OCN', 'JSBACH', 'CLASS-CTEM', 'CABLE-POP']
 trendy_uptake = {
     "year": {model_name : xr.open_dataset(OUTPUT_DIR + f'TRENDY/spatial/output_all/{model_name}_S3_nbp/year.nc')
@@ -71,11 +50,12 @@ trendy_uptake = {
 }
 
 
+
 """ EXECUTIONS """
 GCPdf = AirborneFraction.GCP(co2['year'], temp['year'])
 GCPdf.airborne_fraction()
 
-INVdf = AirborneFraction.INVF(co2['month'], temp['month'], invf_duptake)
+INVdf = AirborneFraction.INVF(co2['year'], temp['year'], invf_uptake['year'])
 INVdf.airborne_fraction()
 INVdf.airborne_fraction()['std'] * 1.645
 
@@ -88,8 +68,8 @@ def inv_af_models(emission_rate=2):
     land = INVdf._feedback_parameters('Earth_Land')
     ocean = INVdf._feedback_parameters('Earth_Ocean')
 
-    beta = (land + ocean).loc['beta'] / 2.12 * 12
-    u_gamma = (land + ocean).loc['u_gamma'] * 12
+    beta = (land + ocean).loc['beta'] / 2.12
+    u_gamma = (land + ocean).loc['u_gamma']
 
     b = 1 / np.log(1 + emission_rate / 100)
     u = 1 - b * (beta + u_gamma)
