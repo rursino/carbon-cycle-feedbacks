@@ -117,7 +117,7 @@ class GCP:
         b = 1 / np.log(1 + emission_rate)
         u = 1 - b * (params_df['beta'] + params_df['u_gamma'])
 
-        return 1 / u
+        return 1 / u, params_df
 
 
 class INVF:
@@ -210,10 +210,11 @@ class INVF:
         u_gamma = (land['u_gamma'] + ocean['u_gamma'])
 
         b = 1 / np.log(1 + emission_rate)
-        u = 1 - b * (beta + u_gamma)
+        alpha = beta + u_gamma
+        u = 1 - b * alpha
 
         af = 1 / u
-        return {'mean': af.mean(axis=1), 'std': af.std(axis=1)}
+        return {'mean': af.mean(axis=1), 'std': af.std(axis=1)}, alpha
 
 
 class TRENDY:
@@ -279,7 +280,7 @@ class TRENDY:
 
         return reg_df
 
-    def airborne_fraction(self, emission_rate=2):
+    def airborne_fraction(self, emission_rate=0.02):
         """
         """
 
@@ -290,25 +291,24 @@ class TRENDY:
         ocean['beta'] /= 2.12
         ocean['u_gamma'] = ocean['gamma'] * self.phi / self.rho
 
-        return land, ocean
-
         params = land.add(ocean, axis=0)
         beta = params.loc['beta']
         u_gamma = params.loc['u_gamma']
 
-        b = 1 / np.log(1 + emission_rate / 100)
+        b = 1 / np.log(1 + emission_rate)
         u = 1 - b * (beta + u_gamma)
 
         af = 1 / u
         return {'mean': af.mean(), 'std': af.std()}
 
-    def window_af(self, emission_rate=2):
+    def window_af(self, emission_rate=0.02):
         """
         """
 
         land = FeedbackAnalysis.TRENDY(self.co2, self.temp, self.all_uptake,
                                         'Earth_Land'
                                         ).params()
+        # land.index.name = None
 
         # Ocean
         times = (
@@ -339,6 +339,7 @@ class TRENDY:
 
         ocean = pd.DataFrame(models).T
         ocean.columns = ['beta', 'gamma']
+        ocean.index = [int(time[0]) for time in times]
 
         phi = 0.015 / 2.12
         rho = 1.93
@@ -346,12 +347,16 @@ class TRENDY:
         ocean['beta'] /= 2.12
         ocean['u_gamma'] = ocean['gamma'] * phi / rho
 
-        return land['S1']['beta'], ocean['beta']
+        land_beta = land['S1']['beta']
+        land_ugamma = land['S3']['u_gamma']
+        land_beta.index.name = None
+        land_ugamma.index.name = None
+
+        beta = land_beta.add(ocean['beta'], axis=0)
+        u_gamma = land_ugamma.add(ocean['u_gamma'], axis=0)
 
         b = 1 / np.log(1 + emission_rate)
-
-        # beta =
-
         u = 1 - b * (beta + u_gamma)
 
-        return 1 / u
+        af = 1 / u
+        return {'mean': af.mean(), 'std': af.std()}

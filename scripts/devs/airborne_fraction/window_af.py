@@ -55,14 +55,9 @@ phi, rho = 0.0071, 1.93
 from importlib import reload
 reload(AirborneFraction);
 
-df = AirborneFraction.TRENDY(co2['year'], temp['year'], trendy_uptake)
+df = AirborneFraction.GCP(co2['year'], temp['year'])#, invf_uptake['year'])
 
-
-df.airborne_fraction()[0]
-
-df.window_af()[0].add(df.window_af()[1])
-
-df.window_af()[0]['VISIT'] + df.window_af()[1]
+df.window_af()
 
 
 def plot():
