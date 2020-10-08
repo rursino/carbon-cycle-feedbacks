@@ -3,9 +3,10 @@ decadal fb parameters from the FeedbackAnalysis class.
 """
 
 """ IMPORTS """
-from core import FeedbackAnalysis
+from core import FeedbackAnalysis, AirborneFraction
 import numpy as np
 import pandas as pd
+from scipy import stats
 import xarray as xr
 import matplotlib.pyplot as plt
 import os
@@ -23,7 +24,6 @@ co2 = {
 temp = {
     "year": xr.open_dataset(OUTPUT_DIR + f'TEMP/spatial/output_all/HadCRUT/year.nc')
 }
-
 
 invf_models = os.listdir(INV_DIRECTORY)
 invf_uptake = {'year': {}}
@@ -52,47 +52,44 @@ phi, rho = 0.0071, 1.93
 
 
 """ DEVS """
-land_df = FeedbackAnalysis.INVF(co2['year'], temp['year'], invf_uptake['year'], 'Earth_Land')
-ocean_df = FeedbackAnalysis.INVF(co2['year'], temp['year'], invf_uptake['year'], 'Earth_Ocean')
+from importlib import reload
+reload(AirborneFraction);
 
-emission_rate = 2
-
-
-land = land_df.params()
-ocean = ocean_df.params()
-beta = (land['beta'] + ocean['beta'])
-u_gamma = (land['u_gamma'] + ocean['u_gamma'])
+df = AirborneFraction.TRENDY(co2['year'], temp['year'], trendy_uptake)
 
 
-b = 1 / np.log(1 + emission_rate / 100)
-u = 1 - b * (beta + u_gamma)
+df.airborne_fraction()[0]
 
-af = 1 / u
-af_results = {'mean': af.mean(axis=1), 'std': af.std(axis=1)}
+df.window_af()[0].add(df.window_af()[1])
+
+df.window_af()[0]['VISIT'] + df.window_af()[1]
+
 
 def plot():
+    fig = plt.figure(figsize=(10,8))
     alpha = beta + u_gamma
-    plt.bar(alpha.mean(axis=1).index - 3, alpha.mean(axis=1).values, width=3)
-    plt.bar(af_results['mean'].index,
-            af_results['mean'].values,
+    ax1 = fig.add_subplot(211)
+    ax1.bar(alpha.mean(axis=1).index - 3, alpha.mean(axis=1).values, width=3)
+    ax1.axhline(linestyle='--', alpha=0.5, color='k')
+    ax1.axhline(emission_rate, linestyle='--', alpha=0.5, color='r')
+
+    ax2 = fig.add_subplot(212)
+    x = af_results['mean'].index
+    y = af_results['mean'].values
+    ax2.bar(x, y,
             # yerr=1.645*af_results['std'].values,
             width=3
            )
-    plt.legend(['alpha', 'af'])
+    for i, j in enumerate(y):
+        ax2.text(x[i]+2, 0.1, f'{j:.2f}', color='blue', fontweight='bold')
+    ax2.axhline(linestyle='--', alpha=0.5, color='k')
+
+    no_outliers = [np.median(y) - 1.5 * stats.iqr(y), np.median(y) + 1.5 * stats.iqr(y)]
+    y_max = y[(y > no_outliers[0]) & (y < no_outliers[1])]
+
+    delta = 0.5
+    ax2.set_xlim([min(x) - 5 , max(x) + 5])
+    ax2.set_ylim([max(y.min() - delta, 0) , y_max.max() + delta])
+
 
 plot()
-
-
-def af_func(a, *x):
-    alpha = np.linspace(*x)
-    u = 1 - (1/(a/100)) * alpha
-    af = 1 / u
-    plt.plot(alpha,af)
-
-
-f = lambda x : 1 / (1 - 50*x)
-f(1/50+0.000000001)
-
-
-af_func(2,-2,0)
-af_func(2,1/25,2)

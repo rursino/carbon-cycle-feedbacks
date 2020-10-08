@@ -75,6 +75,50 @@ class GCP:
 
         return 1 / u
 
+    def window_af(self, emission_rate=0.02):
+        """
+        """
+
+        times = (
+            ('1959', '1968'),
+            ('1969', '1978'),
+            ('1979', '1988'),
+            ('1989', '1998'),
+            ('1999', '2008'),
+            ('2009', '2018'),
+        )
+
+        models = {}
+        df = pd.DataFrame(data =
+            {
+                "sink": self.GCP['land sink'] + self.GCP['ocean sink'],
+                "CO2": self.co2,
+                "temp": self.temp
+            },
+            index= self.GCP.index)
+
+        for time in times:
+            X = sm.add_constant(df[['CO2', 'temp']].loc[time[0]:time[1]])
+            Y = df['sink'].loc[time[0]:time[1]]
+
+            model = sm.OLS(Y, X).fit()
+
+            models[time[0]] = model.params.loc[['CO2', 'temp']]
+
+        params_df = pd.DataFrame(models).T
+        params_df.columns = ['beta', 'gamma']
+
+        phi = 0.015 / 2.12
+        rho = 1.93
+
+        params_df['beta'] /= 2.12
+        params_df['u_gamma'] = params_df['gamma'] * phi / rho
+
+        b = 1 / np.log(1 + emission_rate)
+        u = 1 - b * (params_df['beta'] + params_df['u_gamma'])
+
+        return 1 / u
+
 
 class INVF:
     def __init__(self, co2, temp, uptake):
@@ -149,6 +193,28 @@ class INVF:
         af = 1 / u
         return {'mean': af.mean(), 'std': af.std()}
 
+    def window_af(self, emission_rate=0.02):
+        """
+        """
+
+        land_df = FeedbackAnalysis.INVF(self.co2, self.temp, self.uptake,
+                                        'Earth_Land'
+                                        )
+        ocean_df = FeedbackAnalysis.INVF(self.co2, self.temp, self.uptake,
+                                        'Earth_Ocean'
+                                        )
+
+        land = land_df.params()
+        ocean = ocean_df.params()
+        beta = (land['beta'] + ocean['beta'])
+        u_gamma = (land['u_gamma'] + ocean['u_gamma'])
+
+        b = 1 / np.log(1 + emission_rate)
+        u = 1 - b * (beta + u_gamma)
+
+        af = 1 / u
+        return {'mean': af.mean(axis=1), 'std': af.std(axis=1)}
+
 
 class TRENDY:
     def __init__(self, co2, temp, uptake):
@@ -171,10 +237,14 @@ class TRENDY:
 
         self.co2 = co2
         self.temp = temp
-        self.uptake = uptake
+        self.all_uptake = uptake
+        self.uptake = uptake['S3']['year']
 
         self.phi = 0.015 / 2.12
         self.rho = 1.93
+
+        self.GCP = pd.read_csv(MAIN_DIRECTORY + 'data/GCP/budget.csv',
+                          index_col='Year')
 
     def _feedback_parameters(self, variable):
         """
@@ -220,6 +290,8 @@ class TRENDY:
         ocean['beta'] /= 2.12
         ocean['u_gamma'] = ocean['gamma'] * self.phi / self.rho
 
+        return land, ocean
+
         params = land.add(ocean, axis=0)
         beta = params.loc['beta']
         u_gamma = params.loc['u_gamma']
@@ -229,3 +301,57 @@ class TRENDY:
 
         af = 1 / u
         return {'mean': af.mean(), 'std': af.std()}
+
+    def window_af(self, emission_rate=2):
+        """
+        """
+
+        land = FeedbackAnalysis.TRENDY(self.co2, self.temp, self.all_uptake,
+                                        'Earth_Land'
+                                        ).params()
+
+        # Ocean
+        times = (
+            ('1960', '1969'),
+            ('1970', '1979'),
+            ('1980', '1989'),
+            ('1990', '1999'),
+            ('2000', '2009'),
+            ('2008', '2017'),
+        )
+
+        models = {}
+        df = pd.DataFrame(data =
+            {
+                "sink": self.GCP['ocean sink'],
+                "CO2": self.co2[2:],
+                "temp": self.temp.sel(time=slice('1959', '2018')).Earth
+            },
+            index= self.GCP.index)
+
+        for time in times:
+            X = sm.add_constant(df[['CO2', 'temp']].loc[time[0]:time[1]])
+            Y = df['sink'].loc[time[0]:time[1]]
+
+            model = sm.OLS(Y, X).fit()
+
+            models[time[0]] = model.params.loc[['CO2', 'temp']]
+
+        ocean = pd.DataFrame(models).T
+        ocean.columns = ['beta', 'gamma']
+
+        phi = 0.015 / 2.12
+        rho = 1.93
+
+        ocean['beta'] /= 2.12
+        ocean['u_gamma'] = ocean['gamma'] * phi / rho
+
+        return land['S1']['beta'], ocean['beta']
+
+        b = 1 / np.log(1 + emission_rate)
+
+        # beta =
+
+        u = 1 - b * (beta + u_gamma)
+
+        return 1 / u
