@@ -52,16 +52,20 @@ def setup_module(module):
 
     trendy_models = ['VISIT', 'OCN', 'JSBACH', 'CLASS-CTEM', 'CABLE-POP']
     trendy_uptake = {
-        "year": {model_name : xr.open_dataset(TRENDY_DIRECTORY + f'{model_name}_S3_nbp/year.nc')
-        for model_name in trendy_models},
-        "month": {model_name : xr.open_dataset(TRENDY_DIRECTORY + f'{model_name}_S3_nbp/month.nc')
-        for model_name in trendy_models if model_name != "LPJ-GUESS"}
+        "S1": {
+            "year": {model_name : xr.open_dataset(TRENDY_DIRECTORY + f'{model_name}_S1_nbp/year.nc')
+            for model_name in trendy_models}
+        },
+        "S3": {
+            "year": {model_name : xr.open_dataset(TRENDY_DIRECTORY + f'{model_name}_S3_nbp/year.nc')
+            for model_name in trendy_models}
+        }
     }
 
-    trendy_uptake_mock = {'year': {}}
-    for timeres in trendy_uptake_mock:
+    trendy_uptake_mock = {'S1': {}, 'S3': {}}
+    for sim in trendy_uptake_mock:
         for model in trendy_models:
-            model_dir = TRENDY_DIRECTORY + model + '_S3_nbp/'
+            model_dir = TRENDY_DIRECTORY + model + f'_{sim}_nbp/'
             start = '1960'
             end = '2017'
             ds =  xr.open_dataset(model_dir + f'{timeres}.nc').sel(time=slice(start, end))
@@ -98,7 +102,7 @@ def test_GCP_airborne():
     assert df.airborne_fraction(emission_rate) == pytest.approx(test_af)
 
 def test_invf_airborne():
-    df = AirborneFraction.INVF(co2_year, temp_year, invf_uptake_mock['year'])
+    df = AirborneFraction.INVF(co2_year, temp_year, invf_uptake_mock)
 
     land = df._feedback_parameters('Earth_Land')
     ocean = df._feedback_parameters('Earth_Ocean')
@@ -121,7 +125,7 @@ def test_invf_airborne():
     assert df.airborne_fraction(emission_rate)['std'] == pytest.approx(0.)
 
 def test_trendy_airborne():
-    df = AirborneFraction.TRENDY(co2_year, temp_year, trendy_uptake_mock['year'])
+    df = AirborneFraction.TRENDY(co2_year, temp_year, trendy_uptake_mock)
     GCPdf = AirborneFraction.GCP(co2_year, temp_year)
     GCPdf.GCP['land sink'] = (GCPdf.co2 + GCPdf.temp) / 2
     GCPdf.GCP['ocean sink'] = (GCPdf.co2 + GCPdf.temp) / 2
@@ -160,3 +164,19 @@ def test_trendy_airborne():
     class_af = 1 / class_u
 
     assert class_af.mean() == pytest.approx(test_af)
+
+def test_GCP_window():
+    df = AirborneFraction.TRENDY(co2_year, temp_year, trendy_uptake_mock['year'])
+    GCPdf = AirborneFraction.GCP(co2_year, temp_year)
+    GCPdf.GCP['land sink'] = (GCPdf.co2 + GCPdf.temp) / 2
+    GCPdf.GCP['ocean sink'] = (GCPdf.co2 + GCPdf.temp) / 2
+
+    phi = 0.015 / 2.12
+    rho = 1.93
+
+    land = df._feedback_parameters('Earth_Land')
+    ocean = GCPdf._feedback_parameters()['ocean']
+
+    ocean.index = ['beta', 'gamma']
+    ocean['beta'] /= 2.12
+    ocean['u_gamma'] = ocean['gamma'] * phi / rho

@@ -115,9 +115,10 @@ class GCP:
         params_df['u_gamma'] = params_df['gamma'] * phi / rho
 
         b = 1 / np.log(1 + emission_rate)
-        u = 1 - b * (params_df['beta'] + params_df['u_gamma'])
+        alpha = params_df['beta'] + params_df['u_gamma']
+        u = 1 - b * alpha
 
-        return 1 / u, params_df
+        return 1 / u, alpha
 
 
 class INVF:
@@ -354,9 +355,9 @@ class TRENDY:
 
         beta = land_beta.add(ocean['beta'], axis=0)
         u_gamma = land_ugamma.add(ocean['u_gamma'], axis=0)
-
         b = 1 / np.log(1 + emission_rate)
-        u = 1 - b * (beta + u_gamma)
+        alpha = beta + u_gamma
+        u = 1 - b * alpha
 
         af = 1 / u
-        return {'mean': af.mean(), 'std': af.std()}
+        return {'mean': af.mean(axis=1), 'std': af.std(axis=1)}, alpha
