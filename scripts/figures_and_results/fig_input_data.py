@@ -88,5 +88,3 @@ month_mean = {
 }
 
 co2 = pd.read_csv("./../../data/CO2/co2_year.csv").CO2[2:]
-
-enso = pd.read_csv("./../../data/climate_indices/soi_bom.csv", index_col="Year")

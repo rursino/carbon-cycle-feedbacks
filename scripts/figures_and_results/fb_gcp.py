@@ -152,6 +152,20 @@ def fb_gcp_decade(save=False):
 
     return fb_gcp_vals
 
+def carbon_gained():
+    beta = latex_fb_gcp()['beta'].sum()
+    gamma = latex_fb_gcp()['gamma'].sum()
+    u_gamma = latex_fb_gcp()['u_gamma'].sum()
+
+    return beta, gamma, u_gamma
+
+    gained = {}
+    gained['beta'] = (beta * (C - C.iloc[0]).values * 2.12).sum()
+    gained['gamma'] = (gamma * (T - T[0]).values).sum()
+    gained['u_gamma'] = (u_gamma * (C - C.iloc[0]).values * 2.12).sum()
+
+    return gained
+
 """ EXECUTION """
 latex_fb_gcp()[['beta', 'u_gamma']].sum(axis=1)
 print(latex_fb_gcp())
@@ -168,18 +182,7 @@ abs(land_fwr / ocean_fwr).mean()
 
 fb_gcp_decade(True)
 
-
-
-def resample(df):
-    df.index = T.time.values
-    return df.resample('10Y').mean().values
-
-plt.bar(range(0, 19, 3),T.resample({"time": "10Y"}).mean().values)
-# plt.bar(resample(C))
-plt.bar(range(1, 20, 3), resample(Uo))
-# plt.bar(range(2, 21, 3), resample(Ul))
-plt.legend(['T', 'Uo'])
-
+carbon_gained()
 
 # Pickle
 pickle.dump(fb_gcp_decade(), open(FIGURE_DIRECTORY+'/rayner_df/fb_gcp_decade.pik', 'wb'))

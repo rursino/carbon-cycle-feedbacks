@@ -1,7 +1,8 @@
 """ IMPORTS """
 import matplotlib.pyplot as plt
-from scipy import stats
+from scipy import stats, signal
 import pandas as pd
+import numpy as np
 
 import seaborn as sns
 sns.set_style('darkgrid')
@@ -228,6 +229,40 @@ def gcp_cwt_bandpass(save=False, stat_values=False, fc=1/10):
 
     return cwt_vals
 
+def uptake_enso(save=False):
+    enso = pd.read_csv("./../../data/climate_indices/soi_bom.csv", index_col="Year")
+    enso.index = pd.date_range('1959-1', '2020-1', freq='M')
+    soi_annual = enso.loc['1959-1':'2018-12'].resample('Y').mean().SOI
+
+    soi_uptake = pd.DataFrame(
+                    {'land': -land.values,
+                     'ocean': -ocean.values,
+                     'soi': soi_annual.values},
+                    index=land.index)
+
+    w = np.array([1/7, 1/2.01]) / (1 / 2) # Normalize the frequency.
+    b, a = signal.butter(5, w, 'band')
+
+    Bsoi = signal.filtfilt(b, a, soi_uptake['soi'])
+    Bland = signal.filtfilt(b, a, soi_uptake['land'])
+    Bocean = signal.filtfilt(b, a, soi_uptake['ocean'])
+    # Bsoi = soi_uptake['soi']
+    # Bland = soi_uptake['land']
+    # Bocean = soi_uptake['ocean']
+
+    fig = plt.figure(figsize=(14,8))
+    ax1 = fig.add_subplot(211)
+    ax1.plot(soi_uptake.index, Bland)
+    ax2 = ax1.twinx()
+    ax2.plot(soi_uptake.index, Bsoi, color='red')
+    ax3 = fig.add_subplot(212)
+    ax3.plot(soi_uptake.index, Bocean)
+    ax4 = ax3.twinx()
+    ax4.plot(soi_uptake.index, Bsoi, color='red')
+
+    if save:
+        plt.savefig(FIGURE_DIRECTORY + "uptake_enso_gcp.png")
+
 
 """ EXECUTION """
 gcp_landocean(save=False)
@@ -246,31 +281,9 @@ stat_cwt_bp = gcp_cwt_bandpass(save=False, stat_values=True, fc=1/25)
 stat_cwt_bp['ocean'].slope * 60 *(co2.iloc[-1] - co2.iloc[0])**2 / 1e3)
 
 
-# ENSO variability
-land
+uptake_enso()
 
-enso = pd.read_csv("./../../data/climate_indices/soi_bom.csv", index_col="Year")
-enso
-
-enso.index = pd.date_range('1959-1', '2020-1', freq='M')
-soi_annual = enso.loc['1959-1':'2018-12'].resample('Y').mean().SOI
-soi_annual.index = land.index
-
-land.values
-
-soi_uptake = pd.DataFrame(
-                {'land': land.values,
-                 'ocean': ocean.values,
-                 'soi': soi_annual.values},
-                index=land.index)
-
-soi_uptake.plot()
-
-plt.scatter(soi_uptake.land, soi_uptake.soi)
-stats.linregress(soi_uptake.ocean, soi_uptake.soi)
-
-
-# PICKLE
+ # PICKLE
 pickle.dump(gcp_landocean(), open(FIGURE_DIRECTORY+'/rayner_df/gcp_landocean.pik', 'wb'))
 pickle.dump(gcp_simple_regression(), open(FIGURE_DIRECTORY+'/rayner_df/gcp_simple_regression.pik', 'wb'))
 pickle.dump(gcp_cwt(), open(FIGURE_DIRECTORY+'/rayner_df/gcp_cwt.pik', 'wb'))

@@ -148,6 +148,26 @@ def median_regstat(variable):
 
     return median_regstat
 
+fb_id.co2['year']
+
+def carbon_gained():
+    land = feedback_regression('Earth_Land')[0].mean(axis=1)
+    ocean = feedback_regression('Earth_Ocean')[0].mean(axis=1)
+
+    beta = land.loc['beta'] + ocean.loc['beta']
+    gamma = land.loc['gamma'] + ocean.loc['gamma']
+    u_gamma = land.loc['u_gamma'] + ocean.loc['u_gamma']
+
+    start, end = 1976, 2017
+    C = fb_id.co2['year'].loc[start:end]
+    T = fb_id.temp['year'].sel(time=slice(str(start), str(end))).Earth
+
+    gained = {}
+    gained['beta'] = (beta * (C - C.iloc[0]).values * 2.12).sum()
+    gained['gamma'] = (gamma * (T - T[0]).values).sum()
+    gained['u_gamma'] = (u_gamma * (C - C.iloc[0]).values * 2.12).sum()
+
+    return gained
 
 """ FIGURES """
 def fb_inv(save=False):
@@ -402,14 +422,7 @@ fb_regional_inv(save=False)
 fb_regional_inv2(save=False)
 
 
-# Carbon gained/lost
-co2 = pd.read_csv('./../../data/CO2/co2_year.csv', index_col='Year')
-temp =
-co2_fb = co2.CO2.loc[1976:2017].values * 2.12
-
-(land[0].mean(axis=1)['beta'] * co2_fb).sum()
-land[0].mean(axis=1)['gamma'] * co2_fb
-ocean[0].mean(axis=1)[['beta', 'u_gamma']]
+carbon_gained()
 
 
 # Pickle

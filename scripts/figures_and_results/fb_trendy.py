@@ -144,6 +144,24 @@ def median_regstat(variable):
 
     return mean_regstats
 
+def carbon_gained():
+    fb = feedback_regression('Earth_Land')[0]
+
+    beta = feedback_regression('Earth_Land')[0]['S1'].mean(axis=1)['beta']
+    gamma = feedback_regression('Earth_Land')[0]['S3'].mean(axis=1)['gamma']
+    u_gamma = feedback_regression('Earth_Land')[0]['S3'].mean(axis=1)['u_gamma']
+
+    start, end = 1960, 2017
+    C = fb_id.co2['year'].loc[start:end]
+    T = fb_id.temp['year'].sel(time=slice(str(start), str(end))).Earth
+
+    gained = {}
+    gained['beta'] = (beta * (C - C.iloc[0]).values * 2.12).sum()
+    gained['gamma'] = (gamma * (T - T[0]).values).sum()
+    gained['u_gamma'] = (u_gamma * (C - C.iloc[0]).values * 2.12).sum()
+
+    return gained
+
 
 """ FIGURES """
 def fb_trendy(save=False):
@@ -271,8 +289,6 @@ def fb_regional_trendy(save=False):
 
     return fb_trendy_df
 
-fb_regional_trendy()
-
 def fb_regional_trendy2(save=False):
     uptake = fb_id.trendy_uptake
 
@@ -340,21 +356,21 @@ def fb_regional_trendy2(save=False):
         plt.savefig(fb_id.FIGURE_DIRECTORY + "fb_trendy_regional_year2.png")
 
     return fb_trendy_df
+
+
 """ EXECUTION """
 whole_param = feedback_regression('Earth_Land')
 whole_param[0]['S1'].mean(axis=1)*12
 whole_param[0]['S3'].mean(axis=1)*12
 
-
-
 whole_param[1]['S1']
 whole_param[1]['S3']
-
 
 medianreg = median_regstat("North_Land")
 medianreg['S1']
 medianreg['S3']
 
+carbon_gained()
 
 """ FIGURES """
 fb_trendy(save=False)
