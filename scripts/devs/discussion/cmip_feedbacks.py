@@ -1,7 +1,8 @@
 # Signs reversed from CMIP to suit sign in thesis.
 # Units in CMIP: beta = GtC/ppm, gamma = GtC/K
-# Adjustments here: beta /= 2.12 to get GtC/GtC = 1
-# Adjustments not made here: getting /yr, not trivial.
+# Adjustments here:
+    # beta /= 2.12 to get GtC/GtC = 1
+    # dividing by 140 years to get units /yr
 
 C4MIP = {
     'beta_land': -1.35 / 2.12, 'beta_ocean': -1.13 / 2.12,
@@ -32,4 +33,4 @@ rho = 1.93
 df['u_gamma_land'] = df['gamma_land'] * phi / rho
 df['u_gamma_ocean'] = df['gamma_ocean'] * phi / rho
 
-df
+df / 140
