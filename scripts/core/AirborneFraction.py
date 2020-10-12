@@ -114,8 +114,9 @@ class GCP:
         params_df['beta'] /= 2.12
         params_df['u_gamma'] = params_df['gamma'] * phi / rho
 
-        b = 1 / np.log(1 + emission_rate)
         alpha = params_df['beta'] + params_df['u_gamma']
+
+        b = 1 / np.log(1 + emission_rate)
         u = 1 - b * alpha
 
         return 1 / u, alpha
@@ -210,8 +211,9 @@ class INVF:
         beta = (land['beta'] + ocean['beta'])
         u_gamma = (land['u_gamma'] + ocean['u_gamma'])
 
-        b = 1 / np.log(1 + emission_rate)
         alpha = beta + u_gamma
+
+        b = 1 / np.log(1 + emission_rate)
         u = 1 - b * alpha
 
         af = 1 / u
@@ -309,7 +311,6 @@ class TRENDY:
         land = FeedbackAnalysis.TRENDY(self.co2, self.temp, self.all_uptake,
                                         'Earth_Land'
                                         ).params()
-        # land.index.name = None
 
         # Ocean
         times = (
@@ -322,13 +323,14 @@ class TRENDY:
         )
 
         models = {}
+        start, end = int(times[0][0]), int(times[-1][-1])
         df = pd.DataFrame(data =
             {
-                "sink": self.GCP['ocean sink'],
-                "CO2": self.co2[2:],
-                "temp": self.temp.sel(time=slice('1959', '2018')).Earth
+                "sink": self.GCP['ocean sink'].loc[start:end],
+                "CO2": self.co2.loc[start:end],
+                "temp": self.temp.sel(time=slice(str(start), str(end))).Earth
             },
-            index= self.GCP.index)
+            index= self.GCP.loc[start:end].index)
 
         for time in times:
             X = sm.add_constant(df[['CO2', 'temp']].loc[time[0]:time[1]])
@@ -355,9 +357,12 @@ class TRENDY:
 
         beta = land_beta.add(ocean['beta'], axis=0)
         u_gamma = land_ugamma.add(ocean['u_gamma'], axis=0)
-        b = 1 / np.log(1 + emission_rate)
+
         alpha = beta + u_gamma
+
+        b = 1 / np.log(1 + emission_rate)
         u = 1 - b * alpha
 
         af = 1 / u
+
         return {'mean': af.mean(axis=1), 'std': af.std(axis=1)}, alpha

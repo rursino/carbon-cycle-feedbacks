@@ -104,7 +104,8 @@ def INVF_window(save=False):
     fig = plt.figure(figsize=(14,9))
 
     ax1 = fig.add_subplot(212)
-    ax1.bar(alpha.mean(axis=1).index - 3, alpha.mean(axis=1).values, width=3)
+    ax1.bar(alpha.mean(axis=1).index - 3, alpha.mean(axis=1).values, width=3,
+            yerr=alpha.std(axis=1).values)
     ax1.axhline(linestyle='--', alpha=0.5, color='k')
     ax1.axhline(emission_rate, linestyle='--', alpha=0.5, color='r')
     ax1.set_ylabel(r'$\alpha$ (yr$^{-1}$)', fontsize=20, labelpad=15)
@@ -113,7 +114,7 @@ def INVF_window(save=False):
     x = af_results['mean'].index
     y = af_results['mean'].values
     ax2.bar(x, y,
-            # yerr=1.645*af_results['std'].values,
+            yerr=1.645*af_results['std'].values,
             width=3
            )
     for i, j in enumerate(y):
@@ -125,7 +126,7 @@ def INVF_window(save=False):
 
     delta = 0.5
     ax2.set_xlim([min(x) - 5 , max(x) + 5])
-    ax2.set_ylim([y.min() - delta , y_max.max() + delta])
+    # ax2.set_ylim([y.min() - delta , y_max.max() + delta])
 
     ax2.set_ylabel(r'$\Lambda$', fontsize=20, labelpad=15)
 
@@ -136,7 +137,8 @@ def TRENDY_window(save=False):
     fig = plt.figure(figsize=(14,9))
 
     ax1 = fig.add_subplot(212)
-    ax1.bar(alpha.mean(axis=1).index - 3, alpha.mean(axis=1).values, width=3)
+    ax1.bar(alpha.mean(axis=1).index - 3, alpha.mean(axis=1).values, width=3,
+            yerr=alpha.std(axis=1).values)
     ax1.axhline(linestyle='--', alpha=0.5, color='k')
     ax1.axhline(emission_rate, linestyle='--', alpha=0.5, color='r')
     ax1.set_ylabel(r'$\alpha$ (yr$^{-1}$)', fontsize=20, labelpad=15)
@@ -145,7 +147,7 @@ def TRENDY_window(save=False):
     x = af_results['mean'].index
     y = af_results['mean'].values
     ax2.bar(x, y,
-            # yerr=1.645*af_results['std'].values,
+            yerr=1.645*af_results['std'].values,
             width=3
            )
     for i, j in enumerate(y):
@@ -174,10 +176,25 @@ TRENDYdf = AirborneFraction.TRENDY(co2['year'], temp['year'], trendy_uptake)
 TRENDYdf.airborne_fraction()
 TRENDYdf.airborne_fraction()['std'] * 1.645
 
+
+# Window_AF
+pd.DataFrame({'alpha': GCPdf.window_af()[1], 'af': GCPdf.window_af()[0]})
+
+pd.DataFrame({'alpha_mean': INVdf.window_af()[1].mean(axis=1),
+              'alpha_std': INVdf.window_af()[1].std(axis=1),
+              'af_mean': INVdf.window_af()[0]['mean'],
+              'af_std': INVdf.window_af()[0]['std']})
+
+pd.DataFrame({'alpha_mean': TRENDYdf.window_af()[1].mean(axis=1),
+              'alpha_std': TRENDYdf.window_af()[1].std(axis=1),
+              'af_mean': TRENDYdf.window_af()[0]['mean'],
+              'af_std': TRENDYdf.window_af()[0]['std']})
+
+
+
 GCP_window(save=False)
 INVF_window(save=False)
 TRENDY_window(save=False)
-
 
 # Inversions individual models
 def inv_af_models(emission_rate=2):
