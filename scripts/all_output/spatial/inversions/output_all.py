@@ -34,11 +34,15 @@ def main(input_file, output_folder):
             .latitudinal_splits()
          )
 
+    seasonal = df.seasonal_uptake()
+
     arrays = {
         "month": df,
         "year": df.resample({'time': 'Y'}).sum(),
         "decade": df.resample({'time': '10Y'}).sum(),
-        "whole": df.sum()
+        "whole": df.sum(),
+        "summer": seasonal['summer'],
+        "winter": seasonal['winter']
     }
 
     if not os.path.isdir(output_folder):

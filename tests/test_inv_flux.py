@@ -166,6 +166,16 @@ def test_months_add_to_years():
     for arg in args:
         assert np.subtract(*sums(*arg)) == 0
 
+def test_seasonal():
+    seasonal = test_ds.seasonal_uptake()
+    summer = seasonal['summer']
+    winter = seasonal['winter']
+
+(summer + winter)
+basic_test_result.resample({'time': 'Y'}).sum()
+
+    assert summer + winter == basic_test_result.resample({'time': 'Y'}).sum()
+
 def test_cascading_window_trend_year_co2():
     df = invf.Analysis(year_output)
 
@@ -187,26 +197,3 @@ def test_cascading_window_trend_year_co2():
 
     assert np.all(cwt(10).values.squeeze() == np.ones((1, len(df.data.time.values) - 10)))
     assert np.all(cwt(25).values.squeeze() == np.ones((1, len(df.data.time.values) - 25)))
-
-# def test_cascading_window_trend_month_co2():
-#     df = invf.Analysis(month_output)
-#
-#     start = int(str(df.data.time[0].values)[:4])
-#     end = int(str(df.data.time[-1].values)[:4])
-#
-#     dfco2 = co2_month.loc[start:end].values
-#
-#     df.data = xr.Dataset(
-#         {'Earth_Land': (('time'), dfco2)},
-#         coords={
-#                 'time': (('time'), df.data.time.values)
-#                }
-#     )
-#
-#     def cwt(window_size):
-#         test_df = df.cascading_window_trend(indep='co2',
-#                                             window_size=window_size)
-#         return test_df
-#
-#     assert np.all(cwt(10).values.squeeze() == np.ones((1, len(df.data.time.values) - 10*12)))
-#     assert np.all(cwt(25).values.squeeze() == np.ones((1, len(df.data.time.values) - 25*12)))

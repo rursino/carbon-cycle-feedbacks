@@ -34,15 +34,16 @@ def main(input_file, output_folder, ui=False):
     data = TRENDYf.SpatialAgg(data = input_file)
     df = data.latitudinal_splits()
 
-    if data.time_resolution == "Y":
-        arrays = {"year": df}
-    else:
-        arrays = {
-                    "month": df,
-                    "year": df.resample({'time': 'Y'}).sum()
-                 }
-    arrays["decade"] = df.resample({'time': '10Y'}).sum()
-    arrays["whole"] = df.sum()
+    seasonal = df.seasonal_uptake()
+
+    arrays = {
+                "month": df,
+                "year": df.resample({'time': 'Y'}).sum(),
+                "decade": df.resample({'time': '10Y'}).sum(),
+                "whole": df.sum(),
+                "summer": seasonal['summer'],
+                "winter": seasonal['winter']
+             }
 
     if os.path.isdir(output_folder):
         if ui:

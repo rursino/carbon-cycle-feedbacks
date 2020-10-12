@@ -340,7 +340,57 @@ class SpatialAgg:
             coords={'time': (('time'), ds_time)}
         )
 
+        self.lat_split_ds = ds
+
         return ds
+
+    def seasonal_uptake(self):
+        """If data is monthly resolved, split the dataset into negative values
+        (representing uptake in the winter season) and positive values
+        (representing uptake in the summer season) for use of seasonal analysis.
+        Note that seasons are calibrated to boreal geography because boreal
+        seasons are more dominant than austral seasons.
+
+        Returns
+        -------
+
+        summer: xr.Dataset
+
+            Annual sum of uptake during the summer season.
+
+        winter: xr.Dataset
+
+            Annual sum of uptake during the winter season.
+
+        """
+
+        if not hasattr(self, 'lat_split_ds'):
+            self.lat_split_ds = self.latitudinal_splits()
+
+        ds = self.lat_split_ds
+
+        index = pd.to_datetime(ds.time.values).year.unique()
+        variables = [
+            'Earth_Land', 'South_Land', 'Tropical_Land', 'North_Land']
+
+        summer, winter = {}, {}
+        for variable in variables:
+            winter[variable], summer[variable] = [], []
+            for time in index:
+                year = ds[variable].sel(time=str(time)).values
+                winter[variable].append(year[year < 0].sum())
+                summer[variable].append(year[year >= 0].sum())
+
+        summer_ds = xr.Dataset(
+            {key: (('time'), value) for (key, value) in summer.items()},
+            coords={'time': (('time'), pd.to_datetime(index, format='%Y'))}
+        )
+        winter_ds = xr.Dataset(
+            {key: (('time'), value) for (key, value) in winter.items()},
+            coords={'time': (('time'), pd.to_datetime(index, format='%Y'))}
+        )
+
+        return {'summer': summer_ds, 'winter': winter_ds}
 
 
 class Analysis:
