@@ -71,6 +71,8 @@ def feedback_regression(variable):
 
     return reg_df, stats_df
 
+feedback_regression('Earth_Land')
+
 def all_regstat(variable):
     timeres = 'year'
     uptake = fb_id.invf_uptake['year']
@@ -390,12 +392,12 @@ def fb_regional_inv2(save=False):
 
 """ EXECUTION """
 land = feedback_regression('Earth_Land')
-land[0].mean(axis=1)
-land[1].mean()
+land[0]
+land[1]
 
 ocean = feedback_regression('Earth_Ocean')
-ocean[0].mean(axis=1)
-ocean[1].mean()
+ocean[0]
+ocean[1]
 
 land[0].mean(axis=1) / ocean[0].mean(axis=1)
 
