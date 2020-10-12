@@ -54,6 +54,8 @@ def setup_module(module):
     output_dir = CURRENT_DIR + './../output/TRENDY/spatial/output_all/OCN_S1_nbp/'
     month_output = xr.open_dataset(output_dir + 'month.nc')
     year_output = xr.open_dataset(output_dir + 'year.nc')
+    summer_output = xr.open_dataset(output_dir + 'summer.nc')
+    winter_output = xr.open_dataset(output_dir + 'winter.nc')
 
 
 """ TESTS """
@@ -141,6 +143,16 @@ def test_months_add_to_years():
     for arg in args:
         assert np.subtract(*sums(*arg)) == 0
 
+def test_seasonal():
+    variables = ['Earth_Land', 'South_Land', 'Tropical_Land', 'North_Land']
+
+    for var in variables:
+        summer = summer_output[var].values
+        winter = winter_output[var].values
+        year = year_output[var].values
+
+        assert np.all(summer + winter == pytest.approx(year))
+
 def test_cascading_window_trend_year_co2():
     df = TRENDYf.Analysis(year_output)
 
@@ -164,28 +176,3 @@ def test_cascading_window_trend_year_co2():
 
     assert np.all(cwt(10).values.squeeze() == np.ones((1, len(df.data.time.values) - 10)))
     assert np.all(cwt(25).values.squeeze() == np.ones((1, len(df.data.time.values) - 25)))
-
-# def test_cascading_window_trend_month_co2():
-#     df = TRENDYf.Analysis(month_output)
-#
-#     df.data = df.data.sel(time=slice('1959', '2017'))
-#
-#     start = int(str(df.data.time[0].values)[:4])
-#     end = int(str(df.data.time[-1].values)[:4])
-#
-#     dfco2 = co2_month.loc[start:end].values
-#
-#     df.data = xr.Dataset(
-#         {'Earth_Land': (('time'), dfco2)},
-#         coords={
-#                 'time': (('time'), df.data.time.values)
-#                }
-#     )
-#
-#     def cwt(window_size):
-#         test_df = df.cascading_window_trend(indep='co2',
-#                                             window_size=window_size)
-#         return test_df
-#
-#     assert np.all(cwt(10).values.squeeze() == np.ones((1, len(df.data.time.values) - 10*12)))
-#     assert np.all(cwt(25).values.squeeze() == np.ones((1, len(df.data.time.values) - 25*12)))

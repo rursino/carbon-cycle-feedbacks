@@ -10,11 +10,15 @@ Run this script from the bash shell.
 import sys
 from core import inv_flux
 
+from importlib import reload
+reload(inv_flux);
+
 import os
 import xarray as xr
 import pickle
 import logging
 
+input_file = "./../../../../data/inversions/fco2_Rayner-C13-2018_June2018-ext3_1992-2012_monthlymean_XYT.nc"
 
 """ FUNCTIONS """
 def main(input_file, output_folder):
@@ -29,12 +33,10 @@ def main(input_file, output_folder):
 
     # Open dataset and run latitudinal_splits function.
     ds = xr.open_dataset(input_file)
-    df = (inv_flux
-            .SpatialAgg(data = ds)
-            .latitudinal_splits()
-         )
+    invdf = inv_flux.SpatialAgg(data = ds)
 
-    seasonal = df.seasonal_uptake()
+    df = invdf.latitudinal_splits()
+    seasonal = invdf.seasonal_uptake()
 
     arrays = {
         "month": df,

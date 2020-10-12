@@ -63,6 +63,8 @@ def setup_module(module):
     output_dir = CURRENT_DIR + './../output/inversions/spatial/output_all/CAMS/'
     month_output = xr.open_dataset(output_dir + 'month.nc')
     year_output = xr.open_dataset(output_dir + 'year.nc')
+    summer_output = xr.open_dataset(output_dir + 'summer.nc')
+    winter_output = xr.open_dataset(output_dir + 'winter.nc')
 
 
 """ TESTS """
@@ -167,14 +169,15 @@ def test_months_add_to_years():
         assert np.subtract(*sums(*arg)) == 0
 
 def test_seasonal():
-    seasonal = test_ds.seasonal_uptake()
-    summer = seasonal['summer']
-    winter = seasonal['winter']
+    variables = ['Earth_Land', 'South_Land', 'Tropical_Land', 'North_Land',
+                 'Earth_Ocean', 'South_Ocean', 'Tropical_Ocean', 'North_Ocean']
 
-(summer + winter)
-basic_test_result.resample({'time': 'Y'}).sum()
+    for var in variables:
+        summer = summer_output[var].values
+        winter = winter_output[var].values
+        year = year_output[var].values
 
-    assert summer + winter == basic_test_result.resample({'time': 'Y'}).sum()
+        assert np.all(summer + winter == pytest.approx(year))
 
 def test_cascading_window_trend_year_co2():
     df = invf.Analysis(year_output)

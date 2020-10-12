@@ -32,9 +32,9 @@ def main(input_file, output_folder, ui=False):
 
     # Open dataset and run latitudinal_splits function.
     data = TRENDYf.SpatialAgg(data = input_file)
-    df = data.latitudinal_splits()
 
-    seasonal = df.seasonal_uptake()
+    df = data.latitudinal_splits()
+    seasonal = data.seasonal_uptake()
 
     arrays = {
                 "month": df,

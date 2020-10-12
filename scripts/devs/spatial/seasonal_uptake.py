@@ -103,6 +103,8 @@ def seasonal_uptake(ds):
 
 seasonal_uptake(ds)
 
+dfinv = invf.SpatialAgg("./../../../data/inversions/fco2_Rayner-C13-2018_June2018-ext3_1992-2012_monthlymean_XYT.nc")
+dfinv.seasonal_uptake()
 
 
 del df
