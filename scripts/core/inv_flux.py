@@ -339,8 +339,8 @@ class SpatialAgg:
             winter[variable], summer[variable] = [], []
             for time in index:
                 year = ds[variable].sel(time=str(time)).values
-                winter[variable].append(year[year < 0].sum())
-                summer[variable].append(year[year >= 0].sum())
+                winter[variable].append(year[year >= 0].sum())
+                summer[variable].append(year[year < 0].sum())
 
         summer_ds = xr.Dataset(
             {key: (('time'), value) for (key, value) in summer.items()},
