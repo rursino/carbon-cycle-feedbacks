@@ -1,44 +1,10 @@
-2020-07-17 09:15: INFO:__main__:  LPJ-GUESS_S1_nbp:: pass
-2020-07-17 09:15: INFO:__main__:  LPJ-GUESS_S3_nbp:: pass
-2020-07-17 09:15: INFO:__main__:  OCN_S1_nbp:: pass
-2020-07-17 09:16: INFO:__main__:  OCN_S3_nbp:: pass
-2020-07-17 09:16: INFO:__main__:  CABLE-POP_S1_nbp:: pass
-2020-07-17 09:16: INFO:__main__:  CABLE-POP_S3_nbp:: pass
-2020-07-17 09:16: INFO:__main__:  CLASS-CTEM_S1_nbp:: pass
-2020-07-17 09:16: INFO:__main__:  CLASS-CTEM_S3_nbp:: pass
-2020-07-17 09:17: INFO:__main__:  JSBACH_S1_nbp:: pass
-2020-07-17 09:17: INFO:__main__:  JSBACH_S3_nbp:: pass
-2020-07-23 13:01: INFO:__main__:  LPJ-GUESS_S1_nbp:: pass
-2020-07-23 13:01: INFO:__main__:  LPJ-GUESS_S3_nbp:: pass
-2020-07-23 13:02: INFO:__main__:  OCN_S1_nbp:: pass
-2020-07-23 13:02: INFO:__main__:  OCN_S3_nbp:: pass
-2020-07-23 13:03: ERROR:__main__:  CABLE-POP_S1_nbp :: fail
-2020-07-23 13:03: ERROR:__main__: 'numpy.datetime64' object has no attribute 'strftime'
-2020-07-23 13:03: ERROR:__main__:  CABLE-POP_S3_nbp :: fail
-2020-07-23 13:03: ERROR:__main__: 'numpy.datetime64' object has no attribute 'strftime'
-2020-07-23 13:03: INFO:__main__:  CLASS-CTEM_S1_nbp:: pass
-2020-07-23 13:04: INFO:__main__:  CLASS-CTEM_S3_nbp:: pass
-2020-07-23 13:04: ERROR:__main__:  JSBACH_S1_nbp :: fail
-2020-07-23 13:04: ERROR:__main__: 'numpy.datetime64' object has no attribute 'strftime'
-2020-07-23 13:04: ERROR:__main__:  JSBACH_S3_nbp :: fail
-2020-07-23 13:04: ERROR:__main__: 'numpy.datetime64' object has no attribute 'strftime'
-2020-07-23 14:23: INFO:__main__:  LPJ-GUESS_S1_nbp:: pass
-2020-07-23 14:23: INFO:__main__:  LPJ-GUESS_S3_nbp:: pass
-2020-07-23 14:23: INFO:__main__:  OCN_S1_nbp:: pass
-2020-07-23 14:23: INFO:__main__:  OCN_S3_nbp:: pass
-2020-07-23 14:24: INFO:__main__:  CABLE-POP_S1_nbp:: pass
-2020-07-23 14:24: INFO:__main__:  CABLE-POP_S3_nbp:: pass
-2020-07-23 14:24: INFO:__main__:  CLASS-CTEM_S1_nbp:: pass
-2020-07-23 14:24: INFO:__main__:  CLASS-CTEM_S3_nbp:: pass
-2020-07-23 14:24: INFO:__main__:  JSBACH_S1_nbp:: pass
-2020-07-23 14:25: INFO:__main__:  JSBACH_S3_nbp:: pass
-2020-08-04 17:30: INFO:__main__:  LPJ-GUESS_S1_nbp:: pass
-2020-08-04 17:30: INFO:__main__:  LPJ-GUESS_S3_nbp:: pass
-2020-08-04 17:30: INFO:__main__:  OCN_S1_nbp:: pass
-2020-08-04 17:30: INFO:__main__:  OCN_S3_nbp:: pass
-2020-08-04 17:33: INFO:__main__:  CABLE-POP_S1_nbp:: pass
-2020-08-04 17:36: INFO:__main__:  CABLE-POP_S3_nbp:: pass
-2020-08-04 17:39: INFO:__main__:  CLASS-CTEM_S1_nbp:: pass
-2020-08-04 17:41: INFO:__main__:  CLASS-CTEM_S3_nbp:: pass
-2020-08-04 17:43: INFO:__main__:  JSBACH_S1_nbp:: pass
-2020-08-04 17:45: INFO:__main__:  JSBACH_S3_nbp:: pass
+2020-10-13 12:47: INFO:__main__:  VISIT_S1_nbp:: pass
+2020-10-13 12:48: INFO:__main__:  VISIT_S3_nbp:: pass
+2020-10-13 12:49: INFO:__main__:  OCN_S1_nbp:: pass
+2020-10-13 12:49: INFO:__main__:  OCN_S3_nbp:: pass
+2020-10-13 12:52: INFO:__main__:  CABLE-POP_S1_nbp:: pass
+2020-10-13 12:55: INFO:__main__:  CABLE-POP_S3_nbp:: pass
+2020-10-13 12:57: INFO:__main__:  CLASS-CTEM_S1_nbp:: pass
+2020-10-13 12:59: INFO:__main__:  CLASS-CTEM_S3_nbp:: pass
+2020-10-13 13:01: INFO:__main__:  JSBACH_S1_nbp:: pass
+2020-10-13 13:04: INFO:__main__:  JSBACH_S3_nbp:: pass

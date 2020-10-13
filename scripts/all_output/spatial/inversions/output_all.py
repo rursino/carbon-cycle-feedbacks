@@ -18,7 +18,6 @@ import xarray as xr
 import pickle
 import logging
 
-input_file = "./../../../../data/inversions/fco2_Rayner-C13-2018_June2018-ext3_1992-2012_monthlymean_XYT.nc"
 
 """ FUNCTIONS """
 def main(input_file, output_folder):

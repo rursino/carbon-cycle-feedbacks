@@ -15,7 +15,8 @@ import pytest
 def setup_module(module):
     print('--------------------setup--------------------')
     global original_ds, test_ds, month_output, year_output
-    global basic_test_result, lat, lon, land_vals, ocean_vals, co2_year, co2_month
+    global basic_test_result, lat, lon, land_vals, ocean_vals, co2_year
+    global co2_month, winter_output, summer_output
 
     CURRENT_DIR = './'
 
@@ -144,6 +145,9 @@ def test_months_add_to_years():
         assert np.subtract(*sums(*arg)) == 0
 
 def test_seasonal():
+    assert winter_output.dims['time'] == year_output.dims['time']
+    assert summer_output.dims['time'] == year_output.dims['time']
+
     variables = ['Earth_Land', 'South_Land', 'Tropical_Land', 'North_Land']
 
     for var in variables:
@@ -151,6 +155,8 @@ def test_seasonal():
         winter = winter_output[var].values
         year = year_output[var].values
 
+        assert np.all(winter >= 0)
+        assert np.all(summer <= 0)
         assert np.all(summer + winter == pytest.approx(year))
 
 def test_cascading_window_trend_year_co2():
