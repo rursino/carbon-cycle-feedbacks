@@ -53,30 +53,37 @@ TRENDY_MEAN_DIRECTORY = "./../../output/TRENDY/spatial/mean_all/"
 
 year_invf = {}
 month_invf = {}
+summer_invf = {}
+winter_invf = {}
 for model in os.listdir(INV_DIRECTORY):
     model_dir = INV_DIRECTORY + model + '/'
     year_invf[model] = invf.Analysis(xr.open_dataset(model_dir + 'year.nc'))
     month_invf[model] = invf.Analysis(xr.open_dataset(model_dir + 'month.nc'))
+    summer_invf[model] = invf.Analysis(xr.open_dataset(model_dir + 'summer.nc'))
+    winter_invf[model] = invf.Analysis(xr.open_dataset(model_dir + 'winter.nc'))
 
 year_S1_trendy = {}
 year_S3_trendy = {}
 month_S1_trendy = {}
 month_S3_trendy = {}
+summer_S1_trendy = {}
+summer_S3_trendy = {}
+winter_S1_trendy = {}
+winter_S3_trendy = {}
 for model in os.listdir(TRENDY_DIRECTORY):
     model_dir = TRENDY_DIRECTORY + model + '/'
 
     if 'S1' in model:
         year_S1_trendy[model] = TRENDYf.Analysis(xr.open_dataset(model_dir + 'year.nc'))
-        try:
-            month_S1_trendy[model] = TRENDYf.Analysis(xr.open_dataset(model_dir + 'month.nc'))
-        except FileNotFoundError:
-            pass
+        month_S1_trendy[model] = TRENDYf.Analysis(xr.open_dataset(model_dir + 'month.nc'))
+        summer_S1_trendy[model] = TRENDYf.Analysis(xr.open_dataset(model_dir + 'summer.nc'))
+        winter_S1_trendy[model] = TRENDYf.Analysis(xr.open_dataset(model_dir + 'winter.nc'))
+
     elif 'S3' in model:
         year_S3_trendy[model] = TRENDYf.Analysis(xr.open_dataset(model_dir + 'year.nc'))
-        try:
-            month_S3_trendy[model] = TRENDYf.Analysis(xr.open_dataset(model_dir + 'month.nc'))
-        except FileNotFoundError:
-            pass
+        month_S3_trendy[model] = TRENDYf.Analysis(xr.open_dataset(model_dir + 'month.nc'))
+        summer_S3_trendy[model] = TRENDYf.Analysis(xr.open_dataset(model_dir + 'summer.nc'))
+        winter_S3_trendy[model] = TRENDYf.Analysis(xr.open_dataset(model_dir + 'winter.nc'))
 
 year_mean = {
     "S1": TRENDYf.Analysis(xr.open_dataset(TRENDY_MEAN_DIRECTORY + 'S1/year.nc')),

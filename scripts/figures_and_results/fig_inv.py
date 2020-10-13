@@ -48,6 +48,7 @@ def inv_yearplots(save=False):
     return inv_df
 
 def inv_monthplots(save=False):
+    uptake = id.month_invf
     fig = plt.figure(figsize=(16,10))
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
@@ -57,11 +58,11 @@ def inv_monthplots(save=False):
     for subplot, var in zip(['211', '212'], ['Earth_Land', 'Earth_Ocean']):
         inv_df_models = {}
         ax = fig.add_subplot(subplot)
-        for model in id.month_invf:
-            df = id.month_invf[model].data[var]
+        for model in uptake:
+            df = uptake[model].data[var]
             ax.plot(df.time, df.values)
             inv_df_models[model] = df
-        plt.legend(id.month_invf.keys())
+        plt.legend(uptake.keys())
 
         inv_df[var] = inv_df_models
 
@@ -72,6 +73,32 @@ def inv_monthplots(save=False):
 
     if save:
         plt.savefig(FIGURE_DIRECTORY + "inv_monthplots.png")
+
+    return inv_df
+
+def inv_seasonalplots(season, save=False):
+    uptake = id.summer_invf if season == 'summer' else id.winter_invf
+    fig = plt.figure(figsize=(16,6))
+    axl = fig.add_subplot(111, frame_on=False)
+    axl.tick_params(labelcolor="none", bottom=False, left=False)
+
+    inv_df = {}
+    inv_df_models = {}
+    ax = fig.add_subplot('111')
+    for model in uptake:
+        df = uptake[model].data['Earth_Land']
+        ax.plot(df.time, df.values)
+        inv_df_models[model] = df
+    plt.legend(uptake.keys())
+
+    inv_df['Earth_Land'] = inv_df_models
+
+    axl.set_xlabel("Year", fontsize=16, labelpad=10)
+    axl.set_ylabel("C flux to the atmosphere (GtC yr$^{-1}$)", fontsize=16,
+                    labelpad=20)
+
+    if save:
+        plt.savefig(FIGURE_DIRECTORY + f"inv_{season}plots.png")
 
     return inv_df
 
@@ -90,9 +117,10 @@ def inv_year_cwt(save=False, stat_values=False):
 
         index, vals = [], []
         for model in id.year_invf:
-            df = id.year_invf[model].cascading_window_trend(variable = var, indep="CO2", window_size=10)
+            df = id.year_invf[model].cascading_window_trend(variable = var,
+                                                            window_size=10)
             index.append(df.index)
-            vals.append(df.values.squeeze())
+            vals.append(df.values)
 
         dataframe = {}
         for ind, val in zip(index, vals):
@@ -105,14 +133,14 @@ def inv_year_cwt(save=False, stat_values=False):
             row = np.array(dataframe[ind])
             dataframe[ind] = np.pad(row, (0, 6 - len(row)), 'constant', constant_values=np.nan)
 
-        df = pd.DataFrame(dataframe).T.sort_index().iloc[3:]
+        df = pd.DataFrame(dataframe).T.sort_index()
         x = df.index
         y = df.mean(axis=1)
         std = df.std(axis=1)
 
         inv_cwt[var] = (pd
-                            .DataFrame({'CO2 (ppm)': x, 'CWT (GtC/yr/ppm)': y, 'std': std})
-                            .set_index('CO2 (ppm)')
+                            .DataFrame({'Year': x, 'CWT (GtC/yr/ppm)': y, 'std': std})
+                            .set_index('Year')
                         )
 
         ax.plot(x, y, color='red')
@@ -123,15 +151,14 @@ def inv_year_cwt(save=False, stat_values=False):
         regstats = stats.linregress(x, y)
         slope, intercept, rvalue, pvalue, _ = regstats
         ax.plot(x, x*slope + intercept)
-        text = f"Slope: {(slope*1e3):.3f} MtC yr$^{'{-1}'}$ ppm$^{'{-2}'}$\nr = {rvalue:.3f}"
+        text = f"Slope: {(slope*1e3):.3f} MtC yr$^{'{-1}'}$ ppm$^{'{-1}'}$ / yr\nr = {rvalue:.3f}"
         xtext = x.min() + 0.75 * (x.max() -x.min())
         ytext = (y-2*std).min() +  0.8 * ((y+2*std).max() - (y-2*std).min())
         ax.text(xtext, ytext, text, fontsize=15)
 
         stat_vals[var] = regstats
 
-    axl.set_title("Cascading Window 10-Year Trend", fontsize=32, pad=20)
-    axl.set_xlabel("CO$_2$ concentrations (ppm)", fontsize=16, labelpad=10)
+    axl.set_xlabel("Year", fontsize=16, labelpad=10)
     axl.set_ylabel(r"$\alpha$   " + " (GtC yr$^{-1}$ ppm$^{-1}$)", fontsize=16,
                     labelpad=20)
 
@@ -143,9 +170,8 @@ def inv_year_cwt(save=False, stat_values=False):
 
     return inv_cwt
 
-def inv_month_cwt(fc=None, save=False, stat_values=False):
-    zip_list = zip(['211', '212'], ['Earth_Land', 'Earth_Ocean'])
-
+def inv_seasonal_cwt(season, fc=None, save=False, stat_values=False):
+    uptake = id.summer_invf if season == 'summer' else id.winter_invf
     stat_vals = {}
     fig = plt.figure(figsize=(16,8))
     axl = fig.add_subplot(111, frame_on=False)
@@ -153,58 +179,60 @@ def inv_month_cwt(fc=None, save=False, stat_values=False):
 
     inv_cwt = {}
 
-    for subplot, var in zip_list:
-        ax = fig.add_subplot(subplot)
+    subplot = '111'
+    var = 'Earth_Land'
 
-        index, vals = [], []
-        for model in id.dmonth_invf:
-            df = id.dmonth_invf[model].cascading_window_trend(variable = var, indep="CO2", window_size=10)
-            index.append(df.index)
-            vals.append(df.values.squeeze())
+    ax = fig.add_subplot(subplot)
 
-        dataframe = {}
-        for ind, val in zip(index, vals):
-            for i, v in zip(ind, val):
-                if i in dataframe.keys():
-                    dataframe[i].append(v)
-                else:
-                    dataframe[i] = [v]
-        for ind in dataframe:
-            row = np.array(dataframe[ind])
-            dataframe[ind] = np.pad(row, (0, 12 - len(row)), 'constant', constant_values=np.nan)
+    index, vals = [], []
+    for model in uptake:
+        df = uptake[model].cascading_window_trend(variable = var,
+                                                  window_size=10)
+        index.append(df.index)
+        vals.append(df.values.squeeze())
 
-        df = pd.DataFrame(dataframe).T.sort_index().iloc[3:]
-        x = df.index
-        y = df.mean(axis=1)
-        std = df.std(axis=1)
+    dataframe = {}
+    for ind, val in zip(index, vals):
+        for i, v in zip(ind, val):
+            if i in dataframe.keys():
+                dataframe[i].append(v)
+            else:
+                dataframe[i] = [v]
+    for ind in dataframe:
+        row = np.array(dataframe[ind])
+        dataframe[ind] = np.pad(row, (0, 6 - len(row)), 'constant', constant_values=np.nan)
 
-        inv_cwt[var] = (pd
-                            .DataFrame({'CO2 (ppm)': x, 'CWT (GtC/yr/ppm)': y, 'std': std})
-                            .set_index('CO2 (ppm)')
-                        )
+    df = pd.DataFrame(dataframe).T.sort_index()
+    x = df.index
+    y = df.mean(axis=1)
+    std = df.std(axis=1)
 
-        ax.plot(x, y, color='red')
-        ax.fill_between(x, y - 2*std, y + 2*std, color='gray', alpha=0.2)
+    inv_cwt[var] = (pd
+                        .DataFrame({'Year': x, 'CWT (GtC/yr/ppm)': y, 'std': std})
+                        .set_index('Year')
+                    )
 
-        ax.axhline(ls='--', color='k', alpha=0.5, lw=1)
+    ax.plot(x, y, color='red')
+    ax.fill_between(x, y - 2*std, y + 2*std, color='gray', alpha=0.2)
 
-        regstats = stats.linregress(x, y)
-        slope, intercept, rvalue, pvalue, _ = regstats
-        ax.plot(x, x*slope + intercept)
-        text = f"Slope: {(slope*1e3):.3f} MtC yr$^{'{-1}'}$ ppm$^{'{-2}'}$\nr = {rvalue:.3f}"
-        xtext = x.min() + 0.75 * (x.max() -x.min())
-        ytext = (y-2*std).min() +  0.8 * ((y+2*std).max() - (y-2*std).min())
-        ax.text(xtext, ytext, text, fontsize=15)
+    ax.axhline(ls='--', color='k', alpha=0.5, lw=1)
 
-        stat_vals[var] = regstats
+    regstats = stats.linregress(x, y)
+    slope, intercept, rvalue, pvalue, _ = regstats
+    ax.plot(x, x*slope + intercept)
+    text = f"Slope: {(slope*1e3):.3f} MtC yr$^{'{-1}'}$ ppm$^{'{-1}'}$ / yr\nr = {rvalue:.3f}"
+    xtext = x.min() + 0.75 * (x.max() -x.min())
+    ytext = (y-2*std).min() +  0.8 * ((y+2*std).max() - (y-2*std).min())
+    ax.text(xtext, ytext, text, fontsize=15)
 
-    axl.set_title("Cascading Window 10-Year Trend", fontsize=32, pad=20)
-    axl.set_xlabel("CO$_2$ concentrations (ppm)", fontsize=16, labelpad=10)
+    stat_vals[var] = regstats
+
+    axl.set_xlabel("Year", fontsize=16, labelpad=10)
     axl.set_ylabel(r"$\alpha$   " + " (GtC yr$^{-1}$ ppm$^{-1}$)", fontsize=16,
                     labelpad=20)
 
     if save:
-        plt.savefig(FIGURE_DIRECTORY + "inv_month_cwt.png")
+        plt.savefig(FIGURE_DIRECTORY + f"inv_{season}_cwt.png")
 
     if stat_values:
         return stat_vals
@@ -254,13 +282,17 @@ inv_yearplots(save=False)
 
 inv_monthplots(save=False)
 
+inv_seasonalplots('winter', save=False)
+inv_seasonalplots('summer', save=False)
+
 inv_year_cwt(save=False, stat_values=True)
 
-inv_month_cwt(save=False, stat_values=True)
+inv_seasonal_cwt('winter', save=False, stat_values=True)
+inv_seasonal_cwt('summer', save=False, stat_values=True)
 
 inv_powerspec([10,0], save=False)
 
-# PICKLE
+# PICKLE (YET TO BE UPDATED)
 pickle.dump(inv_yearplots(), open(id.FIGURE_DIRECTORY+'/rayner_df/inv_yearplots.pik', 'wb'))
 pickle.dump(inv_monthplots(), open(id.FIGURE_DIRECTORY+'/rayner_df/inv_monthplots.pik', 'wb'))
 pickle.dump(inv_year_cwt(), open(id.FIGURE_DIRECTORY+'/rayner_df/inv_year_cwt.pik', 'wb'))

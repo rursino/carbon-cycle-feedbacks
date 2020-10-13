@@ -19,8 +19,7 @@ import pickle
 
 
 """ FUNCTIONS """
-def feedback_regression(variable):
-    timeres = 'year'
+def feedback_regression(timeres, variable):
     uptake = fb_id.invf_uptake[timeres]
     reg_models = {}
     model_stats = {
@@ -39,8 +38,8 @@ def feedback_regression(variable):
 
         start = int(U.time.values[0].astype('str')[:4])
         end = int(U.time.values[-1].astype('str')[:4])
-        C = fb_id.co2[timeres].loc[start:end]
-        T = fb_id.temp[timeres].sel(time=slice(str(start), str(end)))
+        C = fb_id.co2['year'].loc[start:end]
+        T = fb_id.temp['year'].sel(time=slice(str(start), str(end)))
 
         df = pd.DataFrame(data = {
                                 "C": C,
@@ -71,15 +70,12 @@ def feedback_regression(variable):
 
     return reg_df, stats_df
 
-feedback_regression('Earth_Land')
-
-def all_regstat(variable):
-    timeres = 'year'
-    uptake = fb_id.invf_uptake['year']
+def all_regstat(timeres, variable):
+    uptake = fb_id.invf_uptake[timeres]
 
     df = FeedbackAnalysis.INVF(
-                                fb_id.co2[timeres],
-                                fb_id.temp[timeres],
+                                fb_id.co2['year'],
+                                fb_id.temp['year'],
                                 uptake,
                                 variable
                                 )
@@ -90,13 +86,12 @@ def all_regstat(variable):
 
     return all_regstats
 
-def mean_regstat(variable):
-    timeres = 'year'
-    uptake = fb_id.invf_uptake['year']
+def mean_regstat(timeres, variable):
+    uptake = fb_id.invf_uptake[timeres]
 
     df = FeedbackAnalysis.INVF(
-                                fb_id.co2[timeres],
-                                fb_id.temp[timeres],
+                                fb_id.co2['year'],
+                                fb_id.temp['year'],
                                 uptake,
                                 variable
                                 )
@@ -120,13 +115,12 @@ def mean_regstat(variable):
 
     return mean_regstat
 
-def median_regstat(variable):
-    timeres = 'year'
-    uptake = fb_id.invf_uptake['year']
+def median_regstat(timeres, variable):
+    uptake = fb_id.invf_uptake[timeres]
 
     df = FeedbackAnalysis.INVF(
-                                fb_id.co2[timeres],
-                                fb_id.temp[timeres],
+                                fb_id.co2['year'],
+                                fb_id.temp['year'],
                                 uptake,
                                 variable
                                 )
@@ -150,11 +144,9 @@ def median_regstat(variable):
 
     return median_regstat
 
-fb_id.co2['year']
-
-def carbon_gained():
-    land = feedback_regression('Earth_Land')[0].mean(axis=1)
-    ocean = feedback_regression('Earth_Ocean')[0].mean(axis=1)
+def carbon_gained(timeres):
+    land = feedback_regression(timeres, 'Earth_Land')[0].mean(axis=1)
+    ocean = feedback_regression(timeres, 'Earth_Ocean')[0].mean(axis=1)
 
     beta = land.loc['beta'] + ocean.loc['beta']
     gamma = land.loc['gamma'] + ocean.loc['gamma']
@@ -171,10 +163,11 @@ def carbon_gained():
 
     return gained
 
+
 """ FIGURES """
 def fb_inv(save=False):
     timeres = 'year'
-    uptake = fb_id.invf_uptake['year']
+    uptake = fb_id.invf_uptake[timeres]
 
     fig = plt.figure(figsize=(14,10))
     ax = {}
@@ -185,12 +178,12 @@ def fb_inv(save=False):
 
     for subplot, region in zip(["211", "212"], ["Land", "Ocean"]):
         df = FeedbackAnalysis.INVF(
-                                    fb_id.co2[timeres],
-                                    fb_id.temp[timeres],
+                                    fb_id.co2['year'],
+                                    fb_id.temp['year'],
                                     uptake,
                                     "Earth_" + region
                                     )
-        whole_df = feedback_regression("Earth_" + region)[0].mean(axis=1)
+        whole_df = feedback_regression(timeres, "Earth_" + region)[0].mean(axis=1)
         beta = df.params()['beta']
         gamma = df.params()['u_gamma'] # Note u_gamma is used to compare with beta.
 
@@ -244,9 +237,81 @@ def fb_inv(save=False):
 
     return fb_inv_df
 
+def fb_seasonal_inv(save=False):
+    timeres = ['winter', 'summer']
+    uptake = {time : fb_id.invf_uptake[time] for time in timeres}
+
+    fig = plt.figure(figsize=(14,10))
+    ax = {}
+    axl = fig.add_subplot(111, frame_on=False)
+    axl.tick_params(labelcolor="none", bottom=False, left=False)
+
+    fb_inv_df = {}
+
+    for subplot, time in zip(["211", "212"], timeres):
+        df = FeedbackAnalysis.INVF(
+                                    fb_id.co2['year'],
+                                    fb_id.temp['year'],
+                                    uptake[time],
+                                    "Earth_Land"
+                                    )
+        whole_df = feedback_regression(time, "Earth_Land")[0].mean(axis=1)
+        beta = df.params()['beta']
+        gamma = df.params()['u_gamma'] # Note u_gamma is used to compare with beta.
+
+        whole_beta = whole_df['beta']
+        whole_gamma = whole_df['u_gamma']
+
+        beta_mean = beta.mean(axis=1)
+        beta_std = beta.std(axis=1)
+        gamma_mean = gamma.mean(axis=1)
+        gamma_std = gamma.std(axis=1)
+
+        fb_inv_df[time] = pd.DataFrame(
+            {
+                'whole_beta': whole_beta, 'whole_gamma': whole_gamma,
+                'beta_mean': beta_mean, 'beta_std': beta_std,
+                'gamma_mean': gamma_mean, 'gamma_std': gamma_std
+            }
+        )
+
+        ax[subplot] = fig.add_subplot(subplot)
+
+        ax[subplot].axhline(ls='--', color='k', alpha=0.5, lw=0.8)
+        ax[subplot].axhline(y= whole_beta, ls='--', color='green', alpha=0.8, lw=1)
+        ax[subplot].axhline(y= whole_gamma, ls='--', color='red', alpha=0.8, lw=1)
+
+        bar_width = 3
+        ax[subplot].bar(beta.index + 5 - bar_width / 2,
+                        beta_mean,
+                        yerr=beta_std * 1.645,
+                        width=bar_width,
+                        color='green',
+                        label=r'$\beta$')
+        ax[subplot].bar(gamma.index + 5 + bar_width / 2,
+                        gamma_mean,
+                        yerr=gamma_std * 1.645,
+                        width=bar_width,
+                        color='red',
+                        label=r'$u_{\gamma}$')
+
+        ax[subplot].legend()
+        ax[subplot].set_ylabel(time.title(), fontsize=14, labelpad=5)
+
+    axl.set_xlabel("First year of 10-year window", fontsize=16, labelpad=10)
+    axl.set_ylabel('Feedback parameter   (yr $^{-1}$)',
+                   fontsize=16,
+                   labelpad=40
+                  )
+
+    if save:
+        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_inv_{timeres}.png")
+
+    return fb_inv_df
+
 def fb_regional_inv(save=False):
     timeres = 'year'
-    uptake = fb_id.invf_uptake['year']
+    uptake = fb_id.invf_uptake[timeres]
 
     all_subplots = ['22'+str(i) for i in range(1,5)]
     # Note u_gamma is used to compare with beta.
@@ -269,8 +334,8 @@ def fb_regional_inv(save=False):
         for var, color, bar_pos in zip(vars, colors, bar_position):
             variable = var + parameter[1]
             df = FeedbackAnalysis.INVF(
-                                        fb_id.co2[timeres],
-                                        fb_id.temp[timeres],
+                                        fb_id.co2['year'],
+                                        fb_id.temp['year'],
                                         uptake,
                                         variable
                                         )
@@ -307,9 +372,72 @@ def fb_regional_inv(save=False):
 
     return fb_reg_inv
 
+def fb_seasonal_regional_inv(save=False):
+    timeres = ['winter', 'summer']
+    uptake = {time : fb_id.invf_uptake[time] for time in timeres}
+
+    all_subplots = ['22'+str(i) for i in range(1,5)]
+    # Note u_gamma is used to compare with beta.
+    parameters = [['beta', '_Land'], ['u_gamma', '_Land']]
+
+    vars = ['Earth', 'South', 'Tropical', 'North']
+    colors = ['gray', 'blue', 'orange', 'green']
+    bar_width = 1.25
+    bar_position = np.arange(-2, 2) * bar_width
+
+    fig = plt.figure(figsize=(14,10))
+    ax = {}
+    axl = fig.add_subplot(111, frame_on=False)
+    axl.tick_params(labelcolor="none", bottom=False, left=False)
+
+    fb_reg_inv = {}
+
+    for subplot, pro in zip(all_subplots, product(parameters, timeres)):
+        parameter, time = pro
+        for var, color, bar_pos in zip(vars, colors, bar_position):
+            variable = var + parameter[1]
+            df = FeedbackAnalysis.INVF(
+                                        fb_id.co2['year'],
+                                        fb_id.temp['year'],
+                                        uptake[time],
+                                        variable
+                                        )
+            param = df.params()[parameter[0]]
+            param_mean = param.mean(axis=1)
+            param_std = param.std(axis=1)
+
+            fb_reg_inv[(variable, parameter[0])] = pd.DataFrame({'Mean': param_mean,
+                                                                 '90_conf_interval': 1.645*param_std})
+
+            ax[subplot] = fig.add_subplot(subplot)
+            ax[subplot].bar(param.index + 5 + bar_pos,
+                            param_mean,
+                            yerr=1.645*param_std,
+                            width=bar_width,
+                            color=color)
+
+    ax["221"].set_xlabel("Winter", fontsize=14, labelpad=5)
+    ax["221"].xaxis.set_label_position('top')
+    ax["222"].set_xlabel("Summer", fontsize=14, labelpad=5)
+    ax["222"].xaxis.set_label_position('top')
+    for subplot, region in zip(["221", "223"],
+                               [r'$\beta$', r'$u_{\gamma}$']):
+        ax[subplot].set_ylabel(region, fontsize=14, labelpad=5)
+
+    axl.set_xlabel("Middle year of 10-year window", fontsize=16, labelpad=10)
+    axl.set_ylabel(r'Feedback parameter   (yr$^{-1}$)',
+                   fontsize=16,
+                   labelpad=40
+                  )
+
+    if save:
+        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_inv_regional_{timeres}.png")
+
+    return fb_reg_inv
+
 def fb_regional_inv2(save=False):
     timeres = 'year'
-    uptake = fb_id.invf_uptake['year']
+    uptake = fb_id.invf_uptake[timeres]
 
     all_subplots = ['42'+str(i) for i in range(1,9)]
     vars = product(['Earth', 'South', 'Tropical', 'North'], ['_Land', '_Ocean'])
@@ -332,8 +460,8 @@ def fb_regional_inv2(save=False):
     for subplot, var in zip(all_subplots, vars):
 
         df = FeedbackAnalysis.INVF(
-                                    fb_id.co2[timeres],
-                                    fb_id.temp[timeres],
+                                    fb_id.co2['year'],
+                                    fb_id.temp['year'],
                                     uptake,
                                     ''.join(var)
                                     )
@@ -389,27 +517,109 @@ def fb_regional_inv2(save=False):
 
     return fb_reg_inv
 
+def fb_seasonal_regional_inv2(save=False):
+    timeres = ['winter', 'summer']
+    uptake = {time : fb_id.invf_uptake[time] for time in timeres}
+
+    all_subplots = ['42'+str(i) for i in range(1,9)]
+    vars = product(['Earth', 'South', 'Tropical', 'North'], timeres)
+
+    # Note u_gamma is used to compare with beta.
+    parameters = ['beta', 'u_gamma']
+    colors = ['green', 'red']
+    bar_width = 1.5
+    bar_position = np.arange(-1, 1) * bar_width
+
+    fig = plt.figure(figsize=(14,10))
+    ax = {}
+    axl = fig.add_subplot(111, frame_on=False)
+    axl.tick_params(labelcolor="none", bottom=False, left=False)
+
+    fb_reg_inv = {}
+
+    ymin_land, ymax_land = [], []
+    ymin_ocean, ymax_ocean = [], []
+    for subplot, var in zip(all_subplots, vars):
+        variable = var[0] + '_Land'
+        time = var[1]
+
+        df = FeedbackAnalysis.INVF(
+                                    fb_id.co2['year'],
+                                    fb_id.temp['year'],
+                                    uptake[time],
+                                    variable
+                                    )
+        params = df.params()
+        for parameter, color, bar_pos in zip(parameters, colors, bar_position):
+            param = params[parameter]
+
+            param_mean = param.mean(axis=1)
+            param_std = param.std(axis=1)
+
+            fb_reg_inv[variable, parameter] = pd.DataFrame({'Mean': param_mean,
+                                                            '90_conf_interval': 1.645*param_std})
+
+            ax[subplot] = fig.add_subplot(subplot)
+
+            ax[subplot].bar(param.index + 5 + bar_pos,
+                            param_mean,
+                            yerr=1.645*param_std,
+                            width=bar_width,
+                            color=color)
+
+            if time == 'winter' and subplot != "421":
+                ymin_land.append((param_mean - 1.645*param_std).min())
+                ymax_land.append((param_mean + 1.645*param_std).max())
+            if time == 'summer' and subplot != "422":
+                ymin_ocean.append((param_mean - 1.645*param_std).min())
+                ymax_ocean.append((param_mean + 1.645*param_std).max())
+
+    delta = 0.05
+    for subplot in ["423", "425", "427"]:
+        ax[subplot].set_ylim([min(ymin_land) - delta * abs(min(ymin_land)),
+                              max(ymax_land) + delta * abs(max(ymax_land))])
+    for subplot in ["424", "426", "428"]:
+        ax[subplot].set_ylim([min(ymin_ocean) - delta * abs(min(ymin_ocean)),
+                              max(ymax_ocean) + delta * abs(max(ymax_ocean))])
+
+    ax["421"].set_xlabel("Winter", fontsize=14, labelpad=5)
+    ax["421"].xaxis.set_label_position('top')
+    ax["422"].set_xlabel("Summer", fontsize=14, labelpad=5)
+    ax["422"].xaxis.set_label_position('top')
+    for subplot, region in zip(["421", "423", "425", "427"],
+                               ['Earth', 'South', 'Tropical', 'North']):
+        ax[subplot].set_ylabel(region, fontsize=14, labelpad=5)
+
+    axl.set_xlabel("Middle year of 10-year window", fontsize=16, labelpad=10)
+    axl.set_ylabel(r'Feedback parameter   (yr$^{-1}$)',
+                   fontsize=16,
+                   labelpad=40
+                  )
+
+    if save:
+        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_inv_regional_{timeres}2.png")
+
+    return fb_reg_inv
+
 
 """ EXECUTION """
-land = feedback_regression('Earth_Land')
-land[0]
-land[1]
+land_year = feedback_regression('year', 'Earth_Land')
+land_winter = feedback_regression('winter', 'Earth_Land')
+land_summer = feedback_regression('summer', 'Earth_Land')
 
-ocean = feedback_regression('Earth_Ocean')
-ocean[0]
-ocean[1]
+ocean_year = feedback_regression('year', 'Earth_Ocean')
 
-land[0].mean(axis=1) / ocean[0].mean(axis=1)
+land_year[0].mean(axis=1) / ocean_year[0].mean(axis=1)
 
 fb_inv(save=False)
 
-(FeedbackAnalysis
-    .INVF(fb_id.co2['year'], fb_id.temp['year'], fb_id.invf_uptake['year'], 'Earth_Land')
-    .params()
-    ['beta']
-)
+# (FeedbackAnalysis
+#     .INVF(fb_id.co2['year'], fb_id.temp['year'], fb_id.invf_uptake['year'], 'Earth_Land')
+#     .params()
+#     ['beta']
+# )
 
-{model: all_regstat("Earth_Land")[model]['p_values_beta'].values for model in all_regstat("Earth_Land")}
+# {model: all_regstat("Earth_Land")[model]['p_values_beta'].values for model in all_regstat("Earth_Land")}
 
 
 median_regstat("Earth_Land")
@@ -426,8 +636,12 @@ fb_regional_inv2(save=False)
 
 carbon_gained()
 
+fb_seasonal_inv(save=False)
+fb_seasonal_regional_inv(save=False)
+fb_seasonal_regional_inv2(save=False)
 
-# Pickle
+
+# Pickle (YET TO BE UPDATED)
 pickle.dump(fb_inv(), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_inv_year.pik', 'wb'))
 # pickle.dump(fb_regional_inv(), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_inv_regional_year.pik', 'wb'))
 pickle.dump(fb_regional_inv2(), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_inv_regional_year2.pik', 'wb'))

@@ -192,12 +192,15 @@ class INVF:
 
 
 class TRENDY:
-    def __init__(self, co2, temp, uptake, variable):
+    def __init__(self, timeres, co2, temp, uptake, variable):
         """ Initialise an instance of the TRENDY FeedbackAnalysis class.
-        Only use year time resolution.
 
         Parameters:
         -----------
+
+        timeres: str
+
+            One of year, summer or winter.
 
         co2: pd.Series
 
@@ -234,11 +237,11 @@ class TRENDY:
 
         start, end = 1960, 2017
         input_models = {}
-        for model_name in self.uptake['S1']['year']:
+        for model_name in self.uptake['S1'][timeres]:
             C = self.co2.loc[start:end]
             T = self.temp.sel(time=slice(str(start), str(end)))
-            U1 = self.uptake['S1']['year'][model_name].sel(time=slice(str(start), str(end)))
-            U3 = self.uptake['S3']['year'][model_name].sel(time=slice(str(start), str(end)))
+            U1 = self.uptake['S1'][timeres][model_name].sel(time=slice(str(start), str(end)))
+            U3 = self.uptake['S3'][timeres][model_name].sel(time=slice(str(start), str(end)))
 
             input_models[model_name] = pd.DataFrame(data = {
                                                 "C": C,

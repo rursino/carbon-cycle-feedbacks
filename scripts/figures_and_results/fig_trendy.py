@@ -122,11 +122,18 @@ def trendy_year_cwt(save=False, stat_values=False):
 
     return trendy_cwt
 
-def trendy_month_cwt(fc=None, save=False, stat_values=False):
-    trendy_month = {
-        'S1': id.deseasonalise_instance(id.month_S1_trendy),
-        'S3': id.deseasonalise_instance(id.month_S3_trendy)
+def trendy_seasonal_cwt(season, fc=None, save=False, stat_values=False):
+    trendy_summer = {
+        'S1': id.summer_S1_trendy,
+        'S3': id.summer_S3_trendy
     }
+
+    trendy_winter = {
+        'S1': id.winter_S1_trendy,
+        'S3': id.winter_S3_trendy
+    }
+
+    uptake = trendy_summer if season == 'summer' else trendy_winter
 
     fig = plt.figure(figsize=(16,12))
     axl = fig.add_subplot(111, frame_on=False)
@@ -136,15 +143,14 @@ def trendy_month_cwt(fc=None, save=False, stat_values=False):
 
     subplots = ['211', '212']
     stat_vals = []
-    for sim, subplot in zip(trendy_month, subplots):
-        trendy_month_sim = trendy_month[sim]
+    for sim, subplot in zip(uptake, subplots):
+        uptake_sim = uptake[sim]
 
         ax = fig.add_subplot(subplot)
         index, vals = [], []
-        for model in trendy_month_sim:
-            df = trendy_month_sim[model].cascading_window_trend(
+        for model in uptake_sim:
+            df = uptake_sim[model].cascading_window_trend(
                                             variable = 'Earth_Land',
-                                            indep="CO2",
                                             window_size=10)
             index.append(df.index)
             vals.append(df.values.squeeze())
@@ -158,15 +164,16 @@ def trendy_month_cwt(fc=None, save=False, stat_values=False):
                     dataframe[i] = [v]
         for ind in dataframe:
             row = np.array(dataframe[ind])
-            dataframe[ind] = np.pad(row, (0, 10 - len(row)), 'constant', constant_values=np.nan)
+            dataframe[ind] = np.pad(row, (0, 5 - len(row)), 'constant', constant_values=np.nan)
+
         df = pd.DataFrame(dataframe).T.sort_index()
         x = df.index
         y = df.mean(axis=1)
         std = df.std(axis=1)
 
         trendy_cwt[sim] = (pd
-                            .DataFrame({'CO2 (ppm)': x, 'CWT (GtC/yr/ppm)': y, 'std': std})
-                            .set_index('CO2 (ppm)')
+                            .DataFrame({'Year': x, 'CWT (GtC/yr/ppm)': y, 'std': std})
+                            .set_index('Year')
                         )
 
         ax.plot(x, y, color='red')
@@ -177,21 +184,19 @@ def trendy_month_cwt(fc=None, save=False, stat_values=False):
         regstats = stats.linregress(x, y)
         slope, intercept, rvalue, pvalue, _ = regstats
         ax.plot(x, x*slope + intercept)
-        text = f"Slope: {(slope*1e3):.3f} MtC yr$^{'{-1}'}$ ppm$^{'{-2}'}$\nr = {rvalue:.3f}"
+        text = f"Slope: {(slope*1e3):.3f} MtC yr$^{'{-1}'}$ ppm$^{'{-1}'}$ / yr\nr = {rvalue:.3f}"
         xtext = x.min() + 0.75 * (x.max() -x.min())
         ytext = (y-2*std).min() +  0.8 * ((y+2*std).max() - (y-2*std).min())
         ax.text(xtext, ytext, text, fontsize=15)
 
         stat_vals.append(regstats)
 
-    axl.set_title(f"Cascading Window 10-Year Trend - TRENDY",
-                 fontsize=30, pad=20)
-    axl.set_xlabel("CO$_2$ concentrations (ppm)", fontsize=16, labelpad=10)
+    axl.set_xlabel("Year", fontsize=16, labelpad=10)
     axl.set_ylabel(r"$\alpha$   " + " (GtC yr$^{-1}$ ppm$^{-1}$)", fontsize=16,
                     labelpad=20)
 
     if save:
-        plt.savefig(id.FIGURE_DIRECTORY + f"trendy_month_cwt.png")
+        plt.savefig(id.FIGURE_DIRECTORY + f"trendy_{season}_cwt.png")
 
     if stat_values:
         return stat_vals
@@ -299,14 +304,15 @@ trendy_yearplots(save=False)
 
 trendy_year_cwt(save=False, stat_values=True)
 
-trendy_month_cwt(save=False, stat_values=True)
+trendy_seasonal_cwt('summer', save=False, stat_values=True)
+trendy_seasonal_cwt('winter', save=False, stat_values=True)
 
 trendy_bandpass_timeseries(1/40, save=False)
 
 trendy_powerspec([7,0], save=False)
 
 
-# PICKLE
+# PICKLE (YET TO BE UPDATED)
 pickle.dump(trendy_yearplots(), open(id.FIGURE_DIRECTORY+'/rayner_df/trendy_yearplots.pik', 'wb'))
 pickle.dump(trendy_year_cwt(), open(id.FIGURE_DIRECTORY+'/rayner_df/trendy_year_cwt.pik', 'wb'))
 pickle.dump(trendy_month_cwt(), open(id.FIGURE_DIRECTORY+'/rayner_df/trendy_month_cwt.pik', 'wb'))

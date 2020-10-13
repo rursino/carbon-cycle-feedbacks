@@ -37,7 +37,7 @@ for timeres in temp:
 
 
 invf_models = os.listdir(INV_DIRECTORY)
-invf_uptake = {'year': {}, 'month': {}}
+invf_uptake = {'year': {}, 'winter': {}, 'summer': {}}
 for timeres in invf_uptake:
     for model in invf_models:
         model_dir = INV_DIRECTORY + model + '/'
@@ -49,14 +49,18 @@ trendy_uptake = {
     "S1": {
         "year": {model_name : xr.open_dataset(OUTPUT_DIR + f'TRENDY/spatial/output_all/{model_name}_S1_nbp/year.nc')
         for model_name in trendy_models},
-        "month": {model_name : xr.open_dataset(OUTPUT_DIR + f'TRENDY/spatial/output_all/{model_name}_S1_nbp/month.nc')
-        for model_name in trendy_models if model_name != "LPJ-GUESS"}
+        "summer": {model_name : xr.open_dataset(OUTPUT_DIR + f'TRENDY/spatial/output_all/{model_name}_S1_nbp/summer.nc')
+        for model_name in trendy_models},
+        "winter": {model_name : xr.open_dataset(OUTPUT_DIR + f'TRENDY/spatial/output_all/{model_name}_S1_nbp/winter.nc')
+        for model_name in trendy_models}
     },
     "S3": {
         "year": {model_name : xr.open_dataset(OUTPUT_DIR + f'TRENDY/spatial/output_all/{model_name}_S3_nbp/year.nc')
         for model_name in trendy_models},
-        "month": {model_name : xr.open_dataset(OUTPUT_DIR + f'TRENDY/spatial/output_all/{model_name}_S3_nbp/month.nc')
-        for model_name in trendy_models if model_name != "LPJ-GUESS"}
+        "summer": {model_name : xr.open_dataset(OUTPUT_DIR + f'TRENDY/spatial/output_all/{model_name}_S3_nbp/summer.nc')
+        for model_name in trendy_models},
+        "winter": {model_name : xr.open_dataset(OUTPUT_DIR + f'TRENDY/spatial/output_all/{model_name}_S3_nbp/winter.nc')
+        for model_name in trendy_models},
     }
 }
 
