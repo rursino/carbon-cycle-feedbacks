@@ -172,7 +172,7 @@ inv_regress_timeseries()["ocean"].std()
 inv_trend = inv_compare_trend()
 inv_trend['ocean']
 mean_inv_trend(inv_trend)['ocean']
-inv_trend['ocean'].std()
+inv_trend['land'].std()
 
 
 {models:model_bias(inv_modeleval, models, 'land') for models in combinations(inv_modeleval.keys(), 2)}
