@@ -158,8 +158,8 @@ def model_bias(model_set, models, sink):
         models_df[model] = {'model': model_df[f'Earth_{sink.title()}'].mean(),
                             'GCP': gcp_df[f'{sink} sink'].mean()}
 
-    return abs((models_df[models[1]]['model'] - models_df[models[0]]['model'])
-                - (models_df[models[1]]['GCP'] - models_df[models[0]]['GCP'])).values
+    return ((models_df[models[1]]['model'] - models_df[models[1]]['GCP'])
+            - (models_df[models[0]]['model'] - models_df[models[0]]['GCP'])).values
 
 
 """ INVF EXECUTION """
@@ -174,9 +174,8 @@ inv_trend['ocean']
 mean_inv_trend(inv_trend)['ocean']
 inv_trend['land'].std()
 
-
 {models:model_bias(inv_modeleval, models, 'land') for models in combinations(inv_modeleval.keys(), 2)}
-{models:model_bias(inv_modeleval, models, 'ocean') for models in combinations(inv_modeleval.keys(), 2)}
+np.array(list({models:model_bias(inv_modeleval, models, 'ocean') for models in combinations(inv_modeleval.keys(), 2)}.values()))
 
 
 
@@ -194,6 +193,5 @@ mean_trendy_trend(trendy_trend)
 trendy_trend.std()
 
 
-trendy_key = ['VISIT_S3_nbp', 'JSBACH_S3_nbp', 'CABLE-POP_S3_nbp',
-              'OCN_S3_nbp', 'CLASS-CTEM_S3_nbp']
+trendy_key = [model for model in trendy_modeleval.keys() if 'S3' in model]
 {models:model_bias(trendy_modeleval, models, 'land') for models in combinations(trendy_key, 2)}
