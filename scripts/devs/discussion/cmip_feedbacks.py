@@ -27,10 +27,37 @@ import pandas as pd
 
 df = pd.DataFrame(whole_CMIP, index=['C4MIP', 'CMIP5', 'CMIP6'])
 
-phi = 0.015 / 2.12
-rho = 1.93
+def get_dataframe(df, length_of_cmip_period=140):
+    phi = 0.015 / 2.12
+    rho = 1.93
 
-df['u_gamma_land'] = df['gamma_land'] * phi / rho
-df['u_gamma_ocean'] = df['gamma_ocean'] * phi / rho
+    df['u_gamma_land'] = df['gamma_land'] * phi / rho
+    df['u_gamma_ocean'] = df['gamma_ocean'] * phi / rho
 
-df / 140
+    df['alpha_land'] = df['beta_land'] + df['u_gamma_land']
+    df['alpha_ocean'] = df['beta_ocean'] + df['u_gamma_ocean']
+
+    df = df[['beta_land', 'gamma_land', 'u_gamma_land', 'alpha_land',
+             'beta_ocean', 'gamma_ocean', 'u_gamma_ocean', 'alpha_ocean']]
+
+    df = df / length_of_cmip_period
+
+    return df
+
+final = get_dataframe(df)
+
+final
+
+caption = ("Values of the feedback parameters from the C4MIP, CMIP5 and CMIP6"
+"intercomparisons, as well as a conversion to $u_{\gamma}$ using the values of "
+"$\gamma$ in each intercomparison. Note that the values of the parameters have "
+"been converted to match the units used in this study, and the signs have been "
+"reversed.")
+latex_code = final.to_latex(column_format='|c|cccc|cccc|',
+                            label='tab:cmip_fb',
+                            caption=caption,
+                            float_format="%.3f")
+latex_code = latex_code.replace("toprule", "hline")
+latex_code = latex_code.replace("midrule", "hline")
+latex_code = latex_code.replace("bottomrule", "hline")
+print(latex_code)

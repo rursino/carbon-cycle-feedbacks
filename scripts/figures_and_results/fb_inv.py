@@ -604,10 +604,14 @@ def fb_seasonal_regional_inv2(save=False):
 
 """ EXECUTION """
 land_year = feedback_regression('year', 'Earth_Land')
+land_year[0].T
+
 land_winter = feedback_regression('winter', 'Earth_Land')
 land_summer = feedback_regression('summer', 'Earth_Land')
 
 ocean_year = feedback_regression('year', 'Earth_Ocean')
+
+ocean_year[0].T
 
 land_year[0].mean(axis=1) / ocean_year[0].mean(axis=1)
 
