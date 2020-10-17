@@ -144,25 +144,24 @@ def median_regstat(timeres, variable):
 
     return median_regstat
 
-def carbon_gained(timeres):
-    land = feedback_regression(timeres, 'Earth_Land')[0].mean(axis=1)
-    ocean = feedback_regression(timeres, 'Earth_Ocean')[0].mean(axis=1)
-
-    beta = land.loc['beta'] + ocean.loc['beta']
-    gamma = land.loc['gamma'] + ocean.loc['gamma']
-    u_gamma = land.loc['u_gamma'] + ocean.loc['u_gamma']
-
-    start, end = 1976, 2017
-    C = fb_id.co2['year'].loc[start:end]
-    T = fb_id.temp['year'].sel(time=slice(str(start), str(end))).Earth
-
-    gained = {}
-    gained['beta'] = (beta * (C - C.iloc[0]).values * 2.12).sum()
-    gained['gamma'] = (gamma * (T - T[0]).values).sum()
-    gained['u_gamma'] = (u_gamma * (C - C.iloc[0]).values * 2.12).sum()
-
-    return gained
-
+# def carbon_gained(timeres):
+#     land = feedback_regression(timeres, 'Earth_Land')[0].mean(axis=1)
+#     ocean = feedback_regression(timeres, 'Earth_Ocean')[0].mean(axis=1)
+#
+#     beta = land.loc['beta'] + ocean.loc['beta']
+#     gamma = land.loc['gamma'] + ocean.loc['gamma']
+#     u_gamma = land.loc['u_gamma'] + ocean.loc['u_gamma']
+#
+#     start, end = 1976, 2017
+#     C = fb_id.co2['year'].loc[start:end]
+#     T = fb_id.temp['year'].sel(time=slice(str(start), str(end))).Earth
+#
+#     gained = {}
+#     gained['beta'] = (beta * (C - C.iloc[0]).values * 2.12).sum()
+#     gained['gamma'] = (gamma * (T - T[0]).values).sum()
+#     gained['u_gamma'] = (u_gamma * (C - C.iloc[0]).values * 2.12).sum()
+#
+#     return gained
 
 """ FIGURES """
 def fb_inv(save=False):
@@ -638,7 +637,7 @@ fb_regional_inv(save=False)
 fb_regional_inv2(save=False)
 
 
-carbon_gained()
+carbon_gained('year')
 
 fb_seasonal_inv(save=False)
 fb_seasonal_regional_inv(save=False)

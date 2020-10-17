@@ -146,11 +146,8 @@ def median_regstat(timeres, variable):
 
     return median_regstats
 
-def carbon_gained():
-    """ Only year time resolution.
-    """
-
-    fb = feedback_regression('year', 'Earth_Land')[0]
+def carbon_gained(timeres):
+    fb = feedback_regression(timeres, 'Earth_Land')[0]
 
     beta = fb['S1'].mean(axis=1)['beta']
     gamma = fb['S3'].mean(axis=1)['gamma']
@@ -382,7 +379,8 @@ medianreg = median_regstat('year', "North_Land")
 medianreg['S1']
 medianreg['S3']
 
-carbon_gained()
+carbon_gained('year')
+carbon_gained('year')['beta'] / carbon_gained('year')['gamma']
 
 """ FIGURES """
 fb_trendy('year', save=False)

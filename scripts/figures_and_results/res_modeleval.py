@@ -30,7 +30,7 @@ for model in os.listdir(SPATIAL_DIRECTORY):
     inv_modeleval[model] = invf.ModelEvaluation(xr.open_dataset(model_dir + 'year.nc'))
 
 trendy_modeleval = {}
-for model in os.listdir(TRENDY_DIRECTORY):
+for model in [m for m in os.listdir(TRENDY_DIRECTORY) if 'S3' in m]:
     model_dir = TRENDY_DIRECTORY + model + '/'
     trendy_modeleval[model] = TRENDYf.ModelEvaluation(xr.open_dataset(model_dir + 'year.nc'))
 
@@ -162,36 +162,43 @@ def model_bias(model_set, models, sink):
             - (models_df[models[0]]['model'] - models_df[models[0]]['GCP'])).values
 
 
+def all_modelbias(model_set, sink):
+    modelbias = {}
+    for model1 in model_set:
+        modelbias[model1] = {}
+        for model2 in model_set:
+            modelbias[model1][model2] = model_bias(model_set, (model1, model2), sink)
+
+    return pd.DataFrame(modelbias)
+
+
 """ INVF EXECUTION """
 inv_regress_timeseries()["ocean"]
 inv_regress_timeseries()["ocean"].mean()
 inv_regress_timeseries()["ocean"].std()
-
-# inv_regress_CWT(10)["land"]
 
 inv_trend = inv_compare_trend()
 inv_trend['ocean']
 mean_inv_trend(inv_trend)['ocean']
 inv_trend['land'].std()
 
-{models:model_bias(inv_modeleval, models, 'land') for models in combinations(inv_modeleval.keys(), 2)}
-np.array(list({models:model_bias(inv_modeleval, models, 'ocean') for models in combinations(inv_modeleval.keys(), 2)}.values()))
+inv_mb_land = all_modelbias(inv_modeleval, 'land')
+inv_mb_ocean = all_modelbias(inv_modeleval, 'ocean')
 
+inv_mb_land
+
+inv_mb_ocean
 
 
 """ TRENDY EXECUTION """
-s3_timeseries = trendy_regress_timeseries().loc[('S3' in i for i in trendy_regress_timeseries().index)]
+s3_timeseries = trendy_regress_timeseries()
 s3_timeseries
 s3_timeseries.mean()
 s3_timeseries.std()
-
-# trendy_regress_CWT(10)
 
 trendy_trend = trendy_compare_trend().loc[('S3' in i for i in trendy_compare_trend().index)]
 trendy_trend
 mean_trendy_trend(trendy_trend)
 trendy_trend.std()
 
-
-trendy_key = [model for model in trendy_modeleval.keys() if 'S3' in model]
-{models:model_bias(trendy_modeleval, models, 'land') for models in combinations(trendy_key, 2)}
+trendy_mb = all_modelbias(trendy_modeleval, 'land')

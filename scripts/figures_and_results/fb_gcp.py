@@ -64,8 +64,6 @@ def latex_fb_gcp():
     latex_df["beta"] /= 2.12
     latex_df["u_gamma"] = latex_df["gamma"] * phi / rho
 
-    return latex_df
-
     return latex_df.to_latex(float_format="%.3f")
 
 def feedback_window_regression(uptake, co2, temp):
@@ -153,18 +151,31 @@ def fb_gcp_decade(save=False):
     return fb_gcp_vals
 
 def carbon_gained():
-    beta = latex_fb_gcp()['beta'].sum()
-    gamma = latex_fb_gcp()['gamma'].sum()
-    u_gamma = latex_fb_gcp()['u_gamma'].sum()
+    beta = {
+        'land': latex_fb_gcp()['beta']['land'],
+        'ocean': latex_fb_gcp()['beta']['ocean']
+    }
 
-    return beta, gamma, u_gamma
+    gamma = {
+        'land': latex_fb_gcp()['gamma']['land'],
+        'ocean': latex_fb_gcp()['gamma']['ocean']
+
+    }
+
+    u_gamma = {
+        'land': latex_fb_gcp()['u_gamma']['land'],
+        'ocean': latex_fb_gcp()['u_gamma']['ocean']
+
+    }
 
     gained = {}
-    gained['beta'] = (beta * (C - C.iloc[0]).values * 2.12).sum()
-    gained['gamma'] = (gamma * (T - T[0]).values).sum()
-    gained['u_gamma'] = (u_gamma * (C - C.iloc[0]).values * 2.12).sum()
+    for region in beta:
+        gained[region] = {}
+        gained[region]['beta'] = (beta[region] * (C - C.iloc[0]).values * 2.12).sum()
+        gained[region]['gamma'] = (gamma[region] * (T - T[0]).values).sum()
+        gained[region]['u_gamma'] = (u_gamma[region] * (C - C.iloc[0]).values * 2.12).sum()
 
-    return gained
+    return pd.DataFrame(gained)
 
 """ EXECUTION """
 latex_fb_gcp()[['beta', 'u_gamma']].sum(axis=1)
@@ -183,6 +194,9 @@ abs(land_fwr / ocean_fwr).mean()
 fb_gcp_decade(True)
 
 carbon_gained()
+
+carbon_gained().sum(axis=1)['beta'] / carbon_gained().sum(axis=1)['gamma']
+carbon_gained()['land']['beta'] / carbon_gained()['land']['gamma']
 
 # Pickle
 pickle.dump(fb_gcp_decade(), open(FIGURE_DIRECTORY+'/rayner_df/fb_gcp_decade.pik', 'wb'))
