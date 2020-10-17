@@ -15,6 +15,11 @@ import fig_input_data as id
 
 import pickle
 
+from importlib import reload
+reload(invf);
+reload(TRENDYf);
+reload(id);
+
 
 """ FIGURES """
 def inv_year_regional_cwt(save=False, stat_values=False):
@@ -72,8 +77,8 @@ def inv_year_regional_cwt(save=False, stat_values=False):
             std = df.std(axis=1)
 
             cwt_vals[var] = (pd
-                                .DataFrame({'CO2 (ppm)': x, 'CWT (MtC/yr/ppm)': y, 'std': std})
-                                .set_index('CO2 (ppm)')
+                                .DataFrame({'Year': x, 'CWT (MtC/yr/GtC)': y, 'std': std})
+                                .set_index('Year')
                             )
 
             ax[subplot].plot(x, y, color=color)
@@ -98,9 +103,8 @@ def inv_year_regional_cwt(save=False, stat_values=False):
                                ["Earth", "South", "Tropical", "North"]):
         ax[subplot].set_ylabel(region, fontsize=14, labelpad=5)
 
-    tlabel = "yr" if timeres == "year" else timeres
     axl.set_xlabel("First year of 10-year window", fontsize=16, labelpad=10)
-    axl.set_ylabel(r"$\alpha$  " + " (MtC " + tlabel + "$^{-1}$ ppm$^{-1}$)",
+    axl.set_ylabel(r"$\alpha$  " + " (MtC.yr$^{-1}$.GtC$^{-1}$)",
                     fontsize=16,
                     labelpad=35
                   )
@@ -167,7 +171,7 @@ def inv_seasonal_regional_cwt(save=False, stat_values=False):
             std = df.std(axis=1)
 
             cwt_vals[var] = (pd
-                                .DataFrame({'Year': x, 'CWT (MtC/yr/ppm)': y, 'std': std})
+                                .DataFrame({'Year': x, 'CWT (MtC/yr/GtC)': y, 'std': std})
                                 .set_index('Year')
                             )
 
@@ -194,7 +198,7 @@ def inv_seasonal_regional_cwt(save=False, stat_values=False):
         ax[subplot].set_ylabel(region, fontsize=14, labelpad=5)
 
     axl.set_xlabel("First year of 10-year window", fontsize=16, labelpad=10)
-    axl.set_ylabel(r"$\alpha$  " + " (MtC yr$^{-1}$ ppm$^{-1}$)",
+    axl.set_ylabel(r"$\alpha$  " + " (MtC.yr$^{-1}$.GtC$^{-1}$)",
                     fontsize=16,
                     labelpad=35
                   )
@@ -267,7 +271,7 @@ def trendy_regional_cwt(timeres, save=False, stat_values=False):
             std = df.std(axis=1)
 
             cwt_sim[var] = (pd
-                                .DataFrame({'Year': x, 'CWT (MtC/yr/ppm)': y, 'std': std})
+                                .DataFrame({'Year': x, 'CWT (MtC/yr/GtC)': y, 'std': std})
                                 .set_index('Year')
                             )
 
@@ -296,9 +300,8 @@ def trendy_regional_cwt(timeres, save=False, stat_values=False):
                                ["Earth", "South", "Tropical", "North"]):
         ax[subplot].set_ylabel(region, fontsize=14, labelpad=5)
 
-    tlabel = "yr" if timeres == "year" else timeres
     axl.set_xlabel("First year of 10-year window", fontsize=16, labelpad=10)
-    axl.set_ylabel(r"$\alpha$  " + " (MtC yr$^{-1}$ ppm$^{-1}$)",
+    axl.set_ylabel(r"$\alpha$  " + " (MtC.yr$^{-1}$.GtC$^{-1}$)",
                     fontsize=16,
                     labelpad=35
                   )
@@ -377,7 +380,7 @@ def trendy_regional_cwt_diff(timeres='year', save=False, stat_values=False):
         std = df.std(axis=1)
 
         cwt_vals[var] = (pd
-                            .DataFrame({'Year': x, 'CWT (MtC/yr/ppm)': y, 'std': std})
+                            .DataFrame({'Year': x, 'CWT (MtC/yr/GtC)': y, 'std': std})
                             .set_index('Year')
                         )
 
@@ -390,16 +393,16 @@ def trendy_regional_cwt_diff(timeres='year', save=False, stat_values=False):
         ymin.append((y - 2*std).min())
         ymax.append((y + 2*std).max())
 
-        delta = 0.1
-        ax[subplot].set_ylim([min(ymin) - delta * abs(min(ymin)),
-                              max(ymax) + delta * abs(max(ymax))])
-
     for subplot, region in zip(subplots,
                                ["Earth", "South", "Tropical", "North"]):
         ax[subplot].set_ylabel(region, fontsize=14, labelpad=5)
 
+        delta = 0.1
+        ax[subplot].set_ylim([min(ymin) - delta * abs(min(ymin)),
+                              max(ymax) + delta * abs(max(ymax))])
+
     axl.set_xlabel("First year of 10-year window", fontsize=16, labelpad=10)
-    axl.set_ylabel(r"$\alpha$  " + " (MtC yr$^{-1}$ ppm$^{-1}$)",
+    axl.set_ylabel(r"$\alpha$  " + " (MtC.yr$^{-1}$.GtC$^{-1}$)",
                     fontsize=16,
                     labelpad=35
                   )

@@ -167,7 +167,7 @@ def test_cascading_window_trend_year_co2():
     start = int(str(df.data.time[0].values)[:4])
     end = int(str(df.data.time[-1].values)[:4])
 
-    dfco2 = co2_year.loc[start:end].values
+    dfco2 = co2_year.loc[start:end].values * 2.12
 
     df.data = xr.Dataset(
         {'Earth_Land': (('time'), dfco2)},

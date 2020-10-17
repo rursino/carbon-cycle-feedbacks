@@ -106,6 +106,7 @@ class Analysis:
     def cascading_window_trend(self, window_size=10):
         """ Calculates the slope of the trend of an uptake variable for each
         time window and for a given window size.
+        Units of alpha (CWT): 1/yr 
 
         Parameters
         ----------
@@ -121,7 +122,7 @@ class Analysis:
         cwt_df = pd.DataFrame(
             {
                 'U': df.values,
-                'CO2': self.CO2.loc[df.index].values
+                'CO2': self.CO2.loc[df.index].values * 2.12
             },
             index=df.index
         )

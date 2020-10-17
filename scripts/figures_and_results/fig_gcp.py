@@ -50,7 +50,6 @@ def gcp_landocean(save=False):
                         index=land.index
                         )
 
-# RE-START HERE
 def gcp_cwt(save=False, stat_values=False):
     zip_list = zip(['211', '212'], ['land', 'ocean'], [land_GCPf, ocean_GCPf])
 
@@ -64,11 +63,12 @@ def gcp_cwt(save=False, stat_values=False):
         ax = fig.add_subplot(subplot)
 
         sink_cwt_df = sink.cascading_window_trend(window_size=10)
+        sink_cwt_df *= 1e3 # units MtC / yr / GtC
         x = sink_cwt_df.index
-        y = sink_cwt_df.values.squeeze()
+        y = sink_cwt_df.values
 
         cwt_vals[var] = (pd
-                            .DataFrame({'Year': x, 'CWT (GtC/yr/ppm)': y})
+                            .DataFrame({'Year': x, 'CWT (1/yr)': y})
                             .set_index('Year')
                         )
 
@@ -76,17 +76,20 @@ def gcp_cwt(save=False, stat_values=False):
         slope, intercept, rvalue, pvalue, _ = regstats
         ax.plot(x, y)
         # ax.plot(x, x*slope + intercept)
-        text = f"Slope: {(slope*1e3):.3f} MtC yr$^{'{-2}'}$ ppm$^{'{-1}'}$\nr = {rvalue:.3f}"
+        text = (f"Slope: {slope:.3f} MtC.yr$^{'{-1}'}$.GtC$^{'{-1}'}$.yr$^{'{-1}'}$\n"
+                f"r = {rvalue:.3f}\n")
         xtext = x.min() + 0.75 * (x.max() - x.min())
-        ytext = y.min() +  0.8 * (y.max() - y.min())
+        ytext = y.min() +  0.75 * (y.max() - y.min())
         ax.text(xtext, ytext, text, fontsize=15)
+
+        ax.set_ylabel(f"{var.title()}", fontsize=16,
+                        labelpad=5)
 
         stat_vals[var] = regstats
 
-    axl.set_title("Cascading Window 10-Year Trend", fontsize=32, pad=20)
-    axl.set_xlabel("CO$_2$ concentrations (ppm)", fontsize=16, labelpad=10)
-    axl.set_ylabel(r"$\alpha$   " + " (GtC yr$^{-1}$ ppm$^{-1}$)", fontsize=16,
-                    labelpad=20)
+    axl.set_xlabel("First year of 10-year window", fontsize=16, labelpad=10)
+    axl.set_ylabel(r"$\alpha$   " + " (MtC.yr$^{-1}$.GtC$^{-1}$)", fontsize=16,
+                    labelpad=40)
 
     if save:
         plt.savefig(FIGURE_DIRECTORY + "gcp_cwt.png")
@@ -170,6 +173,7 @@ def uptake_enso(save=False):
 
 """ EXECUTION """
 gcp_landocean(save=False)
+
 
 gcp_cwt(save=False, stat_values=True)
 

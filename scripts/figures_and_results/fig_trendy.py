@@ -18,6 +18,10 @@ import fig_input_data as id
 
 import pickle
 
+from importlib import reload
+reload(TRENDYf);
+reload(id);
+
 
 """ FIGURES """
 def trendy_yearplots(save=False):
@@ -54,7 +58,7 @@ def trendy_year_cwt(save=False, stat_values=False):
         'S3': id.year_S3_trendy
     }
 
-    fig = plt.figure(figsize=(16,12))
+    fig = plt.figure(figsize=(16,8))
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
 
@@ -70,7 +74,6 @@ def trendy_year_cwt(save=False, stat_values=False):
         for model in trendy_year_sim:
             df = trendy_year_sim[model].cascading_window_trend(
                                             variable = 'Earth_Land',
-                                            indep="CO2",
                                             window_size=10)
             index.append(df.index)
             vals.append(df.values.squeeze())
@@ -84,13 +87,14 @@ def trendy_year_cwt(save=False, stat_values=False):
                     dataframe[i] = [v]
 
         df = pd.DataFrame(dataframe).T.sort_index()
+        df *= 1e3 # Units: MtC / yr / GtC
         x = df.index
         y = df.mean(axis=1)
         std = df.std(axis=1)
 
         trendy_cwt[sim] = (pd
-                            .DataFrame({'CO2 (ppm)': x, 'CWT (GtC/yr/ppm)': y, 'std': std})
-                            .set_index('CO2 (ppm)')
+                            .DataFrame({'Year': x, 'CWT (1/yr)': y, 'std': std})
+                            .set_index('Year')
                         )
 
         ax.plot(x, y, color='red')
@@ -100,19 +104,20 @@ def trendy_year_cwt(save=False, stat_values=False):
 
         regstats = stats.linregress(x, y)
         slope, intercept, rvalue, pvalue, _ = regstats
-        ax.plot(x, x*slope + intercept)
-        text = f"Slope: {(slope*1e3):.3f} MtC yr$^{'{-1}'}$ ppm$^{'{-2}'}$\nr = {rvalue:.3f}"
+        # ax.plot(x, x*slope + intercept)
+        text = (f"Slope: {slope:.3f} MtC.yr$^{'{-1}'}$.GtC$^{'{-1}'}$.yr$^{'{-1}'}$\n"
+                f"r = {rvalue:.3f}")
         xtext = x.min() + 0.75 * (x.max() -x.min())
         ytext = (y-2*std).min() +  0.8 * ((y+2*std).max() - (y-2*std).min())
         ax.text(xtext, ytext, text, fontsize=15)
+        ax.set_ylabel(f"{sim}", fontsize=16,
+                        labelpad=5)
 
         stat_vals.append(regstats)
 
-    axl.set_title(f"Cascading Window 10-Year Trend - TRENDY",
-                 fontsize=30, pad=20)
-    axl.set_xlabel("CO$_2$ concentrations (ppm)", fontsize=16, labelpad=10)
-    axl.set_ylabel(r"$\alpha$   " + " (GtC yr$^{-1}$ ppm$^{-1}$)", fontsize=16,
-                    labelpad=20)
+    axl.set_xlabel("First year of 10-year window", fontsize=16, labelpad=10)
+    axl.set_ylabel(r"$\alpha$   " + " (MtC.yr$^{-1}$.GtC$^{-1}$)", fontsize=16,
+                    labelpad=40)
 
     if save:
         plt.savefig(id.FIGURE_DIRECTORY + f"trendy_year_cwt.png")
@@ -135,7 +140,7 @@ def trendy_seasonal_cwt(season, fc=None, save=False, stat_values=False):
 
     uptake = trendy_summer if season == 'summer' else trendy_winter
 
-    fig = plt.figure(figsize=(16,12))
+    fig = plt.figure(figsize=(16,8))
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
 
@@ -167,12 +172,13 @@ def trendy_seasonal_cwt(season, fc=None, save=False, stat_values=False):
             dataframe[ind] = np.pad(row, (0, 5 - len(row)), 'constant', constant_values=np.nan)
 
         df = pd.DataFrame(dataframe).T.sort_index()
+        df *= 1e3 # Units: MtC / yr / GtC
         x = df.index
         y = df.mean(axis=1)
         std = df.std(axis=1)
 
         trendy_cwt[sim] = (pd
-                            .DataFrame({'Year': x, 'CWT (GtC/yr/ppm)': y, 'std': std})
+                            .DataFrame({'Year': x, 'CWT (1/yr)': y, 'std': std})
                             .set_index('Year')
                         )
 
@@ -183,17 +189,20 @@ def trendy_seasonal_cwt(season, fc=None, save=False, stat_values=False):
 
         regstats = stats.linregress(x, y)
         slope, intercept, rvalue, pvalue, _ = regstats
-        ax.plot(x, x*slope + intercept)
-        text = f"Slope: {(slope*1e3):.3f} MtC yr$^{'{-1}'}$ ppm$^{'{-1}'}$ / yr\nr = {rvalue:.3f}"
+        # ax.plot(x, x*slope + intercept)
+        text = (f"Slope: {slope:.3f} MtC.yr$^{'{-1}'}$.GtC$^{'{-1}'}$.yr$^{'{-1}'}$\n"
+                f"r = {rvalue:.3f}")
         xtext = x.min() + 0.75 * (x.max() -x.min())
         ytext = (y-2*std).min() +  0.8 * ((y+2*std).max() - (y-2*std).min())
         ax.text(xtext, ytext, text, fontsize=15)
+        ax.set_ylabel(f"{sim}", fontsize=16,
+                        labelpad=5)
 
         stat_vals.append(regstats)
 
-    axl.set_xlabel("Year", fontsize=16, labelpad=10)
-    axl.set_ylabel(r"$\alpha$   " + " (GtC yr$^{-1}$ ppm$^{-1}$)", fontsize=16,
-                    labelpad=20)
+    axl.set_xlabel("First year of 10-year window", fontsize=16, labelpad=10)
+    axl.set_ylabel(r"$\alpha$   " + " (MtC.yr$^{-1}$.GtC$^{-1}$)", fontsize=16,
+                    labelpad=40)
 
     if save:
         plt.savefig(id.FIGURE_DIRECTORY + f"trendy_{season}_cwt.png")
@@ -302,7 +311,7 @@ stats.linregress(enso.values.squeeze(), uptake.values)
 """ EXECUTION """
 trendy_yearplots(save=False)
 
-trendy_year_cwt(save=False, stat_values=True)
+trendy_year_cwt(save=False, stat_values=False)
 
 trendy_seasonal_cwt('summer', save=False, stat_values=True)
 trendy_seasonal_cwt('winter', save=False, stat_values=True)

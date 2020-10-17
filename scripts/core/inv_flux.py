@@ -482,7 +482,7 @@ class Analysis:
         cwt_df = pd.DataFrame(
             {
                 'U': df[variable].values,
-                'CO2': self.CO2.loc[index].values
+                'CO2': self.CO2.loc[index].values * 2.12
             },
             index=index
         )
