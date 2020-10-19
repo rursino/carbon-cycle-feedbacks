@@ -417,14 +417,14 @@ def trendy_regional_cwt_diff(timeres='year', save=False, stat_values=False):
 
 
 """ EXECUTION """
-inv_year_regional_cwt(save=False)
+inv_year_regional_cwt(save=False, stat_values=True)
 inv_seasonal_regional_cwt(save=False)
 
-trendy_regional_cwt('year', save=False)
+trendy_regional_cwt('year', save=False, stat_values=True)
 trendy_regional_cwt('winter', save=False)
 trendy_regional_cwt('summer', save=False)
 
-trendy_regional_cwt_diff('year', save=False)
+trendy_regional_cwt_diff('year', save=False, stat_values=True)
 trendy_regional_cwt_diff('winter', save=False)
 trendy_regional_cwt_diff('summer', save=False)
 

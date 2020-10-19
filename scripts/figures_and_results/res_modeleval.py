@@ -162,7 +162,10 @@ def model_bias(model_set, models, sink):
             - (models_df[models[0]]['model'] - models_df[models[0]]['GCP'])).values
 
 
-def all_modelbias(model_set, sink):
+def all_modelbias(model_dict, sink):
+    model_keys = ['JENA_s76', 'CAMS', 'JENA_s85', 'Rayner', 'JAMSTEC', 'CTRACKER']
+    model_set = {key:model_dict[key] for key in model_keys}
+
     modelbias = {}
     for model1 in model_set:
         modelbias[model1] = {}

@@ -300,7 +300,7 @@ inv_monthplots(save=False)
 inv_seasonalplots('winter', save=False)
 inv_seasonalplots('summer', save=False)
 
-inv_year_cwt(save=False, stat_values=False)
+inv_year_cwt(save=False, stat_values=True)
 inv_seasonal_cwt(save=False, stat_values=True)
 
 inv_powerspec([10,0], save=False)

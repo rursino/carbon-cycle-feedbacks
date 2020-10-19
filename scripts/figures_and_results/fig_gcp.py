@@ -175,7 +175,7 @@ def uptake_enso(save=False):
 gcp_landocean(save=False)
 
 
-gcp_cwt(save=False, stat_values=True)
+gcp_cwt(save=False, stat_values=False)
 
 gcp_powerspec(save=False)
 

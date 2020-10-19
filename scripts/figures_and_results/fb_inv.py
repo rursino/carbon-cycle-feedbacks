@@ -304,7 +304,7 @@ def fb_seasonal_inv(save=False):
                   )
 
     if save:
-        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_inv_{timeres}.png")
+        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_inv_seasonal.png")
 
     return fb_inv_df
 
@@ -430,7 +430,7 @@ def fb_seasonal_regional_inv(save=False):
                   )
 
     if save:
-        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_inv_regional_{timeres}.png")
+        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_inv_regional_seasonal.png")
 
     return fb_reg_inv
 
@@ -512,7 +512,7 @@ def fb_regional_inv2(save=False):
                   )
 
     if save:
-        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_inv_regional_{timeres}2.png")
+        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_inv_regional_seasonal2.png")
 
     return fb_reg_inv
 
@@ -596,7 +596,7 @@ def fb_seasonal_regional_inv2(save=False):
                   )
 
     if save:
-        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_inv_regional_{timeres}2.png")
+        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_inv_regional_seasonal2.png")
 
     return fb_reg_inv
 
@@ -612,7 +612,11 @@ ocean_year = feedback_regression('year', 'Earth_Ocean')
 
 ocean_year[0].T
 
-land_year[0].mean(axis=1) / ocean_year[0].mean(axis=1)
+land_year[0].mean(axis=1)
+ocean_year[0].mean(axis=1)
+
+(land_year[0] + ocean_year[0]).mean(axis=1)['beta'] / (land_year[0] + ocean_year[0]).mean(axis=1)['u_gamma']
+
 
 fb_inv(save=False)
 

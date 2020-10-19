@@ -362,8 +362,6 @@ def fb_regional_trendy2(timeres, save=False):
 
     return fb_trendy_df
 
-fb_regional_trendy2('winter')
-
 
 """ EXECUTION """
 whole_param = feedback_regression('year', 'Earth_Land')
@@ -371,11 +369,13 @@ whole_param = feedback_regression('year', 'Earth_Land')
 # whole_param = feedback_regression('summer', 'Earth_Land')
 whole_param[0]['S1'].mean(axis=1)
 whole_param[0]['S3'].mean(axis=1)
+whole_param[0]['S1'].mean(axis=1)['beta'] / whole_param[0]['S3'].mean(axis=1)['u_gamma']
+
 
 whole_param[1]['S1']
 whole_param[1]['S3']
 
-medianreg = median_regstat('year', "North_Land")
+medianreg = median_regstat('year', "Earth_Land")
 medianreg['S1']
 medianreg['S3']
 
