@@ -229,7 +229,7 @@ def fb_trendy(timeres, save=False):
     axl.set_ylabel('Feedback parameter   (yr$^{-1}$)', fontsize=16, labelpad=20)
 
     if save:
-        plt.savefig(fb_id.FIGURE_DIRECTORY + "fb_trendy_year.png")
+        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_trendy_{timeres}.png")
 
     return fb_trendy_df
 
@@ -289,7 +289,7 @@ def fb_regional_trendy(timeres, save=False):
                   )
 
     if save:
-        plt.savefig(fb_id.FIGURE_DIRECTORY + "fb_trendy_regional_year.png")
+        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_trendy_regional_{timeres}.png")
 
     return fb_trendy_df
 
@@ -358,7 +358,7 @@ def fb_regional_trendy2(timeres, save=False):
                   )
 
     if save:
-        plt.savefig(fb_id.FIGURE_DIRECTORY + "fb_trendy_regional_year2.png")
+        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_trendy_regional_{timeres}2.png")
 
     return fb_trendy_df
 

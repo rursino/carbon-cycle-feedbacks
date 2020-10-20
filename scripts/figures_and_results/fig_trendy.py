@@ -313,8 +313,8 @@ trendy_yearplots(save=False)
 
 trendy_year_cwt(save=False, stat_values=True)
 
-trendy_seasonal_cwt('summer', save=False, stat_values=True)
 trendy_seasonal_cwt('winter', save=False, stat_values=True)
+trendy_seasonal_cwt('summer', save=False, stat_values=True)
 
 trendy_bandpass_timeseries(1/40, save=False)
 

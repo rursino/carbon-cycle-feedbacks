@@ -178,7 +178,7 @@ def inv_year_cwt(save=False, stat_values=False):
 
     return inv_cwt
 
-def inv_seasonal_cwt(fc=None, save=False, stat_values=False):
+def inv_seasonal_cwt(save=False, stat_values=False):
     uptake = {
         'winter': id.winter_invf,
         'summer': id.summer_invf
@@ -300,8 +300,9 @@ inv_monthplots(save=False)
 inv_seasonalplots('winter', save=False)
 inv_seasonalplots('summer', save=False)
 
-inv_year_cwt(save=False, stat_values=True)
 inv_seasonal_cwt(save=False, stat_values=True)
+
+inv_year_cwt(save=False, stat_values=True)
 
 inv_powerspec([10,0], save=False)
 

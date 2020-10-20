@@ -141,6 +141,7 @@ def inv_seasonal_regional_cwt(save=False, stat_values=False):
 
     for subplots, time in zip_list:
         ymin, ymax = [], []
+        stat_vals[time] = {}
         for subplot, var, color in zip(subplots, variables, colors):
             ax[subplot] = fig.add_subplot(subplot)
 
@@ -179,7 +180,7 @@ def inv_seasonal_regional_cwt(save=False, stat_values=False):
             ax[subplot].fill_between(x, y - 2*std, y + 2*std, color='gray', alpha=0.2)
             ax[subplot].axhline(ls='--', color='k', alpha=0.5, lw=1)
 
-            stat_vals[var] = stats.linregress(x, y)
+            stat_vals[time][var] = stats.linregress(x, y)
 
             ymin.append((y - 2*std).min())
             ymax.append((y + 2*std).max())
@@ -418,15 +419,15 @@ def trendy_regional_cwt_diff(timeres='year', save=False, stat_values=False):
 
 """ EXECUTION """
 inv_year_regional_cwt(save=False, stat_values=True)
-inv_seasonal_regional_cwt(save=False)
+inv_seasonal_regional_cwt(save=False, stat_values=True)
 
 trendy_regional_cwt('year', save=False, stat_values=True)
-trendy_regional_cwt('winter', save=False)
-trendy_regional_cwt('summer', save=False)
+trendy_regional_cwt('winter', save=False, stat_values=True)
+trendy_regional_cwt('summer', save=False, stat_values=True)
 
 trendy_regional_cwt_diff('year', save=False, stat_values=True)
-trendy_regional_cwt_diff('winter', save=False)
-trendy_regional_cwt_diff('summer', save=False)
+trendy_regional_cwt_diff('winter', save=False, stat_values=True)
+trendy_regional_cwt_diff('summer', save=False, stat_values=True)
 
 
 # PICKLE (YET TO BE UPDATED)

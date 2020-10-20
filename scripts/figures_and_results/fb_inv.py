@@ -617,7 +617,6 @@ ocean_year[0].mean(axis=1)
 
 (land_year[0] + ocean_year[0]).mean(axis=1)['beta'] / (land_year[0] + ocean_year[0]).mean(axis=1)['u_gamma']
 
-
 fb_inv(save=False)
 
 # (FeedbackAnalysis
@@ -644,8 +643,8 @@ fb_regional_inv2(save=False)
 carbon_gained('year')
 
 fb_seasonal_inv(save=False)
-fb_seasonal_regional_inv(save=False)
 fb_seasonal_regional_inv2(save=False)
+fb_seasonal_regional_inv(save=False)
 
 
 # Pickle (YET TO BE UPDATED)
