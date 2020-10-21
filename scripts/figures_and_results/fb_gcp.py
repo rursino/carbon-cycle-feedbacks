@@ -133,9 +133,11 @@ def fb_gcp_decade(save=False):
 
         ax[subplot].bar(x_beta, y['beta'], width=bar_width, color='green')
         ax[subplot].bar(x_ugamma, y['u_gamma'], width=bar_width, color='red')
-        ax[subplot].plot(x, y['beta'] + y['u_gamma'], color='black')
+        # ax[subplot].plot(x, y['beta'] + y['u_gamma'], color='black')
 
-        ax[subplot].legend([r'$\alpha$', r'$\beta$', r'$u_{\gamma}$'],
+        # ax[subplot].legend([r'$\alpha$', r'$\beta$', r'$u_{\gamma}$'],
+        #                    fontsize=12)
+        ax[subplot].legend([r'$\beta$', r'$u_{\gamma}$'],
                            fontsize=12)
 
     ax["211"].set_xlabel("Land", fontsize=18, labelpad=10)
@@ -191,7 +193,7 @@ abs(land_fwr)
 
 abs(land_fwr / ocean_fwr).mean()
 
-fb_gcp_decade(True)
+fb_gcp_decade(save=True)
 
 carbon_gained()
 

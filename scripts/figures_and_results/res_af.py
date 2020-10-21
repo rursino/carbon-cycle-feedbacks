@@ -90,6 +90,7 @@ stats.linregress(range(len(inv_window.index)), inv_window.af)
 
 
 TRENDYdf = AirborneFraction.TRENDY(co2['year'], temp['year'], trendy_uptake)
+TRENDYdf.airborne_fraction()
 af_dataframe(TRENDYdf)
 TRENDY_window = pd.DataFrame(TRENDYdf.window_af())
 TRENDY_window['alpha_cf'] = TRENDY_window['alpha_std'] * 1.645
@@ -125,7 +126,7 @@ def inv_af_models(emission_rate=2):
 
     return af
 
-inv_af_models()
+inv_af_models().AF.std()
 
 inv_af_models().loc[['CTRACKER', 'JAMSTEC', 'Rayner']]['AF']
 inv_af_models().loc[['CTRACKER', 'JAMSTEC', 'Rayner']].mean()['AF']

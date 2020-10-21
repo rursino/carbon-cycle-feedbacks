@@ -430,7 +430,7 @@ def fb_seasonal_regional_inv(save=False):
                   )
 
     if save:
-        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_inv_regional_seasonal.png")
+        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_inv_regional_year.png")
 
     return fb_reg_inv
 
@@ -512,7 +512,7 @@ def fb_regional_inv2(save=False):
                   )
 
     if save:
-        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_inv_regional_seasonal2.png")
+        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_inv_regional_year2.png")
 
     return fb_reg_inv
 
@@ -617,7 +617,7 @@ ocean_year[0].mean(axis=1)
 
 (land_year[0] + ocean_year[0]).mean(axis=1)['beta'] / (land_year[0] + ocean_year[0]).mean(axis=1)['u_gamma']
 
-fb_inv(save=False)
+fb_inv(save=True)
 
 # (FeedbackAnalysis
 #     .INVF(fb_id.co2['year'], fb_id.temp['year'], fb_id.invf_uptake['year'], 'Earth_Land')
@@ -637,13 +637,13 @@ median_regstat("Earth_Ocean")
 
 
 fb_regional_inv(save=False)
-fb_regional_inv2(save=False)
+fb_regional_inv2(save=True)
 
 
 carbon_gained('year')
 
-fb_seasonal_inv(save=False)
-fb_seasonal_regional_inv2(save=False)
+fb_seasonal_inv(save=True)
+fb_seasonal_regional_inv2(save=True)
 fb_seasonal_regional_inv(save=False)
 
 

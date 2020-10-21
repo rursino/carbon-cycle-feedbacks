@@ -166,7 +166,7 @@ def carbon_gained(timeres):
 
 
 """ FIGURES """
-def fb_trendy(timeres, save=False):
+def fb_trendy(timeres='year', save=False):
     uptake = fb_id.trendy_uptake
     fig = plt.figure(figsize=(14,6))
     ax = {}
@@ -229,11 +229,86 @@ def fb_trendy(timeres, save=False):
     axl.set_ylabel('Feedback parameter   (yr$^{-1}$)', fontsize=16, labelpad=20)
 
     if save:
-        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_trendy_{timeres}.png")
+        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_trendy_year.png")
 
     return fb_trendy_df
 
-def fb_regional_trendy(timeres, save=False):
+
+
+def fb_trendy_seasonal(save=False):
+    uptake = fb_id.trendy_uptake
+    fig = plt.figure(figsize=(20,11))
+    ax = {}
+    axl = fig.add_subplot(111, frame_on=False)
+    axl.tick_params(labelcolor="none", bottom=False, left=False)
+
+    bar_width = 3
+    param_details = {
+        'beta': {
+                    'bar_width': -bar_width,
+                    'color': 'green',
+                    'label': r'$\beta$'
+                },
+        'u_gamma': {
+                    'bar_width': bar_width,
+                    'color': 'red',
+                    'label': r'$u_{\gamma}$'
+                }
+    }
+
+    subplots = ['211', '212']
+    seasons = ['winter', 'summer']
+
+    fb_trendy_df = {}
+
+    for subplot, timeres in zip(subplots, seasons):
+        fb_trendy_df[timeres] = {}
+        for simulation, parameter in zip(["S1", "S3"], ['beta', 'u_gamma']):
+            bw = param_details[parameter]['bar_width']
+            color = param_details[parameter]['color']
+            label = param_details[parameter]['label']
+
+            df = FeedbackAnalysis.TRENDY(
+                                        timeres,
+                                        fb_id.co2['year'],
+                                        fb_id.temp['year'],
+                                        uptake,
+                                        'Earth_Land'
+                                        )
+
+            whole_df = feedback_regression(timeres, "Earth_Land")[0][simulation].mean(axis=1)
+            whole_param = whole_df[parameter]
+
+            param = df.params()[simulation][parameter]
+            param_mean = param.mean(axis=1)
+            param_std = param.std(axis=1)
+
+            fb_trendy_df[timeres][parameter] = pd.DataFrame({'Mean': param_mean,
+                                                '90_conf_interval': 1.645*param_std})
+
+            ax[subplot] = fig.add_subplot(subplot)
+
+            ax[subplot].axhline(ls='--', color='k', alpha=0.5, lw=0.8)
+            ax[subplot].bar(param.index + 5 + bw / 2,
+                            param_mean,
+                            yerr=param_std * 1.645,
+                            width=abs(bar_width),
+                            color=color,
+                            label=label)
+            ax[subplot].axhline(y= whole_param, ls='--', color=color, alpha=0.8, lw=1)
+            ax[subplot].legend()
+
+            ax[subplot].set_ylabel(f'{timeres.title()}', fontsize=16, labelpad=5)
+
+    axl.set_xlabel("Middle year of 10-year window", fontsize=16, labelpad=10)
+    axl.set_ylabel('Feedback parameter   (yr$^{-1}$)', fontsize=16, labelpad=40)
+
+    if save:
+        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_trendy_seasonal.png")
+
+    return fb_trendy_df
+
+def fb_regional_trendy(timeres='year', save=False):
     uptake = fb_id.trendy_uptake
 
     all_subplots = ['211', '212']
@@ -289,11 +364,11 @@ def fb_regional_trendy(timeres, save=False):
                   )
 
     if save:
-        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_trendy_regional_{timeres}.png")
+        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_trendy_regional_year.png")
 
     return fb_trendy_df
 
-def fb_regional_trendy2(timeres, save=False):
+def fb_regional_trendy2(timeres='year', save=False):
     uptake = fb_id.trendy_uptake
 
     all_subplots = ['41'+str(i) for i in range(1,5)]
@@ -358,10 +433,86 @@ def fb_regional_trendy2(timeres, save=False):
                   )
 
     if save:
-        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_trendy_regional_{timeres}2.png")
+        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_trendy_regional_year2.png")
 
     return fb_trendy_df
 
+def fb_regional_trendy_seasonal2(save=False):
+    uptake = fb_id.trendy_uptake
+
+    seasons = ['winter', 'summer']
+    all_subplots = [['421', '423', '425', '427'], ['422', '424', '426', '428']]
+    vars = ['Earth', 'South', 'Tropical', 'North']
+
+    # Note u_gamma is used to compare with beta.
+    parameters = ['beta', 'u_gamma']
+    simulations = ['S1', 'S3']
+    colors = ['green', 'red']
+    bar_width = 1.5
+    bar_position = np.arange(-1, 1) * bar_width
+
+    fig = plt.figure(figsize=(16,14))
+    ax = {}
+    axl = fig.add_subplot(111, frame_on=False)
+    axl.tick_params(labelcolor="none", bottom=False, left=False)
+
+    fb_trendy_df = {}
+
+    for subplots, timeres in zip(all_subplots, seasons):
+        ymin, ymax = [], []
+        fb_trendy_df[timeres] = {}
+        for subplot, var in zip(subplots, vars):
+            df = FeedbackAnalysis.TRENDY(
+                                        timeres,
+                                        fb_id.co2['year'],
+                                        fb_id.temp['year'],
+                                        uptake,
+                                        var + '_Land'
+                                        )
+            for parameter, sim, color, bar_pos in zip(parameters, simulations, colors, bar_position):
+                param = df.params()[sim][parameter]
+                param_mean = param.mean(axis=1)
+                param_std = param.std(axis=1)
+
+                fb_trendy_df[timeres][(var+'_Land', parameter)] = pd.DataFrame({'Mean': param_mean,
+                                                               '90_conf_interval': 1.645*param_std})
+
+                ax[subplot] = fig.add_subplot(subplot)
+
+                ax[subplot].bar(param.index + 5 + bar_pos,
+                                param_mean,
+                                yerr=1.645*param_std,
+                                width=bar_width,
+                                color=color)
+
+                if subplot != "411":
+                    ymin.append((param_mean - 1.645*param_std).min())
+                    ymax.append((param_mean + 1.645*param_std).max())
+
+        delta = 0.05
+        for subplot in subplots[1:]:
+            ax[subplot].set_ylim([min(ymin) - delta * abs(min(ymin)),
+                                  max(ymax) + delta * abs(max(ymax))])
+
+    for subplot, region in zip(["421", "423", "425", "427"],
+                               ['Earth', 'South', 'Tropical', 'North']):
+        ax[subplot].set_ylabel(region, fontsize=14, labelpad=5)
+
+    for subplot, season in zip(["421", "422"],
+                               ['Winter', 'Summer']):
+        ax[subplot].set_xlabel(season, fontsize=14, labelpad=5)
+        ax[subplot].xaxis.set_label_position('top')
+
+    axl.set_xlabel("Middle year of 10-year window", fontsize=16, labelpad=10)
+    axl.set_ylabel(r'Feedback parameter   (yr$^{-1}$)',
+                   fontsize=16,
+                   labelpad=40
+                  )
+
+    if save:
+        plt.savefig(fb_id.FIGURE_DIRECTORY + f"fb_trendy_regional_seasonal2.png")
+
+    return fb_trendy_df
 
 """ EXECUTION """
 whole_param = feedback_regression('year', 'Earth_Land')
@@ -383,17 +534,15 @@ carbon_gained('year')
 carbon_gained('year')['beta'] / carbon_gained('year')['gamma']
 
 """ FIGURES """
-fb_trendy('year', save=False)
-fb_trendy('winter', save=False)
-fb_trendy('summer', save=False)
+fb_trendy(save=True)
+fb_trendy_seasonal(save=True)
 
-fb_regional_trendy('year', save=False)
-fb_regional_trendy('winter', save=False)
-fb_regional_trendy('summer', save=False)
+# fb_regional_trendy('year', save=False)
+# fb_regional_trendy('winter', save=False)
+# fb_regional_trendy('summer', save=False)
 
-fb_regional_trendy2('year', save=False)
-fb_regional_trendy2('winter', save=False)
-fb_regional_trendy2('summer', save=False)
+fb_regional_trendy2(save=True)
+fb_regional_trendy_seasonal2(save=True)
 
 # Pickle (YET TO BE UPDATED)
 pickle.dump(fb_trendy(), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_trendy_year.pik', 'wb'))

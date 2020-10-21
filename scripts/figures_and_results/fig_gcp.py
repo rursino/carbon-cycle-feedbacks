@@ -32,21 +32,20 @@ co2 = pd.read_csv("./../../data/CO2/co2_year.csv").CO2[2:]
 
 """ FIGURES """
 def gcp_landocean(save=False):
-    plt.figure(figsize=(15,8))
+    plt.figure(figsize=(16,8))
     plt.plot(land, color='g')
     plt.plot(ocean, color='b')
 
-    plt.title("GCP Uptake: 1959 - 2018", fontsize=32)
     plt.xlabel("Year", fontsize=24)
-    plt.ylabel("Uptake flux to the atmosphere (GtC/yr)", fontsize=16)
+    plt.ylabel(r"C flux to the atmosphere (GtC.yr$^{-1}$)", fontsize=20)
 
-    plt.legend(["land", "ocean"], fontsize=20)
+    plt.legend(["Land", "Ocean"], fontsize=18)
 
     if save:
         plt.savefig(FIGURE_DIRECTORY + "gcp_landocean.png")
 
     # For P.Rayner
-    return pd.DataFrame({'land': land.values, 'ocean': ocean.values},
+    return pd.DataFrame({'Land': land.values, 'Ocean': ocean.values},
                         index=land.index
                         )
 
@@ -126,9 +125,10 @@ def gcp_powerspec(save=False):
         ax.semilogy(x, y)
         ax.invert_xaxis()
 
-    axl.set_title("Power Spectrum: GCP Uptake", fontsize=32, pad=20)
-    axl.set_xlabel(sink_psd.columns[0], fontsize=16, labelpad=10)
-    axl.set_ylabel(sink_psd.columns[1], fontsize=16,
+        ax.set_ylim([0.5e-3, 1e1])
+
+    axl.set_xlabel(sink_psd.columns[0], fontsize=18, labelpad=10)
+    axl.set_ylabel(sink_psd.columns[1], fontsize=18,
                     labelpad=20)
 
     if save:
@@ -150,22 +150,45 @@ def uptake_enso(save=False):
     w = np.array([1/7, 1/2.01]) / (1 / 2) # Normalize the frequency.
     b, a = signal.butter(5, w, 'band')
 
-    Bsoi = signal.filtfilt(b, a, soi_uptake['soi'])
-    Bland = signal.filtfilt(b, a, soi_uptake['land'])
-    Bocean = signal.filtfilt(b, a, soi_uptake['ocean'])
-    # Bsoi = soi_uptake['soi']
-    # Bland = soi_uptake['land']
-    # Bocean = soi_uptake['ocean']
+    # Bsoi = signal.filtfilt(b, a, soi_uptake['soi'])
+    # Bland = signal.filtfilt(b, a, soi_uptake['land'])
+    # Bocean = signal.filtfilt(b, a, soi_uptake['ocean'])
+    Bsoi = soi_uptake['soi']
+    Bland = soi_uptake['land']
+    Bocean = soi_uptake['ocean']
 
     fig = plt.figure(figsize=(14,8))
+    axl = fig.add_subplot(111, frame_on=False)
+    axl.tick_params(labelcolor="none", bottom=False, left=False)
+    axr = axl.twinx()
+    axr.tick_params(labelcolor="none", bottom=False, left=False)
+
     ax1 = fig.add_subplot(211)
     ax1.plot(soi_uptake.index, Bland)
     ax2 = ax1.twinx()
-    ax2.plot(soi_uptake.index, Bsoi, color='red')
+    ax2.plot(soi_uptake.index, Bsoi, color='red', ls='--')
     ax3 = fig.add_subplot(212)
     ax3.plot(soi_uptake.index, Bocean)
     ax4 = ax3.twinx()
-    ax4.plot(soi_uptake.index, Bsoi, color='red')
+    ax4.plot(soi_uptake.index, Bsoi, color='red', ls='--')
+
+    ax1.axvline(1991, color='g', ls='--', alpha=0.6)
+    ax3.axvline(1991, color='g', ls='--', alpha=0.6)
+    ax1.axvline(1998, color='b', ls='--', alpha=0.6)
+    ax3.axvline(1998, color='b', ls='--', alpha=0.6)
+
+    ax4.set_xlabel('Year', fontsize=16, labelpad=20)
+
+    axl.set_ylabel(r'C flux to the atmosphere (GtC.yr$^{-1}$)', fontsize=16, labelpad=40)
+    axr.set_ylabel('SOI', fontsize=16, labelpad=20)
+    axr.yaxis.set_label_position("right")
+
+    ax1.set_ylabel('Land', fontsize=16, labelpad=20)
+    ax3.set_ylabel('Ocean', fontsize=16, labelpad=7)
+    # ax2.set_ylabel('y', fontsize=16, labelpad=15)
+    # ax2.yaxis.set_label_position("right")
+    # ax4.set_ylabel('y', fontsize=16, labelpad=15)
+    # ax4.yaxis.set_label_position("right")
 
     if save:
         plt.savefig(FIGURE_DIRECTORY + "uptake_enso_gcp.png")
@@ -174,12 +197,11 @@ def uptake_enso(save=False):
 """ EXECUTION """
 gcp_landocean(save=False)
 
-
 gcp_cwt(save=False, stat_values=False)
 
 gcp_powerspec(save=False)
 
-uptake_enso()
+uptake_enso(save=False)
 
  # PICKLE
 pickle.dump(gcp_landocean(), open(FIGURE_DIRECTORY+'/rayner_df/gcp_landocean.pik', 'wb'))

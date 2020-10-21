@@ -22,6 +22,8 @@ from importlib import reload
 reload(TRENDYf);
 reload(id);
 
+FIGURE_DIRECTORY = "./../../latex/thesis/figures/"
+
 
 """ FIGURES """
 def trendy_yearplots(save=False):
@@ -42,7 +44,6 @@ def trendy_yearplots(save=False):
     ax.axhline(ls='--', color='k', alpha=0.5, lw=1)
     plt.legend(year_mean.keys(), fontsize=14)
 
-    ax.set_title(f"Uptake: TRENDY - Annual", fontsize=32, pad=20)
     ax.set_xlabel("Year", fontsize=16, labelpad=10)
     ax.set_ylabel("C flux to the atmosphere (GtC yr$^{-1}$)", fontsize=16,
                     labelpad=20)
@@ -127,85 +128,94 @@ def trendy_year_cwt(save=False, stat_values=False):
 
     return trendy_cwt
 
-def trendy_seasonal_cwt(season, fc=None, save=False, stat_values=False):
-    trendy_summer = {
-        'S1': id.summer_S1_trendy,
-        'S3': id.summer_S3_trendy
+def trendy_seasonal_cwt(save=False, stat_values=False):
+    uptake = {
+        'winter': {
+                    'S1': id.winter_S1_trendy,
+                    'S3': id.winter_S3_trendy
+                },
+        'summer': {
+                    'S1': id.summer_S1_trendy,
+                    'S3': id.summer_S3_trendy
+                }
     }
 
-    trendy_winter = {
-        'S1': id.winter_S1_trendy,
-        'S3': id.winter_S3_trendy
-    }
-
-    uptake = trendy_summer if season == 'summer' else trendy_winter
-
-    fig = plt.figure(figsize=(16,8))
+    fig = plt.figure(figsize=(24,8))
     axl = fig.add_subplot(111, frame_on=False)
     axl.tick_params(labelcolor="none", bottom=False, left=False)
+    ax = {}
 
     trendy_cwt = {}
 
-    subplots = ['211', '212']
-    stat_vals = []
-    for sim, subplot in zip(uptake, subplots):
-        uptake_sim = uptake[sim]
+    all_subplots = [['221', '223'], ['222', '224']]
+    stat_vals = {}
+    for season, subplots in zip(uptake, all_subplots):
+        trendy_cwt[season] = {}
+        stat_vals[season] = []
+        for sim, subplot in zip(uptake[season], subplots):
+            uptake_sim = uptake[season][sim]
 
-        ax = fig.add_subplot(subplot)
-        index, vals = [], []
-        for model in uptake_sim:
-            df = uptake_sim[model].cascading_window_trend(
-                                            variable = 'Earth_Land',
-                                            window_size=10)
-            index.append(df.index)
-            vals.append(df.values.squeeze())
+            ax[subplot] = fig.add_subplot(subplot)
+            index, vals = [], []
+            for model in uptake_sim:
+                df = uptake_sim[model].cascading_window_trend(
+                                                variable = 'Earth_Land',
+                                                window_size=10)
+                index.append(df.index)
+                vals.append(df.values.squeeze())
 
-        dataframe = {}
-        for ind, val in zip(index, vals):
-            for i, v in zip(ind, val):
-                if i in dataframe.keys():
-                    dataframe[i].append(v)
-                else:
-                    dataframe[i] = [v]
-        for ind in dataframe:
-            row = np.array(dataframe[ind])
-            dataframe[ind] = np.pad(row, (0, 5 - len(row)), 'constant', constant_values=np.nan)
+            dataframe = {}
+            for ind, val in zip(index, vals):
+                for i, v in zip(ind, val):
+                    if i in dataframe.keys():
+                        dataframe[i].append(v)
+                    else:
+                        dataframe[i] = [v]
+            for ind in dataframe:
+                row = np.array(dataframe[ind])
+                dataframe[ind] = np.pad(row, (0, 5 - len(row)), 'constant', constant_values=np.nan)
 
-        df = pd.DataFrame(dataframe).T.sort_index()
-        df *= 1e3 # Units: MtC / yr / GtC
-        x = df.index
-        y = df.mean(axis=1)
-        std = df.std(axis=1)
+            df = pd.DataFrame(dataframe).T.sort_index()
+            df *= 1e3 # Units: MtC / yr / GtC
+            x = df.index
+            y = df.mean(axis=1)
+            std = df.std(axis=1)
 
-        trendy_cwt[sim] = (pd
-                            .DataFrame({'Year': x, 'CWT (1/yr)': y, 'std': std})
-                            .set_index('Year')
-                        )
+            trendy_cwt[season][sim] = (pd
+                                .DataFrame({'Year': x, 'CWT (1/yr)': y, 'std': std})
+                                .set_index('Year')
+                            )
 
-        ax.plot(x, y, color='red')
-        ax.fill_between(x, y - 2*std, y + 2*std, color='gray', alpha=0.2)
+            ax[subplot].plot(x, y, color='red')
+            ax[subplot].fill_between(x, y - 2*std, y + 2*std, color='gray', alpha=0.2)
 
-        ax.axhline(ls='--', color='k', alpha=0.5, lw=1)
+            ax[subplot].axhline(ls='--', color='k', alpha=0.5, lw=1)
 
-        regstats = stats.linregress(x, y)
-        slope, intercept, rvalue, pvalue, _ = regstats
-        # ax.plot(x, x*slope + intercept)
-        text = (f"Slope: {slope:.3f} MtC.yr$^{'{-1}'}$.GtC$^{'{-1}'}$.yr$^{'{-1}'}$\n"
-                f"r = {rvalue:.3f}")
-        xtext = x.min() + 0.75 * (x.max() -x.min())
-        ytext = (y-2*std).min() +  0.8 * ((y+2*std).max() - (y-2*std).min())
-        ax.text(xtext, ytext, text, fontsize=15)
-        ax.set_ylabel(f"{sim}", fontsize=16,
-                        labelpad=5)
+            regstats = stats.linregress(x, y)
+            slope, intercept, rvalue, pvalue, _ = regstats
+            text = (f"Slope: {slope:.3f} MtC.yr$^{'{-1}'}$.GtC$^{'{-1}'}$.yr$^{'{-1}'}$\n"
+                    f"r = {rvalue:.3f}")
+            xtext = x.min() + 0.68 * (x.max() - x.min())
+            ytext = (y-2*std).min() +  0.85 * ((y+2*std).max() - (y-2*std).min())
+            ax[subplot].text(xtext, ytext, text, fontsize=13)
 
-        stat_vals.append(regstats)
+            stat_vals[season].append(regstats)
 
     axl.set_xlabel("First year of 10-year window", fontsize=16, labelpad=10)
     axl.set_ylabel(r"$\alpha$   " + " (MtC.yr$^{-1}$.GtC$^{-1}$)", fontsize=16,
                     labelpad=40)
 
+    ax['221'].set_ylabel("S1", fontsize=16, labelpad=5)
+    ax['223'].set_ylabel("S3", fontsize=16, labelpad=5)
+
+    ax["221"].set_xlabel("Winter", fontsize=16, labelpad=5)
+    ax["221"].xaxis.set_label_position('top')
+    ax["222"].set_xlabel("Summer", fontsize=16, labelpad=5)
+    ax["222"].xaxis.set_label_position('top')
+
+
     if save:
-        plt.savefig(id.FIGURE_DIRECTORY + f"trendy_{season}_cwt.png")
+        plt.savefig(id.FIGURE_DIRECTORY + "trendy_seasonal_cwt.png")
 
     if stat_values:
         return stat_vals
@@ -228,7 +238,6 @@ def trendy_bandpass_timeseries(fc, save=False):
 
     plt.legend(trendy_year.keys())
 
-    ax.set_title(f"Uptake: TRENDY - Low-pass filtered: 1/{1/fc} years)", fontsize=32, pad=20)
     ax.set_xlabel("Year", fontsize=16, labelpad=10)
     ax.set_ylabel("C flux to the atmosphere (GtC yr$^{-1}$)", fontsize=16,
                     labelpad=20)
@@ -290,7 +299,6 @@ def trendy_powerspec(xlim, save=False):
         ax.set_xlim(xlim)
         ax.set_xticks(np.arange(*xlim, -1.0))
 
-    axl.set_title("Power Spectrum: TRENDY Uptake", fontsize=32, pad=20)
     axl.set_xlabel(psd.columns[0], fontsize=16, labelpad=10)
     axl.set_ylabel(psd.columns[1], fontsize=16,
                     labelpad=20)
@@ -309,16 +317,15 @@ uptake = id.month_S3_trendy['JSBACH_S3_nbp'].data.Earth_Land.sel(time=slice('196
 stats.linregress(enso.values.squeeze(), uptake.values)
 
 """ EXECUTION """
-trendy_yearplots(save=False)
+trendy_yearplots(save=True)
 
-trendy_year_cwt(save=False, stat_values=True)
+trendy_year_cwt(save=True, stat_values=True)
 
-trendy_seasonal_cwt('winter', save=False, stat_values=True)
-trendy_seasonal_cwt('summer', save=False, stat_values=True)
+trendy_seasonal_cwt(save=True, stat_values=True)
 
-trendy_bandpass_timeseries(1/40, save=False)
+trendy_bandpass_timeseries(1/40, save=True)
 
-trendy_powerspec([7,0], save=False)
+trendy_powerspec([7,0], save=True)
 
 
 # PICKLE (YET TO BE UPDATED)

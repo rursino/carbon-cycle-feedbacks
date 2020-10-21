@@ -19,6 +19,7 @@ from importlib import reload
 reload(invf);
 reload(id);
 
+FIGURE_DIRECTORY = "./../../latex/thesis/figures/"
 
 """ FIGURES """
 def inv_yearplots(save=False):
@@ -41,7 +42,6 @@ def inv_yearplots(save=False):
 
         inv_df[var] = inv_df_models
 
-    axl.set_title("Uptake: Inversions - Annual", fontsize=32, pad=20)
     axl.set_xlabel("Year", fontsize=16, labelpad=10)
     axl.set_ylabel("C flux to the atmosphere (GtC yr$^{-1}$)", fontsize=16,
                     labelpad=20)
@@ -70,7 +70,6 @@ def inv_monthplots(save=False):
 
         inv_df[var] = inv_df_models
 
-    axl.set_title("Uptake: Inversions - Monthly", fontsize=32, pad=20)
     axl.set_xlabel("Year", fontsize=16, labelpad=10)
     axl.set_ylabel("C flux to the atmosphere (GtC yr$^{-1}$)", fontsize=16,
                     labelpad=20)
@@ -281,7 +280,6 @@ def inv_powerspec(xlim, save=False):
         ax.set_xlim(xlim)
         ax.set_xticks(np.arange(*xlim, -1.0))
 
-    axl.set_title("Power Spectrum: Inversion Uptake", fontsize=32, pad=20)
     axl.set_xlabel(psd.columns[0], fontsize=16, labelpad=10)
     axl.set_ylabel(psd.columns[1], fontsize=16,
                     labelpad=20)
@@ -293,18 +291,18 @@ def inv_powerspec(xlim, save=False):
 
 
 """ EXECUTION """
-inv_yearplots(save=False)
+inv_yearplots(save=True)
 
-inv_monthplots(save=False)
+inv_monthplots(save=True)
 
 inv_seasonalplots('winter', save=False)
 inv_seasonalplots('summer', save=False)
 
-inv_seasonal_cwt(save=False, stat_values=True)
+inv_seasonal_cwt(save=True, stat_values=True)
 
-inv_year_cwt(save=False, stat_values=True)
+inv_year_cwt(save=True, stat_values=True)
 
-inv_powerspec([10,0], save=False)
+inv_powerspec([10,0], save=True)
 
 # PICKLE (YET TO BE UPDATED)
 pickle.dump(inv_yearplots(), open(id.FIGURE_DIRECTORY+'/rayner_df/inv_yearplots.pik', 'wb'))
