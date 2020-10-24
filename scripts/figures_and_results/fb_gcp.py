@@ -33,6 +33,7 @@ T= T.Earth
 
 phi, rho = 0.015 / 2.12, 1.93
 
+
 """ FUNCTIONS """
 def feedback_regression(uptake, co2, temp):
     df = pd.DataFrame(
@@ -41,7 +42,7 @@ def feedback_regression(uptake, co2, temp):
             "T": temp,
             "U": uptake
         },
-        index = C.index
+        index = co2.index
     )
 
     X = sm.add_constant(df[["C", "T"]])
@@ -83,7 +84,7 @@ def feedback_window_regression(uptake, co2, temp):
             "T": temp,
             "U": uptake
         },
-        index = C.index
+        index = co2.index
     )
 
     params = {'beta': [], 'gamma': []}
@@ -199,6 +200,41 @@ carbon_gained()
 
 carbon_gained().sum(axis=1)['beta'] / carbon_gained().sum(axis=1)['gamma']
 carbon_gained()['land']['beta'] / carbon_gained()['land']['gamma']
+
+# 1990s analysis
+def analysis_1990s(pop=None):
+    start, end = 1989, 1998
+    nU = Ul.loc[start:end]
+    nC = C.loc[start:end]
+    nT = pd.Series(T.sel(time=slice(str(start), str(end))).values, index=nC.index)
+
+    if pop:
+        for item in pop:
+            nU.pop(item)
+            nC.pop(item)
+            nT.pop(item)
+
+    ds = feedback_regression(nU, nC, nT).params
+    data = pd.Series({'beta': ds.C, 'gamma': ds['T']})
+    data['u_gamma'] = data['gamma'] * phi / rho
+    data['alpha'] = data['beta'] + data['u_gamma']
+    return data
+
+analysis_1990s()
+
+analysis_1990s([1991, 1998])
+
+analysis_1990s([1991])
+
+analysis_1990s([1998])
+
+
+nU = Ul.loc[1989:1998]
+nC = C.loc[1989:1998]
+nT = pd.Series(T.sel(time=slice(str(1989), str(1998))).values, index=nC.index)
+
+plt.scatter(np.arange(1989,1999), nT)
+
 
 # Pickle
 pickle.dump(fb_gcp_decade(), open(FIGURE_DIRECTORY+'/rayner_df/fb_gcp_decade.pik', 'wb'))

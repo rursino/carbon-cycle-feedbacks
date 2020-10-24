@@ -20,6 +20,8 @@ OUTPUT_DIR = DIR + 'output/'
 INV_DIRECTORY = "./../../output/inversions/spatial/output_all/"
 FIGURE_DIRECTORY = "./../../latex/thesis/figures/"
 
+GCP = pd.read_csv(DIR + './data/GCP/budget.csv', index_col='Year')
+
 co2 = {
     "year": pd.read_csv(DIR + f"data/CO2/co2_year.csv", index_col=["Year"]).CO2,
     "month": pd.read_csv(DIR + f"data/CO2/co2_month.csv", index_col=["Year", "Month"]).CO2
@@ -62,6 +64,46 @@ trendy_uptake = {
 }
 
 
+def original_af():
+    c_atm = GCP['atmospheric growth']
+    fossil = GCP['fossil fuel and industry']
+    luc = GCP['land-use change emissions']
+
+    return c_atm / (fossil + luc)
+
+def gcp_original_af(Ul, Uo):
+
+    fossil = GCP['fossil fuel and industry']
+    luc = GCP['land-use change emissions']
+
+    af = 1 + (Ul + Uo) / (fossil + luc)
+
+    return af.mean()
+
+def inv_original_af(Udf):
+
+    index = pd.to_datetime(Udf.time.values).year
+    start, end = index[0], index[-1]
+
+    fossil = GCP['fossil fuel and industry'].loc[start:end]
+    luc = GCP['land-use change emissions'].loc[start:end]
+
+    Ul = Udf.Earth_Land.values
+    Uo = Udf.Earth_Ocean.values
+
+    af = 1 + (Ul + Uo) / (fossil + luc)
+
+    return af.mean()
+
+def trendy_original_af(Ul, Uo):
+
+    fossil = GCP['fossil fuel and industry'].loc[1960:2017]
+    luc = GCP['land-use change emissions'].loc[1960:2017]
+
+    af = 1 + (Ul + Uo) / (fossil + luc)
+
+    return af.mean()
+
 """ RESULTS """
 def af_dataframe(data):
     af_df = pd.Series(data.airborne_fraction())
@@ -73,6 +115,9 @@ def af_dataframe(data):
 
 """ EXECUTIONS """
 GCPdf = AirborneFraction.GCP(co2['year'], temp['year'])
+
+GCPdf.airborne_fraction()
+
 pd.Series(GCPdf.airborne_fraction())
 GCP_window = pd.DataFrame(GCPdf.window_af())
 GCP_window
@@ -99,6 +144,46 @@ TRENDY_window['alpha_95'] = TRENDY_window['alpha_mean'] + TRENDY_window['alpha_c
 TRENDY_window
 stats.linregress(range(len(TRENDY_window.index)), TRENDY_window.af)
 
+# Original AFs
+oaf = original_af()
+
+oaf.mean()
+oaf.loc[1960:1969].mean()
+oaf.loc[1970:1979].mean()
+oaf.loc[1980:1989].mean()
+oaf.loc[1990:1999].mean()
+oaf.loc[2000:2009].mean()
+oaf.loc[2009:2018].mean()
+
+
+
+# GCP
+original_af(GCP['land sink'], GCP['ocean sink'])
+
+Udf.Earth_Land.sel(time=slice('1979', '2017'))
+
+
+# inversions
+inv_af = {}
+for model in invf_uptake['year']:
+    Udf = invf_uptake['year'][model]
+    inv_af[model] = inv_original_af(Udf)
+
+pd.Series(inv_af)
+
+(Ul.loc[1960:2017] - UdfT).mean()
+
+
+# TRENDY
+TRENDY_af = {}
+for model in trendy_uptake['S3']['year']:
+    UdfT = trendy_uptake['S3']['year'][model].sel(time=slice('1960', '2017')).Earth_Land.values
+    TRENDY_af[model] = trendy_original_af(UdfT, Uo.loc[1960:2017])
+
+pd.Series(TRENDY_af)
+
+
+
 
 # Inversions individual models
 def inv_af_models(emission_rate=2):
@@ -108,8 +193,10 @@ def inv_af_models(emission_rate=2):
     beta = (land + ocean).loc['beta'] / 2.12
     u_gamma = (land + ocean).loc['u_gamma']
 
+    alpha = beta + u_gamma
+
     b = 1 / np.log(1 + emission_rate / 100)
-    u = 1 - b * (beta + u_gamma)
+    u = 1 - b * alpha
 
     time = {
         'CAMS': (1979, 2017),
@@ -122,11 +209,14 @@ def inv_af_models(emission_rate=2):
 
     af = pd.DataFrame(time).T.sort_index()
     af['AF'] = (1 / u).values
-    af.columns = ['start', 'end', 'AF']
+    af['alpha'] = alpha
+    af.columns = ['start', 'end', 'AF', 'alpha']
 
     return af
 
-inv_af_models().AF.std()
+    return pd.DataFrame({'AF': af, 'alpha': alpha})
+
+inv_af_models()
 
 inv_af_models().loc[['CTRACKER', 'JAMSTEC', 'Rayner']]['AF']
 inv_af_models().loc[['CTRACKER', 'JAMSTEC', 'Rayner']].mean()['AF']
@@ -150,12 +240,14 @@ def trendy_af_models(emission_rate=2):
     beta = params.loc['beta']
     u_gamma = params.loc['u_gamma']
 
+    alpha = beta + u_gamma
+
     b = 1 / np.log(1 + emission_rate / 100)
-    u = 1 - b * (beta + u_gamma)
+    u = 1 - b * alpha
 
-    return 1 / u
+    return pd.DataFrame({'AF': 1 / u, 'alpha': alpha})
 
-trendy_af_models()
+trendy_af_models()['alpha'].mean()
 
 
 

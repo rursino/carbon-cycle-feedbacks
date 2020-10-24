@@ -21,9 +21,8 @@ from importlib import reload
 reload(FeedbackAnalysis);
 
 """ FUNCTIONS """
-def feedback_regression(timeres, variable):
+def feedback_regression(timeres, variable, start=1960, end=2017, pop=None):
     uptake = fb_id.trendy_uptake
-    start, end = 1960, 2017
     reg_models = {}
     model_stats = {}
     for simulation in ['S1', 'S3']:
@@ -62,8 +61,16 @@ def feedback_regression(timeres, variable):
             elif simulation == 'S3':
                 x_var = 'T'
                 other_var = 'C'
-            X = sm.add_constant(df[x_var])
+            X = df[x_var]
             Y = df["U"]
+
+            if pop != None:
+                for item in pop:
+                    X.pop(item)
+                    Y.pop(item)
+
+            X = sm.add_constant(X)
+
             reg_model = sm.OLS(Y, X).fit()
             reg_model_params = reg_model.params
             reg_model_params[other_var] = 0
@@ -543,6 +550,22 @@ fb_trendy_seasonal(save=True)
 
 fb_regional_trendy2(save=True)
 fb_regional_trendy_seasonal2(save=True)
+
+
+# 1990s analysis
+analysis_1990s = feedback_regression('year', 'Earth_Land', 1990, 1999, [1991, 1998])[0]
+
+analysis_1990s['S1'].mean(axis=1)['beta']
+analysis_1990s['S3'].mean(axis=1)['u_gamma']
+
+analysis_1990s_no_remove = feedback_regression('year', 'Earth_Land', 1990, 1999)[0]
+
+analysis_1990s_no_remove['S1'].mean(axis=1)['beta']
+analysis_1990s_no_remove['S3'].mean(axis=1)['u_gamma']
+
+
+plt.scatter(np.arange(1990,2000), fb_id.trendy_uptake['S1']['year']['OCN'].sel(time=slice('1990', '1999')).Earth_Land.values)
+
 
 # Pickle (YET TO BE UPDATED)
 pickle.dump(fb_trendy(), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_trendy_year.pik', 'wb'))
