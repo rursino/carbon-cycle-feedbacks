@@ -567,6 +567,17 @@ analysis_1990s_no_remove['S3'].mean(axis=1)['u_gamma']
 plt.scatter(np.arange(1990,2000), fb_id.trendy_uptake['S1']['year']['OCN'].sel(time=slice('1990', '1999')).Earth_Land.values)
 
 
+# 2000s analysis
+analysis_2000s = feedback_regression('year', 'Earth_Land', 2000, 2009)[0]
+
+analysis_2000s['S1'].mean(axis=1)['beta']
+analysis_2000s['S3'].mean(axis=1)['u_gamma']
+
+
+plt.scatter(np.arange(2000,2010), fb_id.trendy_uptake['S1']['year']['OCN'].sel(time=slice('2000', '2009')).Earth_Land.values)
+
+
+
 # Pickle (YET TO BE UPDATED)
 pickle.dump(fb_trendy(), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_trendy_year.pik', 'wb'))
 pickle.dump(fb_regional_trendy(), open(fb_id.FIGURE_DIRECTORY+'/rayner_df/fb_trendy_regional_year.pik', 'wb'))

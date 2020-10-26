@@ -236,5 +236,35 @@ nT = pd.Series(T.sel(time=slice(str(1989), str(1998))).values, index=nC.index)
 plt.scatter(np.arange(1989,1999), nT)
 
 
+# 2000s analysis
+def analysis_2000s(pop=None):
+    start, end = 1999, 2008
+    nU = Ul.loc[start:end]
+    nC = C.loc[start:end]
+    nT = pd.Series(T.sel(time=slice(str(start), str(end))).values, index=nC.index)
+
+    if pop:
+        for item in pop:
+            nU.pop(item)
+            nC.pop(item)
+            nT.pop(item)
+
+    ds = feedback_regression(nU, nC, nT).params
+    data = pd.Series({'beta': ds.C, 'gamma': ds['T']})
+    data['u_gamma'] = data['gamma'] * phi / rho
+    data['alpha'] = data['beta'] + data['u_gamma']
+    return data
+
+analysis_2000s()
+
+
+nU = Ul.loc[1999:2008]
+nC = C.loc[1999:2008]
+nT = pd.Series(T.sel(time=slice(str(1999), str(2008))).values, index=nC.index)
+
+# plt.scatter(np.arange(1999,2009), nU)
+plt.scatter(nC, nT)
+
+
 # Pickle
 pickle.dump(fb_gcp_decade(), open(FIGURE_DIRECTORY+'/rayner_df/fb_gcp_decade.pik', 'wb'))
