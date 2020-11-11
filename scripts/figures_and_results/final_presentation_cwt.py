@@ -27,21 +27,38 @@ reload(TRENDYf);
 INV_DIRECTORY = "./../../output/inversions/spatial/output_all/"
 TRENDY_DIRECTORY = "./../../output/TRENDY/spatial/output_all/"
 
+seasons = ['summer', 'winter']
+
 year_invf = {}
 for model in os.listdir(INV_DIRECTORY):
     model_dir = INV_DIRECTORY + model + '/'
     year_invf[model] = invf.Analysis(xr.open_dataset(model_dir + 'year.nc'))
 
+seasonal_invf = {'summer': {}, 'winter': {}}
+for season in seasonal_invf:
+    for model in os.listdir(INV_DIRECTORY):
+        model_dir = INV_DIRECTORY + model + '/'
+        seasonal_invf[season][model] = invf.Analysis(xr.open_dataset(model_dir + f'{season}.nc'))
+
 year_S1_trendy = {}
 year_S3_trendy = {}
 for model in os.listdir(TRENDY_DIRECTORY):
     model_dir = TRENDY_DIRECTORY + model + '/'
-
     if 'S1' in model:
         year_S1_trendy[model] = TRENDYf.Analysis(xr.open_dataset(model_dir + 'year.nc'))
-
     elif 'S3' in model:
         year_S3_trendy[model] = TRENDYf.Analysis(xr.open_dataset(model_dir + 'year.nc'))
+
+seasonal_S1_trendy = {'summer': {}, 'winter': {}}
+seasonal_S3_trendy = {'summer': {}, 'winter': {}}
+for season in seasonal_S1_trendy:
+    for model in os.listdir(TRENDY_DIRECTORY):
+        model_dir = TRENDY_DIRECTORY + model + '/'
+        if 'S1' in model:
+            seasonal_S1_trendy[season][model] = TRENDYf.Analysis(xr.open_dataset(model_dir + f'{season}.nc'))
+        elif 'S3' in model:
+            seasonal_S3_trendy[season][model] = TRENDYf.Analysis(xr.open_dataset(model_dir + f'{season}.nc'))
+
 
 co2 = pd.read_csv("./../../data/CO2/co2_year.csv").CO2[2:]
 
@@ -82,7 +99,7 @@ def inv_year_cwt():
 
     return sink
 
-def trendy_year_cwt():
+def trendy_year_cwt(var='Earth_Land'):
     trendy_year = {
         'S1': year_S1_trendy,
         'S3': year_S3_trendy
@@ -96,7 +113,7 @@ def trendy_year_cwt():
         index, vals = [], []
         for model in trendy_year_sim:
             df = trendy_year_sim[model].cascading_window_trend(
-                                            variable = 'Earth_Land',
+                                            variable = var,
                                             window_size=10)
             index.append(df.index)
             vals.append(df.values.squeeze())
@@ -187,5 +204,49 @@ def cwt():
 
     return regstats
 
-
 cwt()
+
+year_S1_trendy['VISIT_S1_nbp'].cascading_window_trend('South_Land')
+year_S3_trendy['VISIT_S3_nbp'].cascading_window_trend('South_Land')
+
+
+def trendy_regional_cwt():
+    trendy_cwt = trendy_year_cwt()
+
+    fig = plt.figure(figsize=(18,20))
+    axl = fig.add_subplot(111, frame_on=False)
+    axl.tick_params(labelcolor="none", bottom=False, left=False)
+
+    zip_list = zip(
+        ['411', '412', '413', '414'],
+        ['Earth_Land', 'South_Land', 'Tropical_Land', 'North_Land'],
+        ['black', 'blue', 'orange', 'green']
+    )
+
+    ax = {}
+    for subplot, var, color in zip_list:
+        ax[subplot] = fig.add_subplot(subplot)
+
+        df = trendy_year_cwt(var)
+        x = df['S1'].index
+        yS1 = df['S1'].values
+        yS3 = df['S3'].values
+        ax[subplot].plot(x, yS1, '--', color=color)
+        ax[subplot].plot(x, yS3, color=color)
+        ax[subplot].set_ylim([-80, 80])
+        ax[subplot].set_xlabel(var.split('_')[0], fontsize=32,
+                            labelpad=5)
+        ax[subplot].xaxis.set_label_position('top')
+        ax[subplot].legend(['S1', 'S3'], fontsize=20)
+
+    axl.set_xlabel("First year of 10-year window", fontsize=36, labelpad=40)
+    axl.set_ylabel(r"$\alpha$   " + " (MtC.yr$^{-1}$.GtC$^{-1}$)", fontsize=36,
+                    labelpad=40)
+
+    for subplot in ax:
+        ax[subplot].tick_params(axis="x", labelsize=18)
+        ax[subplot].tick_params(axis="y", labelsize=18)
+
+    fig.tight_layout(pad=5.0)
+
+trendy_regional_cwt()
