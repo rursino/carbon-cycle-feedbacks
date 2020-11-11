@@ -67,6 +67,13 @@ gcp_uptake = pd.read_csv(INPUT_DIRECTORY + 'GCP/budget.csv',
 Ul = gcp_uptake['land sink']
 Uo = gcp_uptake['ocean sink']
 
+C = pd.read_csv(INPUT_DIRECTORY + 'CO2/co2_year.csv',index_col='Year').CO2[2:]
+T = (xr
+        .open_dataset('./../../output/TEMP/spatial/output_all/HadCRUT/year.nc')
+        .sel(time=slice("1959", "2018"))
+    )
+T= T.Earth
+
 phi, rho = 0.015 / 2.12, 1.93
 
 
@@ -196,9 +203,9 @@ def fb_plot():
         inv_std = invf_params[var][param].std(axis=1).values
 
         ax[subplot].bar(gcp_x - bar_width, gcp, width=bar_width, color='black')
-        ax[subplot].bar(inv_x, inv, width=bar_width, yerr=inv_std, color='blue')
+        ax[subplot].bar(inv_x, inv, width=bar_width, yerr=inv_std, color='cyan')
 
-        # ax[subplot].set_ylim([-0.16, 0.11]) if var == 'land' else ax[subplot].set_ylim([-0.04, 0.012])
+        ax[subplot].set_ylim([-0.16, 0.11]) if var == 'land' else ax[subplot].set_ylim([-0.04, 0.02])
 
         ax[subplot].set_xlabel(label, fontsize=24, labelpad=10)
         ax[subplot].xaxis.set_label_position('top')
@@ -212,6 +219,11 @@ def fb_plot():
         ax[subplot].bar(trendy_x + bar_width, trendy, width=bar_width, yerr=trendy_std, color='red')
 
     axl.set_ylabel('Feedback parameter ($yr^{-1}$)', fontsize=28, labelpad=40)
+    ax['411'].legend(['GCP', 'Inversions', 'TRENDY'])
+
+    for subplot in ax:
+        ax[subplot].tick_params(axis="x", labelsize=14)
+        ax[subplot].tick_params(axis="y", labelsize=14)
 
     fig.tight_layout(pad=3.0)
 
