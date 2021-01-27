@@ -4,7 +4,7 @@
 
 This repository contains the source code and data for my Master of Science (Atmospheric Sciences) research thesis, titled <b>"Analysing trends in the climate-carbon cycle feedbacks and its drivers from observations"</b> (at The University of Melbourne).
 
-If you would like to hear more about this project or have any other questions, please feel free to email me at rursino@student.unimelb.edu.au. Also, if you would like to suggest changes/improvements to my source code, then you are welcome to fork my repository and make a pull request.
+If you would like to hear more about this project or have any other questions, please feel free to email me at rosscursino@gmail.com. Also, if you would like to suggest changes/improvements to my source code, then you are welcome to fork my repository and make a pull request.
 
 Abstract of project is below (subject to change):
 
